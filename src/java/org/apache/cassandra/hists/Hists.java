@@ -1,0 +1,190 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.cassandra.hists;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.common.collect.ImmutableList;
+
+import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogWriter;
+import org.HdrHistogram.Recorder;
+import org.apache.cassandra.net.MessageIn;
+
+/*
+
+Hists contain histograms used in our measurements to identify tail latency.
+
+ */
+public final class Hists
+{
+    // Hists for reads and writes
+    public static final Hists reads = must("/cassandra_data/hists/reads");
+    public static final Hists writes = must("/cassandra_data/hists/writes");
+
+    public static final Instant epoch = Instant.now();
+    public static final AtomicLong flushStart = new AtomicLong(-1);
+    public static final AtomicLong flushEnd = new AtomicLong(-1);
+    public static final AtomicLong compactionStart = new AtomicLong(-1);
+    public static final AtomicLong compactionEnd = new AtomicLong(-1);
+
+    public static long nowMicros() {
+        Duration d = Duration.between(epoch, Instant.now());
+        return (d.getSeconds() * 1_000_000) + ((long)d.getNano() / 1000);
+    }
+
+    public static long toMicros(Instant t) {
+        Duration d = Duration.between(epoch, t);
+        return (d.getSeconds() * 1_000_000) + ((long)d.getNano() / 1000);
+    }
+
+    private static final AtomicBoolean setIfEqLock = new AtomicBoolean(false);
+
+    public static void setIfEq(AtomicLong dest, long destVal, AtomicLong cond, long condVal) {
+        while (!setIfEqLock.compareAndSet(false, true)) {}
+        if (cond.get() == condVal) {
+            dest.set(destVal);
+        }
+        setIfEqLock.set(false);
+    }
+
+    private static final long WRITE_PERIOD_SECONDS = 30;
+
+    // Per-Hists histograms
+    private final HistRecorder overall;
+    private final HistRecorder queueing;
+    private final HistRecorder processing;
+    private final HistRecorder hasFlush;
+    private final HistRecorder hasCompaction;
+    private final HistRecorder majorityQueuing;
+
+    private Hists(String destPath) throws IOException {
+        Files.createDirectories(Paths.get(destPath));
+        overall = HistRecorder.at(Paths.get(destPath, "overall_hist.log"));
+        queueing = HistRecorder.at(Paths.get(destPath, "queueing_hist.log"));
+        processing = HistRecorder.at(Paths.get(destPath, "processing_hist.log"));
+        hasFlush = HistRecorder.at(Paths.get(destPath, "hasflush_hist.log"));
+        hasCompaction = HistRecorder.at(Paths.get(destPath, "hascompaction_hist.log"));
+        majorityQueuing = HistRecorder.at(Paths.get(destPath, "majorityqueueing_hist.log"));
+
+        // add our HistRecorders to a global list so that they
+        // are periodically written to disk
+        addRecorders(ImmutableList.of(overall, queueing, processing, hasFlush, hasCompaction, majorityQueuing));
+    }
+
+    private static ArrayList<HistRecorder> recorders = null; // global list of HistRecorders that should be flushed periodically
+    private static Thread flusher = null; // thread to flush above
+
+    private synchronized static void addRecorders(Collection<HistRecorder> toAdd) {
+        if (flusher == null) {
+            assert recorders == null;
+            recorders = new ArrayList<>();
+            flusher = new Thread(() -> {
+                while (true) {
+                    try {
+                        Thread.sleep(WRITE_PERIOD_SECONDS * 1000);
+                    } catch (InterruptedException _) {}
+                    for (HistRecorder h : recorders) {
+                        h.log();
+                    }
+                }
+            });
+            flusher.start();
+        }
+
+        recorders.addAll(toAdd);
+    }
+
+    private static Hists must(String destPath) {
+        try {
+            return new Hists(destPath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void measure(MessageIn.MessageMeta meta) {
+        long tt = meta.totalTime().toNanos() / 1000;
+        long qt = meta.queuingTime().toNanos() / 1000;
+        overall.recorder.recordValue(tt);
+        queueing.recorder.recordValue(qt);
+        processing.recorder.recordValue(meta.processingTime().toNanos() / 1000);
+
+        if (qt >= tt/2) {
+            majorityQueuing.recorder.recordValue(tt);
+        }
+        if (hasOverlap(meta, flushStart, flushEnd)) {
+            hasFlush.recorder.recordValue(tt);
+        }
+        if (hasOverlap(meta, compactionStart, compactionEnd)) {
+            hasCompaction.recorder.recordValue(tt);
+        }
+    }
+
+    private static boolean hasOverlap(MessageIn.MessageMeta meta, AtomicLong start, AtomicLong end) {
+        long startMicros = start.get();
+        long endMicros = end.get();
+        return toMicros(meta.getStart()) < endMicros || (endMicros < startMicros && startMicros < toMicros(meta.getEnd()));
+    }
+
+    private static final class HistRecorder {
+        final Recorder recorder; // recorder stores actual latency histogram, is thread-safe
+        final HistogramLogWriter writer;
+        final OutputStream fw;
+
+        private Histogram recycleHist = null;
+
+        private HistRecorder(Path destPath) throws IOException {
+            recorder = new Recorder(3);
+            fw = Files.newOutputStream(destPath);
+            writer = new HistogramLogWriter(fw);
+            writer.outputLogFormatVersion();
+            long now = System.currentTimeMillis();
+            writer.outputStartTime(now);
+            writer.setBaseTime(now);
+            writer.outputLegend();
+            fw.flush();
+        }
+
+        public static HistRecorder at(Path destPath) throws IOException { return new HistRecorder(destPath); }
+
+        // log writes an interval histogram to disk. It is the caller's responsibility
+        // to make sure that log is not called concurrently.
+        public void log() {
+            Histogram hist = recorder.getIntervalHistogram(recycleHist);
+            writer.outputIntervalHistogram(hist);
+            try {
+                fw.flush();
+            } catch (IOException e) {
+                // ignore failed flushes
+            }
+            recycleHist = hist;
+        }
+    }
+}

@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 
 import org.apache.cassandra.batchlog.LegacyBatchlogMigrator;
 import org.apache.cassandra.exceptions.WriteTimeoutException;
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.io.util.FastByteArrayInputStream;
 import org.apache.cassandra.net.*;
 import org.apache.cassandra.tracing.Tracing;
@@ -60,16 +61,23 @@ public class MutationVerbHandler implements IVerbHandler<Mutation>
 
         try
         {
+            message.meta.setQueueEnd();
             if (message.version < MessagingService.VERSION_30 && LegacyBatchlogMigrator.isLegacyBatchlogMutation(message.payload))
             {
                 LegacyBatchlogMigrator.handleLegacyMutation(message.payload);
                 reply(id, replyTo);
-            }
-            else
-                message.payload.applyFuture().thenAccept(o -> reply(id, replyTo)).exceptionally(wto -> {
+                message.meta.setProcessEnd();
+                Hists.writes.measure(message.meta);
+            } else {
+                message.payload.applyFuture().thenAccept(o -> {
+                    reply(id, replyTo);
+                    message.meta.setProcessEnd();
+                    Hists.writes.measure(message.meta);
+                }).exceptionally(wto -> {
                     failed();
                     return null;
                 });
+            }
         }
         catch (WriteTimeoutException wto)
         {

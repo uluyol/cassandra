@@ -23,6 +23,8 @@ import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,6 +58,7 @@ import org.apache.cassandra.db.rows.CellPath;
 import org.apache.cassandra.dht.*;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.index.SecondaryIndexManager;
 import org.apache.cassandra.index.internal.CassandraIndex;
 import org.apache.cassandra.index.transactions.UpdateTransaction;
@@ -815,7 +818,15 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
         {
             logFlush();
             Flush flush = new Flush(false);
-            flushExecutor.execute(flush);
+            flushExecutor.execute(() -> {
+                long start = Hists.nowMicros();
+                Hists.flushStart.set(start);
+                try {
+                    flush.run();
+                } finally {
+                    Hists.setIfEq(Hists.flushEnd, Hists.nowMicros(), Hists.flushStart, start);
+                }
+            });
             ListenableFutureTask<?> task = ListenableFutureTask.create(flush.postFlush, null);
             postFlushExecutor.submit(task);
             return task;

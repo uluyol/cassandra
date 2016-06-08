@@ -19,6 +19,8 @@ package org.apache.cassandra.net;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 
@@ -40,13 +42,15 @@ public class MessageIn<T>
     public final MessagingService.Verb verb;
     public final int version;
     public final ConstructionTime constructionTime;
+    public final MessageMeta meta;
 
     private MessageIn(InetAddress from,
                       T payload,
                       Map<String, byte[]> parameters,
                       MessagingService.Verb verb,
                       int version,
-                      ConstructionTime constructionTime)
+                      ConstructionTime constructionTime,
+                      Instant reqTime)
     {
         this.from = from;
         this.payload = payload;
@@ -54,6 +58,7 @@ public class MessageIn<T>
         this.verb = verb;
         this.version = version;
         this.constructionTime = constructionTime;
+        this.meta = MessageMeta.create(reqTime);
     }
 
     public static <T> MessageIn<T> create(InetAddress from,
@@ -61,17 +66,18 @@ public class MessageIn<T>
                                           Map<String, byte[]> parameters,
                                           MessagingService.Verb verb,
                                           int version,
-                                          ConstructionTime constructionTime)
+                                          ConstructionTime constructionTime,
+                                          Instant reqTime)
     {
-        return new MessageIn<>(from, payload, parameters, verb, version, constructionTime);
+        return new MessageIn<>(from, payload, parameters, verb, version, constructionTime, reqTime);
     }
 
-    public static <T2> MessageIn<T2> read(DataInputPlus in, int version, int id) throws IOException
+    public static <T2> MessageIn<T2> read(DataInputPlus in, int version, int id, Instant reqTime) throws IOException
     {
-        return read(in, version, id, new ConstructionTime());
+        return read(in, version, id, new ConstructionTime(), reqTime);
     }
 
-    public static <T2> MessageIn<T2> read(DataInputPlus in, int version, int id, ConstructionTime constructionTime) throws IOException
+    public static <T2> MessageIn<T2> read(DataInputPlus in, int version, int id, ConstructionTime constructionTime, Instant reqTime) throws IOException
     {
         InetAddress from = CompactEndpointSerializationHelper.deserialize(in);
 
@@ -109,10 +115,10 @@ public class MessageIn<T>
             serializer = (IVersionedSerializer<T2>) callback.serializer;
         }
         if (payloadSize == 0 || serializer == null)
-            return create(from, null, parameters, verb, version, constructionTime);
+            return create(from, null, parameters, verb, version, constructionTime, reqTime);
 
         T2 payload = serializer.deserialize(in, version);
-        return MessageIn.create(from, payload, parameters, verb, version, constructionTime);
+        return MessageIn.create(from, payload, parameters, verb, version, constructionTime, reqTime);
     }
 
     public static ConstructionTime createTimestamp()
@@ -161,5 +167,24 @@ public class MessageIn<T>
         StringBuilder sbuf = new StringBuilder();
         sbuf.append("FROM:").append(from).append(" TYPE:").append(getMessageType()).append(" VERB:").append(verb);
         return sbuf.toString();
+    }
+
+    public static class MessageMeta {
+        private final Instant reqStart;
+        private Instant queueEnd;
+        private Instant processEnd;
+
+        private MessageMeta(Instant start) { reqStart = start; }
+        public static MessageMeta create(Instant start) { return new MessageMeta(start); }
+
+        public void setQueueEnd() { queueEnd = Instant.now(); }
+        public void setProcessEnd() { processEnd = Instant.now(); }
+
+        public Duration queuingTime() { return Duration.between(reqStart, queueEnd); }
+        public Duration processingTime() { return Duration.between(queueEnd, processEnd); }
+        public Duration totalTime() { return Duration.between(reqStart, processEnd); }
+
+        public Instant getStart() { return reqStart; }
+        public Instant getEnd() { return processEnd; }
     }
 }

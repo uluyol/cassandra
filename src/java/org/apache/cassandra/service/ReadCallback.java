@@ -18,6 +18,7 @@
 package org.apache.cassandra.service;
 
 import java.net.InetAddress;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -193,7 +194,8 @@ public class ReadCallback implements IAsyncCallbackWithFailure<ReadResponse>
                                                            Collections.<String, byte[]>emptyMap(),
                                                            MessagingService.Verb.INTERNAL_RESPONSE,
                                                            MessagingService.current_version,
-                                                           MessageIn.createTimestamp());
+                                                           MessageIn.createTimestamp(),
+                                                           Instant.now());
         response(message);
     }
 

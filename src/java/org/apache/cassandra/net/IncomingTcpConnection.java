@@ -23,6 +23,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.time.Instant;
 import java.util.zip.Checksum;
 import java.util.Set;
 
@@ -187,7 +188,8 @@ public class IncomingTcpConnection extends Thread implements Closeable
         else
             id = input.readInt();
 
-        MessageIn message = MessageIn.read(input, version, id, MessageIn.readTimestamp(input));
+        Instant reqTime = Instant.now();
+        MessageIn message = MessageIn.read(input, version, id, MessageIn.readTimestamp(input), reqTime);
         if (message == null)
         {
             // callback expired; nothing to do

@@ -51,6 +51,7 @@ import org.apache.cassandra.db.view.ViewBuilder;
 import org.apache.cassandra.dht.Bounds;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.index.SecondaryIndexBuilder;
 import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.sstable.ISSTableScanner;
@@ -261,7 +262,13 @@ public class CompactionManager implements CompactionManagerMBean
                     logger.trace("No tasks available");
                     return;
                 }
-                task.execute(metrics);
+                long start = Hists.nowMicros();
+                Hists.compactionStart.set(start);
+                try {
+                    task.execute(metrics);
+                } finally {
+                    Hists.setIfEq(Hists.compactionEnd, Hists.nowMicros(), Hists.compactionStart, start);
+                }
             }
             finally
             {

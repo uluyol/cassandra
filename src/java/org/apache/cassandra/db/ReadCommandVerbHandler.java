@@ -18,6 +18,7 @@
 package org.apache.cassandra.db;
 
 import org.apache.cassandra.db.partitions.UnfilteredPartitionIterator;
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
@@ -44,6 +45,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         command.setMonitoringTime(message.constructionTime, message.getTimeout());
 
         ReadResponse response;
+        message.meta.setQueueEnd();
         try (ReadExecutionController executionController = command.executionController();
              UnfilteredPartitionIterator iterator = command.executeLocally(executionController))
         {
@@ -59,6 +61,8 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
 
         Tracing.trace("Enqueuing response to {}", message.from);
         MessageOut<ReadResponse> reply = new MessageOut<>(MessagingService.Verb.REQUEST_RESPONSE, response, serializer());
+        message.meta.setProcessEnd();
+        Hists.reads.measure(message.meta);
         MessagingService.instance().sendReply(reply, id, message.from);
     }
 }

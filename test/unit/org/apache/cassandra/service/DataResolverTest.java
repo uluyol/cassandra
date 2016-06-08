@@ -21,6 +21,7 @@ package org.apache.cassandra.service;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.*;
 
 import com.google.common.collect.Iterators;
@@ -716,7 +717,8 @@ public class DataResolverTest
                                 Collections.EMPTY_MAP,
                                 MessagingService.Verb.REQUEST_RESPONSE,
                                 MessagingService.current_version,
-                                MessageIn.createTimestamp());
+                                MessageIn.createTimestamp(),
+                                Instant.now());
     }
 
     private RangeTombstone tombstone(Object start, Object end, long markedForDeleteAt, int localDeletionTime)
