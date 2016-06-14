@@ -27,6 +27,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,8 +47,8 @@ Hists contain histograms used in our measurements to identify tail latency.
 public final class Hists
 {
     // Hists for reads and writes
-    public static final Hists reads = must("/cassandra_data/hists/reads");
-    public static final Hists writes = must("/cassandra_data/hists/writes");
+    public static final Hists reads = must("/logs/hists/reads");
+    public static final Hists writes = must("/logs/hists/writes");
 
     public static final Instant epoch = Instant.now();
     public static final AtomicLong flushStart = new AtomicLong(-1);
@@ -98,13 +100,13 @@ public final class Hists
         addRecorders(ImmutableList.of(overall, queueing, processing, hasFlush, hasCompaction, majorityQueuing));
     }
 
-    private static ArrayList<HistRecorder> recorders = null; // global list of HistRecorders that should be flushed periodically
+    private static List<HistRecorder> recorders = null; // global list of HistRecorders that should be flushed periodically
     private static Thread flusher = null; // thread to flush above
 
     private synchronized static void addRecorders(Collection<HistRecorder> toAdd) {
         if (flusher == null) {
             assert recorders == null;
-            recorders = new ArrayList<>();
+            recorders = Collections.synchronizedList(new ArrayList<HistRecorder>());
             flusher = new Thread(() -> {
                 while (true) {
                     try {
