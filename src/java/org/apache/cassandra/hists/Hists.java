@@ -20,6 +20,7 @@ package org.apache.cassandra.hists;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -159,18 +160,21 @@ public final class Hists
         final Recorder recorder; // recorder stores actual latency histogram, is thread-safe
         final HistogramLogWriter writer;
         final OutputStream fw;
+        final PrintStream ps;
 
         private Histogram recycleHist = null;
 
         private HistRecorder(Path destPath) throws IOException {
             recorder = new Recorder(3);
             fw = Files.newOutputStream(destPath);
-            writer = new HistogramLogWriter(fw);
+            ps = new PrintStream(fw);
+            writer = new HistogramLogWriter(ps);
             writer.outputLogFormatVersion();
             long now = System.currentTimeMillis();
             writer.outputStartTime(now);
             writer.setBaseTime(now);
             writer.outputLegend();
+            ps.flush();
             fw.flush();
         }
 
@@ -182,6 +186,7 @@ public final class Hists
             Histogram hist = recorder.getIntervalHistogram(recycleHist);
             writer.outputIntervalHistogram(hist);
             try {
+                ps.flush();
                 fw.flush();
             } catch (IOException e) {
                 // ignore failed flushes
