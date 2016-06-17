@@ -47,6 +47,11 @@ Hists contain histograms used in our measurements to identify tail latency.
  */
 public final class Hists
 {
+    // keep these on top so that they initialize first
+    // global list of HistRecorders that should be flushed periodically
+    private static List<HistRecorder> recorders = Collections.synchronizedList(new ArrayList<HistRecorder>());
+    private static Thread flusher = null; // thread to flush above
+
     // Hists for reads and writes
     public static final Hists reads = must("/logs/hists/reads");
     public static final Hists writes = must("/logs/hists/writes");
@@ -101,13 +106,9 @@ public final class Hists
         addRecorders(ImmutableList.of(overall, queueing, processing, hasFlush, hasCompaction, majorityQueuing));
     }
 
-    private static List<HistRecorder> recorders = null; // global list of HistRecorders that should be flushed periodically
-    private static Thread flusher = null; // thread to flush above
-
     private synchronized static void addRecorders(Collection<HistRecorder> toAdd) {
         if (flusher == null) {
-            assert recorders == null;
-            recorders = Collections.synchronizedList(new ArrayList<HistRecorder>());
+            assert recorders != null;
             flusher = new Thread(() -> {
                 while (true) {
                     try {
