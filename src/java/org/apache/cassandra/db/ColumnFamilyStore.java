@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
@@ -1031,7 +1030,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
 
         public void run()
         {
-            FlushTimeLogger.getInstance().flushStart();
+            Instant flushStart = Instant.now();
             // mark writes older than the barrier as blocking progress, permitting them to exceed our memory limit
             // if they are stuck waiting on it, then wait for them all to complete
             writeBarrier.markBlocking();
@@ -1132,7 +1131,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             }
             // signal the post-flush we've done our work
             postFlush.latch.countDown();
-            FlushTimeLogger.getInstance().flushStop();
+            OpLogger.flushes().record(flushStart, Instant.now());
         }
 
         private void reclaim(final Memtable memtable)

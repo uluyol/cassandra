@@ -113,7 +113,7 @@ public final class Hists
                 while (true) {
                     try {
                         Thread.sleep(WRITE_PERIOD_SECONDS * 1000);
-                    } catch (InterruptedException _) {}
+                    } catch (InterruptedException $) {}
                     for (HistRecorder h : recorders) {
                         h.log();
                     }
