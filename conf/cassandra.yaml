@@ -240,7 +240,7 @@ key_cache_save_period: 14400
 # headroom for OS block level cache. Do never allow your system to swap.
 #
 # Default value is 0, to disable row caching.
-row_cache_size_in_mb: 512
+row_cache_size_in_mb: 128
 
 # Duration in seconds after which Cassandra should save the row cache.
 # Caches are saved to saved_caches_directory as specified in this configuration file.
@@ -382,8 +382,8 @@ disk_optimization_strategy: spinning
 # accepting writes when the limit is exceeded until a flush completes,
 # and will trigger a flush based on memtable_cleanup_threshold
 # If omitted, Cassandra will set both to 1/4 the size of the heap.
-memtable_heap_space_in_mb: 512
-memtable_offheap_space_in_mb: 512
+memtable_heap_space_in_mb: 128
+memtable_offheap_space_in_mb: 128
 
 # Ratio of occupied non-flushing memtable size to total permitted size
 # that will trigger a flush of the largest memtable. Larger mct will
@@ -392,7 +392,7 @@ memtable_offheap_space_in_mb: 512
 # under heavy write load.
 #
 # memtable_cleanup_threshold defaults to 1 / (memtable_flush_writers + 1)
-# memtable_cleanup_threshold: 0.11
+memtable_cleanup_threshold: 0.33
 
 # Specify the way Cassandra allocates and manages memtable memory.
 # Options are:
@@ -419,7 +419,7 @@ memtable_allocation_type: heap_buffers
 #
 # If your data directories are backed by SSD, you can increase this, but
 # avoid having memtable_flush_writers * data_file_directories > number of cores
-#memtable_flush_writers: 1
+memtable_flush_writers: 2
 
 # A fixed memory pool size in MB for for SSTable index summaries. If left
 # empty, this will default to 5% of the heap size. If the memory usage of
