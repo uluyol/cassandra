@@ -55,6 +55,8 @@ public final class Hists
     // Hists for reads and writes
     public static final Hists reads = must("/logs/hists/reads");
     public static final Hists writes = must("/logs/hists/writes");
+    //public static final Hists reads = must("/tmp/reads");
+    //public static final Hists writes = must("/tmp/writes");
 
     public static final Instant epoch = Instant.now();
     public static final AtomicLong flushStart = new AtomicLong(-1);

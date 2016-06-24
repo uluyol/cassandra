@@ -37,6 +37,8 @@ public final class OpLogger
 
     private static final OpLogger _flushes = new OpLogger("/cassandra_data/flush_time_log.csv");
     private static final OpLogger _compactions = new OpLogger("/cassandra_data/compaction_time_log.csv");
+    //private static final OpLogger _flushes = new OpLogger("/tmp/flush_time_log.csv");
+    //private static final OpLogger _compactions = new OpLogger("/tmp/compaction_time_log.csv");
 
     private static final int LOG_CAPACITY = 1024;
     private static final int WRITE_PERIOD_SECONDS = 15;
@@ -63,14 +65,17 @@ public final class OpLogger
         if (flusher == null) {
             assert loggers != null;
             flusher = new Thread(() -> {
-                try {
-                    Thread.sleep(WRITE_PERIOD_SECONDS * 1000);
-                }
-                catch (InterruptedException $) {}
-                for (OpLogger l : loggers) {
-                    l.flush();
+                while (true) {
+                    try {
+                        Thread.sleep(WRITE_PERIOD_SECONDS * 1000);
+                    }
+                    catch (InterruptedException $) {}
+                    for (OpLogger l : loggers) {
+                        l.flush();
+                    }
                 }
             });
+            flusher.start();
         }
 
         loggers.add(logger);
