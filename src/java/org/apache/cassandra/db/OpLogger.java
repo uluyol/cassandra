@@ -33,10 +33,10 @@ public final class OpLogger
     // these need to be at the top so that they are initiliazed when
     // creating the loggers.
     private static Thread flusher = null;
-    private static List<OpLogger> loggers = Collections.synchronizedList(new ArrayList<>());
+    private static final List<OpLogger> loggers = Collections.synchronizedList(new ArrayList<>());
 
-    private static OpLogger _flushes = new OpLogger("/cassandra_data/flush_time_log.csv");
-    private static OpLogger _compactions = new OpLogger("/cassandra_data/compaction_time_log.csv");
+    private static final OpLogger _flushes = new OpLogger("/cassandra_data/flush_time_log.csv");
+    private static final OpLogger _compactions = new OpLogger("/cassandra_data/compaction_time_log.csv");
 
     private static final int LOG_CAPACITY = 1024;
     private static final int WRITE_PERIOD_SECONDS = 15;
@@ -72,6 +72,8 @@ public final class OpLogger
                 }
             });
         }
+
+        loggers.add(logger);
     }
 
     public static OpLogger flushes() { return _flushes; }
