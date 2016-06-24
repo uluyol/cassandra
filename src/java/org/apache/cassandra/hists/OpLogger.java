@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.db;
+package org.apache.cassandra.hists;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -98,6 +98,7 @@ public final class OpLogger
                     String out = ss.startMicros() + "," + ss.durationMicros() + "\n";
                     w.write(out.getBytes());
                 }
+                w.flush();
             }
         } catch (IOException e) {
             e.printStackTrace();
