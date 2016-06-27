@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option java_package = "org.apache.cassandra.hists";
+
+message CacheEntry {
+  string Keyspace = 1;
+  string ColumnFamily = 2;
+  bytes Key = 3;
+}
+

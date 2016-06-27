@@ -33,6 +33,7 @@ import javax.management.ObjectName;
 import com.google.common.util.concurrent.Futures;
 
 import org.apache.cassandra.db.lifecycle.SSTableSet;
+import org.apache.cassandra.hists.CacheDumper;
 import org.apache.cassandra.io.sstable.format.SSTableReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +90,8 @@ public class CacheService implements CacheServiceMBean
     public final AutoSavingCache<RowCacheKey, IRowCacheEntry> rowCache;
     public final AutoSavingCache<CounterCacheKey, ClockAndCount> counterCache;
 
+    public static final CacheDumper dummySoThatTheDumperIsInitilized = CacheDumper.instance;
+
     private CacheService()
     {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
@@ -107,6 +110,8 @@ public class CacheService implements CacheServiceMBean
         counterCache = initCounterCache();
     }
 
+    public PausableCache<KeyCacheKey, RowIndexEntry> keyCacheCache = null;
+
     /**
      * @return auto saving cache object
      */
@@ -120,6 +125,8 @@ public class CacheService implements CacheServiceMBean
         // where 48 = 40 bytes (average size of the key) + 8 bytes (size of value)
         ICache<KeyCacheKey, RowIndexEntry> kc;
         kc = ConcurrentLinkedHashCache.create(keyCacheInMemoryCapacity);
+        keyCacheCache = PausableCache.create(kc);
+        kc = keyCacheCache;
         AutoSavingCache<KeyCacheKey, RowIndexEntry> keyCache = new AutoSavingCache<>(kc, CacheType.KEY_CACHE, new KeyCacheSerializer());
 
         int keyCacheKeysToSave = DatabaseDescriptor.getKeyCacheKeysToSave();
@@ -128,6 +135,8 @@ public class CacheService implements CacheServiceMBean
 
         return keyCache;
     }
+
+    public PausableCache<RowCacheKey, IRowCacheEntry> rowCacheCache = null;
 
     /**
      * @return initialized row cache
@@ -152,6 +161,8 @@ public class CacheService implements CacheServiceMBean
 
         // cache object
         ICache<RowCacheKey, IRowCacheEntry> rc = cacheProvider.create();
+        //rowCacheCache = PausableCache.create(rc);
+        //rc = rowCacheCache;
         AutoSavingCache<RowCacheKey, IRowCacheEntry> rowCache = new AutoSavingCache<>(rc, CacheType.ROW_CACHE, new RowCacheSerializer());
 
         int rowCacheKeysToSave = DatabaseDescriptor.getRowCacheKeysToSave();
