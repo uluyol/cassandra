@@ -1,5 +1,11 @@
 # Cassandra storage config YAML 
 
+# Hist/Logging options
+
+hist_dir: /tmp/hists
+oplog_dir: /tmp
+dumpcache_dir: /tmp
+
 # NOTE:
 #   See http://wiki.apache.org/cassandra/StorageConfiguration for
 #   full explanations of configuration directives

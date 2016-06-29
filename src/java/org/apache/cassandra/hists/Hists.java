@@ -33,11 +33,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.xml.crypto.Data;
+
 import com.google.common.collect.ImmutableList;
 
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogWriter;
 import org.HdrHistogram.Recorder;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.net.MessageIn;
 
 /*
@@ -53,8 +56,10 @@ public final class Hists
     private static Thread flusher = null; // thread to flush above
 
     // Hists for reads and writes
-    public static final Hists reads = must("/logs/hists/reads");
-    public static final Hists writes = must("/logs/hists/writes");
+    public static final Hists reads = must(Paths.get(DatabaseDescriptor.getHistDir(), "reads"));
+    public static final Hists writes = must(Paths.get(DatabaseDescriptor.getHistDir(), "writes"));
+    //public static final Hists reads = must("/logs/hists/reads");
+    //public static final Hists writes = must("/logs/hists/writes");
     //public static final Hists reads = must("/tmp/reads");
     //public static final Hists writes = must("/tmp/writes");
 
@@ -94,14 +99,14 @@ public final class Hists
     private final HistRecorder hasCompaction;
     private final HistRecorder majorityQueuing;
 
-    private Hists(String destPath) throws IOException {
-        Files.createDirectories(Paths.get(destPath));
-        overall = HistRecorder.at(Paths.get(destPath, "overall_hist.log"));
-        queueing = HistRecorder.at(Paths.get(destPath, "queueing_hist.log"));
-        processing = HistRecorder.at(Paths.get(destPath, "processing_hist.log"));
-        hasFlush = HistRecorder.at(Paths.get(destPath, "hasflush_hist.log"));
-        hasCompaction = HistRecorder.at(Paths.get(destPath, "hascompaction_hist.log"));
-        majorityQueuing = HistRecorder.at(Paths.get(destPath, "majorityqueueing_hist.log"));
+    private Hists(Path destPath) throws IOException {
+        Files.createDirectories(destPath);
+        overall = HistRecorder.at(destPath.resolve("overall_hist.log"));
+        queueing = HistRecorder.at(destPath.resolve("queueing_hist.log"));
+        processing = HistRecorder.at(destPath.resolve("processing_hist.log"));
+        hasFlush = HistRecorder.at(destPath.resolve("hasflush_hist.log"));
+        hasCompaction = HistRecorder.at(destPath.resolve("hascompaction_hist.log"));
+        majorityQueuing = HistRecorder.at(destPath.resolve("majorityqueueing_hist.log"));
 
         // add our HistRecorders to a global list so that they
         // are periodically written to disk
@@ -128,6 +133,10 @@ public final class Hists
     }
 
     private static Hists must(String destPath) {
+        return must(Paths.get(destPath));
+    }
+
+    private static Hists must(Path destPath) {
         try {
             return new Hists(destPath);
         } catch (IOException e) {

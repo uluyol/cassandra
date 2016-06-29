@@ -21,12 +21,15 @@ package org.apache.cassandra.hists;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.apache.cassandra.config.DatabaseDescriptor;
 
 public final class OpLogger
 {
@@ -35,8 +38,12 @@ public final class OpLogger
     private static Thread flusher = null;
     private static final List<OpLogger> loggers = Collections.synchronizedList(new ArrayList<>());
 
-    private static final OpLogger _flushes = new OpLogger("/cassandra_data/flush_time_log.csv");
-    private static final OpLogger _compactions = new OpLogger("/cassandra_data/compaction_time_log.csv");
+    private static final OpLogger _flushes =
+        new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "flush_time_log.csv"));
+    private static final OpLogger _compactions =
+        new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_time_log.csv"));
+    //private static final OpLogger _flushes = new OpLogger("/cassandra_data/flush_time_log.csv");
+    //private static final OpLogger _compactions = new OpLogger("/cassandra_data/compaction_time_log.csv");
     //private static final OpLogger _flushes = new OpLogger("/tmp/flush_time_log.csv");
     //private static final OpLogger _compactions = new OpLogger("/tmp/compaction_time_log.csv");
 
@@ -46,12 +53,12 @@ public final class OpLogger
     private List<StartStop> log = null;
     private OutputStream w = null;
 
-    public OpLogger(String path) {
+    public OpLogger(Path path) {
         ArrayList<StartStop> l = new ArrayList<>();
         l.ensureCapacity(LOG_CAPACITY);
         log = l;
         try {
-            w = Files.newOutputStream(Paths.get(path));
+            w = Files.newOutputStream(path);
             w.write("# log file format is below\n# start,duration\n".getBytes());
         } catch (IOException e) {
             e.printStackTrace();

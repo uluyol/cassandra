@@ -37,6 +37,10 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
+    /* Logging params */
+    public String hist_dir;
+    public String oplog_dir;
+    public String dumpcache_dir;
 
     public String cluster_name = "Test Cluster";
     public String authenticator;

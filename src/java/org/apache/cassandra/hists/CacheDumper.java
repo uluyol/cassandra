@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
@@ -30,6 +31,7 @@ import com.google.protobuf.ByteString;
 import org.apache.cassandra.cache.KeyCacheKey;
 import org.apache.cassandra.cache.PausableCache;
 import org.apache.cassandra.cache.RowCacheKey;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.service.CacheService;
 import org.apache.jasper.tagplugins.jstl.core.Out;
 
@@ -39,24 +41,27 @@ import org.apache.jasper.tagplugins.jstl.core.Out;
  */
 public final class CacheDumper
 {
-    public static final CacheDumper instance = new CacheDumper("/logs/dumpcache.fifo", "/cassandra_data/dumped_cache");
+    public static final CacheDumper instance =
+        new CacheDumper(Paths.get(DatabaseDescriptor.getDumpCacheDir(), "dumpcache.fifo"),
+                        Paths.get(DatabaseDescriptor.getDumpCacheDir(), "dumpcache.out"));
+    //public static final CacheDumper instance = new CacheDumper("/logs/dumpcache.fifo", "/cassandra_data/dumped_cache");
     //public static final CacheDumper instance = new CacheDumper("/tmp/dumpcache.fifo", "/tmp/dumped_cache");
 
     private Thread t = null;
 
-    private CacheDumper(String inPath, String outPath) {
+    private CacheDumper(Path inPath, Path outPath) {
         InputStream s = null;
         OutputStream out = null;
         try
         {
-            Process rmp = Runtime.getRuntime().exec(new String[]{"rm", "-rf", inPath});
+            Process rmp = Runtime.getRuntime().exec(new String[]{"rm", "-rf", inPath.toString()});
             rmp.waitFor();
-            Process p = Runtime.getRuntime().exec(new String[]{"mkfifo", inPath});
+            Process p = Runtime.getRuntime().exec(new String[]{"mkfifo", inPath.toString()});
             int ret = p.waitFor();
             if (ret != 0) {
                 throw new RuntimeException("unable to create fifo");
             }
-            out = Files.newOutputStream(Paths.get(outPath));
+            out = Files.newOutputStream(outPath);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -67,14 +72,14 @@ public final class CacheDumper
 
     private static class WaitThread implements Runnable {
         private final OutputStream out;
-        private final String inPath;
-        WaitThread(String inPath, OutputStream out) { this.inPath = inPath; this.out = out; }
+        private final Path inPath;
+        WaitThread(Path inPath, OutputStream out) { this.inPath = inPath; this.out = out; }
 
         public void run() {
             boolean again = true;
             while (again) {
                 try {
-                    InputStream s = Files.newInputStream(Paths.get(inPath));
+                    InputStream s = Files.newInputStream(inPath);
                     // wait for message
                     s.read();
                     again = false;
