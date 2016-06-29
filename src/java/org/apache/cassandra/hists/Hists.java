@@ -84,7 +84,7 @@ public final class Hists
         setIfEqLock.set(false);
     }
 
-    private static final long WRITE_PERIOD_SECONDS = 30;
+    private static final long WRITE_PERIOD_SECONDS = 10;
 
     // Per-Hists histograms
     private final HistRecorder overall;
