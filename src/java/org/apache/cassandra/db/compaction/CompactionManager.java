@@ -20,7 +20,6 @@ package org.apache.cassandra.db.compaction;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -53,7 +52,6 @@ import org.apache.cassandra.dht.Bounds;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.hists.Hists;
-import org.apache.cassandra.hists.OpLogger;
 import org.apache.cassandra.index.SecondaryIndexBuilder;
 import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.sstable.ISSTableScanner;
@@ -264,13 +262,11 @@ public class CompactionManager implements CompactionManagerMBean
                     logger.trace("No tasks available");
                     return;
                 }
-                Instant iStart = Instant.now();
                 long start = Hists.nowMicros();
                 Hists.compactionStart.set(start);
                 try {
                     task.execute(metrics);
                 } finally {
-                    OpLogger.compactions().record(iStart, Instant.now());
                     Hists.setIfEq(Hists.compactionEnd, Hists.nowMicros(), Hists.compactionStart, start);
                 }
             }
