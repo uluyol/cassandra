@@ -118,7 +118,7 @@ public final class OpLogger
         }
     }
 
-    private static final class StartStop {
+    static final class StartStop {
         public final Instant start;
         public final Instant stop;
 
@@ -132,7 +132,8 @@ public final class OpLogger
         }
 
         public long durationMicros() {
-            return Duration.between(start, stop).getNano() / 1000;
+            Duration d = Duration.between(start, stop);
+            return d.getSeconds() * 1000_000L + d.getNano() / 1000;
         }
     }
 }
