@@ -58,6 +58,7 @@ import org.apache.cassandra.dht.*;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.hists.Hists;
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.hists.OpLogger;
 import org.apache.cassandra.index.SecondaryIndexManager;
 import org.apache.cassandra.index.internal.CassandraIndex;
@@ -1031,7 +1032,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
 
         public void run()
         {
-            Instant flushStart = Instant.now();
+            Instant flushStart = Instant.now(NanoClock.instance);
             // mark writes older than the barrier as blocking progress, permitting them to exceed our memory limit
             // if they are stuck waiting on it, then wait for them all to complete
             writeBarrier.markBlocking();
@@ -1132,7 +1133,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             }
             // signal the post-flush we've done our work
             postFlush.latch.countDown();
-            OpLogger.flushes().record(flushStart, Instant.now());
+            OpLogger.flushes().record(flushStart, Instant.now(NanoClock.instance));
         }
 
         private void reclaim(final Memtable memtable)

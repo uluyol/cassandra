@@ -36,6 +36,7 @@ import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.xxhash.XXHashFactory;
 
 import org.apache.cassandra.config.Config;
+import org.apache.cassandra.hists.NanoClock;
 import org.xerial.snappy.SnappyInputStream;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.UnknownColumnFamilyException;
@@ -188,7 +189,7 @@ public class IncomingTcpConnection extends Thread implements Closeable
         else
             id = input.readInt();
 
-        Instant reqTime = Instant.now();
+        Instant reqTime = Instant.now(NanoClock.instance);
         MessageIn message = MessageIn.read(input, version, id, MessageIn.readTimestamp(input), reqTime);
         if (message == null)
         {

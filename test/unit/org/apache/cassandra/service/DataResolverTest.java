@@ -42,6 +42,7 @@ import org.apache.cassandra.db.marshal.AsciiType;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.partitions.*;
 import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.net.*;
 import org.apache.cassandra.schema.KeyspaceParams;
 import org.apache.cassandra.utils.ByteBufferUtil;
@@ -718,7 +719,7 @@ public class DataResolverTest
                                 MessagingService.Verb.REQUEST_RESPONSE,
                                 MessagingService.current_version,
                                 MessageIn.createTimestamp(),
-                                Instant.now());
+                                Instant.now(NanoClock.instance));
     }
 
     private RangeTombstone tombstone(Object start, Object end, long markedForDeleteAt, int localDeletionTime)

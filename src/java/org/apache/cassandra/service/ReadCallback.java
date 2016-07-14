@@ -36,6 +36,7 @@ import org.apache.cassandra.db.partitions.PartitionIterator;
 import org.apache.cassandra.exceptions.ReadFailureException;
 import org.apache.cassandra.exceptions.ReadTimeoutException;
 import org.apache.cassandra.exceptions.UnavailableException;
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.metrics.ReadRepairMetrics;
 import org.apache.cassandra.net.IAsyncCallbackWithFailure;
 import org.apache.cassandra.net.MessageIn;
@@ -195,7 +196,7 @@ public class ReadCallback implements IAsyncCallbackWithFailure<ReadResponse>
                                                            MessagingService.Verb.INTERNAL_RESPONSE,
                                                            MessagingService.current_version,
                                                            MessageIn.createTimestamp(),
-                                                           Instant.now());
+                                                           Instant.now(NanoClock.instance));
         response(message);
     }
 

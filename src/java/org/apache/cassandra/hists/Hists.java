@@ -63,14 +63,14 @@ public final class Hists
     //public static final Hists reads = must("/tmp/reads");
     //public static final Hists writes = must("/tmp/writes");
 
-    public static final Instant epoch = Instant.now();
+    public static final Instant epoch = Instant.now(NanoClock.instance);
     public static final AtomicLong flushStart = new AtomicLong(-1);
     public static final AtomicLong flushEnd = new AtomicLong(-1);
     public static final AtomicLong compactionStart = new AtomicLong(-1);
     public static final AtomicLong compactionEnd = new AtomicLong(-1);
 
     public static long nowMicros() {
-        Duration d = Duration.between(epoch, Instant.now());
+        Duration d = Duration.between(epoch, Instant.now(NanoClock.instance));
         return (d.getSeconds() * 1_000_000) + ((long)d.getNano() / 1000);
     }
 
