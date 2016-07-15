@@ -245,6 +245,7 @@ public class CompactionManager implements CompactionManagerMBean
 
         public void run()
         {
+            if (true) return;
             try
             {
                 logger.trace("Checking {}.{}", cfs.keyspace.getName(), cfs.name);
