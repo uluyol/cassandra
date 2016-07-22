@@ -1552,14 +1552,21 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
                 keyCacheRequest.incrementAndGet();
                 if (cachedEntry != null)
                 {
+                    cachedEntry = cachedEntry.clone();
                     keyCacheHit.incrementAndGet();
                     bloomFilterTracker.addTruePositive();
+                    cachedEntry.wasCached = true;
                 }
                 return cachedEntry;
             }
             else
             {
-                return keyCache.getInternal(unifiedKey);
+                RowIndexEntry t = keyCache.getInternal(unifiedKey);
+                if (t != null) {
+                    t = t.clone();
+                    t.wasCached = true;
+                }
+                return t;
             }
         }
         return null;

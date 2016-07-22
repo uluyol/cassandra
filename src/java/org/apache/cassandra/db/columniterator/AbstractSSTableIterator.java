@@ -18,13 +18,18 @@
 package org.apache.cassandra.db.columniterator;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.protobuf.ByteString;
 import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.config.ColumnDefinition;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.db.filter.ColumnFilter;
+import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.cassandra.db.rows.*;
 import org.apache.cassandra.io.sstable.format.SSTableReader;
 import org.apache.cassandra.io.sstable.CorruptSSTableException;
@@ -86,8 +91,14 @@ abstract class AbstractSSTableIterator implements SliceableUnfilteredRowIterator
                 // once we drop support for the legacy file format
                 boolean needsReader = sstable.descriptor.version.storeRows() || isForThrift || !sstable.metadata.isStaticCompactTable();
 
-                if (needSeekAtPartitionStart)
+                if (DatabaseDescriptor.shouldKeyCacheSendFakeResponse()
+                    && indexEntry.wasCached
+                    && columnFilter.getCFMetaData().ksName.equals("ycsb"))
                 {
+                    this.reader = new JunkYCSBReader(columnFilter.getCFMetaData(), key);
+                    this.staticRow = Rows.EMPTY_STATIC_ROW;
+                    this.partitionLevelDeletion = DeletionTime.LIVE;
+                } else if (needSeekAtPartitionStart) {
                     // Not indexed (or is reading static), set to the beginning of the partition and read partition level deletion there
                     if (file == null)
                         file = sstable.getFileDataInput(indexEntry.position);
@@ -129,6 +140,66 @@ abstract class AbstractSSTableIterator implements SliceableUnfilteredRowIterator
                 }
                 throw new CorruptSSTableException(e, filePath);
             }
+        }
+    }
+
+    private static Row junkStaticRow(CFMetaData md, DecoratedKey key) {
+        ColumnDefinition[] columns = new ColumnDefinition[]{
+            //ColumnDefinition.partitionKeyDef("ycsb", "userdata", "y_id", UTF8Type.instance, 0),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field0", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field1", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field2", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field3", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field4", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field5", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field6", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field7", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field8", UTF8Type.instance),
+            ColumnDefinition.regularDef("ycsb", "userdata", "field9", UTF8Type.instance)};
+        ByteBuffer[] vals = new ByteBuffer[]{
+            //key.getKey(),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("zlxcjvalsdbfwqyefbajnvaagsdkjhfbaweyfuaouyifbaslhbasdhfawyefvaskjvchaskdjhfvaskudyfvasdf00asdflhayse").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("userasdfasldfbaoyvbawe237491749286734017264082596q4376r523787347834598767867869234987632786234324342").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("igerfaiygrefaiygerefa78t932jhgkvwe43rr762qew432ygtcvw43re6fg65grftr6ht65tghytyut4ytfcvtyjfyjtfwarewa").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("kuhysafd65ds754r6u34tyfw3re47i6erf46u5iverfiew43rie3rw4i3erwii3ewri7iu565i66tyrfu6utyrftr65yf5r665tr").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("yyyyasdyyadyfaydfyasdifasdyuiyuyutiyutiyuityuiyuiyuiaefwerq2w3r42341271vyvw34et87tw4re8we3r8wreerewz").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("cvbwkjhbvkjghvkjhvkjhvkjhgvkuvuyvyuvhearfujheazjhejhblujhljhezflhjjhuerf8765476uyserasaazcjjbja3noiz").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("98798659876592540987625340975423q20978653q47098yt54t6870t654y77o87692657826598288823888833223540p982").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("01dsgf23234adsf5asdf6asd7fa8sdf9zxcva0gr31523h3q4abadsfasdfasd234gt3qadfgvgfdgasd5678901234567890123").toByteArray()),
+            ByteBuffer.wrap(ByteString.copyFromUtf8("jhkvbkjhbvugvuhasdeiyuasdfujiyhasjkbmnbzxcvjhbvwreeou8y79we4768387782q323124e1134e134r124e12e1deasdf").toByteArray())};
+
+        Row.Builder b = BTreeRow.sortedBuilder();
+        b.newRow(Clustering.EMPTY);
+        for (int i = 0; i < columns.length; i++) {
+            b.addCell(BufferCell.live(md, columns[i], 123, vals[i]));
+        }
+        return b.build();
+    }
+
+    public class JunkYCSBReader extends AbstractSSTableIterator.Reader {
+        private boolean hasNext = true;
+        private final CFMetaData md;
+        private final DecoratedKey key;
+
+        public void setForSlice(Slice s) {}
+
+        public JunkYCSBReader(CFMetaData md, DecoratedKey key) {
+            super(null, false);
+            this.md = md;
+            this.key = key;
+        }
+
+        protected boolean hasNextInternal() throws IOException {
+            if (hasNext) {
+                hasNext = false;
+                return true;
+            }
+            return false;
+        }
+
+        protected Unfiltered nextInternal() throws IOException {
+            return junkStaticRow(md, key);
         }
     }
 

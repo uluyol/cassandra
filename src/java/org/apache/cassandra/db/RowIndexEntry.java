@@ -34,11 +34,12 @@ import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.ObjectSizes;
 
-public class RowIndexEntry<T> implements IMeasurableMemory
+public class RowIndexEntry<T> implements IMeasurableMemory, Cloneable
 {
     private static final long EMPTY_SIZE = ObjectSizes.measure(new RowIndexEntry(0));
 
     public final long position;
+    public boolean wasCached = false;
 
     public RowIndexEntry(long position)
     {
@@ -71,6 +72,15 @@ public class RowIndexEntry<T> implements IMeasurableMemory
     public boolean isIndexed()
     {
         return !columnsIndex().isEmpty();
+    }
+
+    public RowIndexEntry clone()
+    {
+        try {
+            return (RowIndexEntry) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public DeletionTime deletionTime()

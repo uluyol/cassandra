@@ -1,5 +1,8 @@
 # Cassandra storage config YAML 
 
+compactions_enable: true
+key_cache_fake_response: true
+
 # Hist/Logging options
 
 hist_dir: /tmp/hists

@@ -1198,6 +1198,9 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static boolean shouldCompact() { return conf.compactions_enable; }
+    public static boolean shouldKeyCacheSendFakeResponse() { return conf.key_cache_fake_response; }
+
     public static String getHistDir() { return conf.hist_dir; }
     public static String getOpLogDir() { return conf.oplog_dir; }
     public static String getDumpCacheDir() { return conf.dumpcache_dir; }

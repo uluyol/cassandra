@@ -245,7 +245,7 @@ public class CompactionManager implements CompactionManagerMBean
 
         public void run()
         {
-            if (true) return;
+            if (!DatabaseDescriptor.shouldCompact()) return;
             try
             {
                 logger.trace("Checking {}.{}", cfs.keyspace.getName(), cfs.name);

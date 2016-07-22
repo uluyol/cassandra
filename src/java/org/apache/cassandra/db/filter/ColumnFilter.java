@@ -72,6 +72,8 @@ public class ColumnFilter
         this.subSelections = subSelections;
     }
 
+    public CFMetaData getCFMetaData() { return metadata; }
+
     /**
      * A selection that includes all columns (and their values).
      */
