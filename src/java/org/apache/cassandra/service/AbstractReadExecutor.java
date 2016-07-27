@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.concurrent.StageManager;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.ReadRepairDecision;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.ConsistencyLevel;
@@ -82,12 +83,14 @@ public abstract class AbstractReadExecutor
 
     protected void makeDataRequests(Iterable<InetAddress> endpoints)
     {
+        //System.out.println("making a data request for " + endpoints.toString());
         makeRequests(command, endpoints);
 
     }
 
     protected void makeDigestRequests(Iterable<InetAddress> endpoints)
     {
+        //System.out.println("making a digest request for " + endpoints.toString());
         makeRequests(command.copy().setIsDigestQuery(true), endpoints);
     }
 
@@ -166,6 +169,10 @@ public abstract class AbstractReadExecutor
 
         ColumnFamilyStore cfs = keyspace.getColumnFamilyStore(command.metadata().cfId);
         SpeculativeRetryParam retry = cfs.metadata.params.speculativeRetry;
+
+        if (DatabaseDescriptor.useHedgedRequests()) {
+            return new HedgedReadExecutor(keyspace, command, consistencyLevel, allReplicas);
+        }
 
         // Speculative retry is disabled *OR* there are simply no extra replicas to speculate.
         if (retry.equals(SpeculativeRetryParam.NONE) || consistencyLevel.blockFor(keyspace) == allReplicas.size())
@@ -298,6 +305,23 @@ public abstract class AbstractReadExecutor
                  ? targetReplicas
                  : targetReplicas.subList(0, targetReplicas.size() - 1);
         }
+    }
+
+    private static class HedgedReadExecutor extends AbstractReadExecutor {
+        HedgedReadExecutor(Keyspace ks, ReadCommand cmd, ConsistencyLevel level, List<InetAddress> replicas) {
+            super(ks, cmd, level, replicas);
+        }
+
+        @Override
+        public void maybeTryAdditionalReplicas() {}
+        @Override
+        public Collection<InetAddress> getContactedReplicas() { return targetReplicas; }
+
+        @Override
+        public void executeAsync() {
+            makeDataRequests(targetReplicas);
+        }
+
     }
 
     private static class AlwaysSpeculatingReadExecutor extends AbstractReadExecutor

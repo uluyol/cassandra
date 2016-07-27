@@ -39,6 +39,7 @@ public class Config
 
     public Boolean compactions_enable;
     public Boolean key_cache_fake_response;
+    public Boolean use_hedged_requests;
 
     /* Logging params */
     public String hist_dir;

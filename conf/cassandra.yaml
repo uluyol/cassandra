@@ -2,6 +2,7 @@
 
 compactions_enable: true
 key_cache_fake_response: false
+use_hedged_requests: true
 
 # Hist/Logging options
 

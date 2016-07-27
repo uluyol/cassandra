@@ -1200,6 +1200,7 @@ public class DatabaseDescriptor
 
     public static boolean shouldCompact() { return conf.compactions_enable; }
     public static boolean shouldKeyCacheSendFakeResponse() { return conf.key_cache_fake_response; }
+    public static boolean useHedgedRequests() { return conf.use_hedged_requests; }
 
     public static String getHistDir() { return conf.hist_dir; }
     public static String getOpLogDir() { return conf.oplog_dir; }
