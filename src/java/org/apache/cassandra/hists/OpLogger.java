@@ -111,6 +111,7 @@ public final class OpLogger
                     w.write(out.getBytes());
                 }
                 w.flush();
+                log.clear();
             }
         } catch (IOException e) {
             e.printStackTrace();
