@@ -162,6 +162,12 @@ public class ReadCallback implements IAsyncCallbackWithFailure<ReadResponse>
             // the original resolve that get() kicks off as soon as the condition is signaled
             if (blockfor < endpoints.size() && n == endpoints.size())
             {
+                if (true) {
+                    // we don't care about read-repair for our experiments, but we need
+                    // to disable it for our experiments since we are faking values on
+                    // a key-cache hit
+                    return;
+                }
                 TraceState traceState = Tracing.instance.get();
                 if (traceState != null)
                     traceState.trace("Initiating read-repair");
