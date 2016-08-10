@@ -154,19 +154,22 @@ public final class Hists
         if (qt >= tt/2) {
             majorityQueuing.recorder.recordValue(tt);
         }
-        if (hasOverlap(meta, flushStart, flushEnd)) {
+        if (hasOverlap(meta.getStart(), meta.getEnd(), flushStart, flushEnd)) {
             hasFlush.recorder.recordValue(tt);
         }
-        if (hasOverlap(meta, compactionStart, compactionEnd)) {
+        if (hasOverlap(meta.getStart(), meta.getEnd(), compactionStart, compactionEnd)) {
             hasCompaction.recorder.recordValue(tt);
         }
     }
 
-    private static boolean hasOverlap(MessageIn.MessageMeta meta, AtomicLong start, AtomicLong end) {
+    private static boolean hasOverlap(Instant msgStart, Instant msgEnd, AtomicLong start, AtomicLong end) {
         long startMicros = start.get();
         long endMicros = end.get();
-        return toMicros(meta.getStart()) < endMicros || (endMicros < startMicros && startMicros < toMicros(meta.getEnd()));
+        return toMicros(msgStart) < endMicros || (endMicros < startMicros && startMicros < toMicros(msgEnd));
     }
+
+    public static boolean overlapCompaction(Instant start, Instant end) { return hasOverlap(start, end, compactionStart, compactionEnd); }
+    public static boolean overlapFlush(Instant start, Instant end) { return hasOverlap(start, end, flushStart, flushEnd); }
 
     private static final class HistRecorder {
         final Recorder recorder; // recorder stores actual latency histogram, is thread-safe

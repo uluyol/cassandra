@@ -43,7 +43,11 @@ public class NanoClock extends Clock {
 
     @Override
     public Instant instant() {
-        long n = System.nanoTime() - NANOS_START + EPOCH_NANOS;
+        return nanoToInstant(System.nanoTime());
+    }
+
+    public Instant nanoToInstant(long nano) {
+        long n = nano - NANOS_START + EPOCH_NANOS;
         return Instant.ofEpochSecond(n / 1000_000_000, n % 1000_000_000);
     }
 }

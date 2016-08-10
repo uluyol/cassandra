@@ -19,6 +19,7 @@ package org.apache.cassandra.db;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.*;
 
 import com.google.common.collect.Lists;
@@ -34,6 +35,8 @@ import org.apache.cassandra.db.rows.*;
 import org.apache.cassandra.db.transform.StoppingTransformation;
 import org.apache.cassandra.db.transform.Transformation;
 import org.apache.cassandra.dht.AbstractBounds;
+import org.apache.cassandra.hists.Hists;
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.index.Index;
 import org.apache.cassandra.index.IndexNotAvailableException;
 import org.apache.cassandra.io.IVersionedSerializer;
@@ -455,7 +458,8 @@ public abstract class ReadCommand extends MonitorableImpl implements ReadQuery
             @Override
             public void onClose()
             {
-                recordLatency(metric, System.nanoTime() - startTimeNanos);
+                long end = System.nanoTime();
+                recordLatency(metric, end - startTimeNanos);
 
                 metric.tombstoneScannedHistogram.update(tombstones);
                 metric.liveScannedHistogram.update(liveRows);
@@ -469,6 +473,14 @@ public abstract class ReadCommand extends MonitorableImpl implements ReadQuery
                 }
 
                 Tracing.trace("Read {} live and {} tombstone cells{}", liveRows, tombstones, (warnTombstones ? " (see tombstone_warn_threshold)" : ""));
+                Instant istart = NanoClock.instance.nanoToInstant(startTimeNanos);
+                Instant iend = NanoClock.instance.nanoToInstant(end);
+                if (Hists.overlapFlush(istart, iend)) {
+                    Tracing.trace("Flush was executing");
+                }
+                if (Hists.overlapCompaction(istart, iend)) {
+                    Tracing.trace("Compaction was executing");
+                }
             }
         };
 
