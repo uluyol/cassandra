@@ -19,12 +19,17 @@ package org.apache.cassandra.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.*;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -56,7 +61,11 @@ import org.apache.cassandra.service.CacheService;
 import org.apache.cassandra.thrift.ThriftServer;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.memory.*;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 public class DatabaseDescriptor
 {
@@ -104,6 +113,9 @@ public class DatabaseDescriptor
     private static Comparator<InetAddress> localComparator;
     private static EncryptionContext encryptionContext;
 
+    private static int rateLimitWriteBatchSize;
+    private static int rateLimitMaxIOPS;
+
     public static void forceStaticInitialization() {}
     static
     {
@@ -120,11 +132,66 @@ public class DatabaseDescriptor
             {
                 applyConfig(loadConfig());
             }
+            MutableInt writeBatchSize = new MutableInt();
+            MutableInt maxIOPS = new MutableInt();
+            computeRateLimitParams(writeBatchSize, maxIOPS);
+            rateLimitWriteBatchSize = writeBatchSize.intValue();
+            rateLimitMaxIOPS = maxIOPS.intValue();
         }
         catch (Exception e)
         {
             throw new ExceptionInInitializerError(e);
         }
+    }
+
+    public static void computeRateLimitParams(MutableInt batchSize, MutableInt iops) throws Exception {
+        String[] dataFilePaths = getAllDataFileLocations();
+        String os = "";
+        if (SystemUtils.IS_OS_WINDOWS) {
+            os = "windows";
+        } else if (SystemUtils.IS_OS_MAC_OSX) {
+            os = "darwin";
+        } else if (SystemUtils.IS_OS_LINUX) {
+            os = "linux";
+        } else {
+            throw new Exception("Only support Linux, Darwin, and Windows");
+        }
+        InputStream binary =
+            conf.getClass().getResource("/org/apache/cassandra/ratelimit/detectbatch." + os).openStream();
+        Path tmp = Files.createTempFile("cassandra.detectb", null,
+                                        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxrwxr-x")));
+        Files.delete(tmp);
+        Files.copy(binary, tmp);
+        Files.setPosixFilePermissions(tmp, ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE,
+                                                           PosixFilePermission.GROUP_EXECUTE,
+                                                           PosixFilePermission.OTHERS_EXECUTE));
+        binary.close();
+        Runtime rt = Runtime.getRuntime();
+        int bs = Integer.MAX_VALUE;
+        int mops = 0;
+        for (String p : dataFilePaths) {
+            if (!Files.exists(Paths.get(p))) {
+                Files.createDirectories(Paths.get(p));
+            }
+            Process proc = rt.exec(new String[]{tmp.toString(), p});
+            InputStream outst = proc.getInputStream();
+            String out = StringUtils.strip(IOUtils.toString(outst, "utf-8"));
+            String err = StringUtils.strip(IOUtils.toString(proc.getErrorStream(), "utf-8"));
+            proc.waitFor();
+            int ret = proc.exitValue();
+            if (ret != 0) {
+                throw new Exception("Batch size detection failed: " + err);
+            }
+            String[] cols = out.split(" ");
+            bs = Integer.min(bs, Integer.parseInt(cols[0]));
+            double diops = Double.parseDouble(cols[1]);
+            mops += (int)diops;
+        }
+        batchSize.setValue(bs);
+        iops.setValue(mops);
+        logger.info("Write Batch Size: " + bs);
+        logger.info("Random Write IOPS: " + iops);
+        Files.delete(tmp);
     }
 
     @VisibleForTesting
@@ -1197,6 +1264,9 @@ public class DatabaseDescriptor
     {
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
+
+    public static int getRateLimitWriteBatchSize() { return rateLimitWriteBatchSize; }
+    public static int getRateLimitMaxIOPS() { return rateLimitMaxIOPS; }
 
     public static boolean shouldCompact() { return conf.compactions_enable; }
     public static boolean shouldKeyCacheSendFakeResponse() { return conf.key_cache_fake_response; }
