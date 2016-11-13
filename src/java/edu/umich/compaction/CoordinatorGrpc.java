@@ -28,6 +28,15 @@ public class CoordinatorGrpc {
 
   // Static method descriptors that strictly reflect the proto.
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static final io.grpc.MethodDescriptor<edu.umich.compaction.Coordination.RegisterReq,
+      edu.umich.compaction.Coordination.Empty> METHOD_REGISTER =
+      io.grpc.MethodDescriptor.create(
+          io.grpc.MethodDescriptor.MethodType.UNARY,
+          generateFullMethodName(
+              "compaction.Coordinator", "Register"),
+          io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.RegisterReq.getDefaultInstance()),
+          io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.Empty.getDefaultInstance()));
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   public static final io.grpc.MethodDescriptor<edu.umich.compaction.Coordination.WatchReq,
       edu.umich.compaction.Coordination.ExecCompaction> METHOD_WATCH_COMPACTIONS =
       io.grpc.MethodDescriptor.create(
@@ -84,6 +93,13 @@ public class CoordinatorGrpc {
 
     /**
      */
+    public void register(edu.umich.compaction.Coordination.RegisterReq request,
+        io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty> responseObserver) {
+      asyncUnimplementedUnaryCall(METHOD_REGISTER, responseObserver);
+    }
+
+    /**
+     */
     public void watchCompactions(edu.umich.compaction.Coordination.WatchReq request,
         io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.ExecCompaction> responseObserver) {
       asyncUnimplementedUnaryCall(METHOD_WATCH_COMPACTIONS, responseObserver);
@@ -105,6 +121,13 @@ public class CoordinatorGrpc {
 
     @java.lang.Override public io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+          .addMethod(
+            METHOD_REGISTER,
+            asyncUnaryCall(
+              new MethodHandlers<
+                edu.umich.compaction.Coordination.RegisterReq,
+                edu.umich.compaction.Coordination.Empty>(
+                  this, METHODID_REGISTER)))
           .addMethod(
             METHOD_WATCH_COMPACTIONS,
             asyncServerStreamingCall(
@@ -146,6 +169,14 @@ public class CoordinatorGrpc {
     protected CoordinatorStub build(io.grpc.Channel channel,
         io.grpc.CallOptions callOptions) {
       return new CoordinatorStub(channel, callOptions);
+    }
+
+    /**
+     */
+    public void register(edu.umich.compaction.Coordination.RegisterReq request,
+        io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(METHOD_REGISTER, getCallOptions()), request, responseObserver);
     }
 
     /**
@@ -193,6 +224,13 @@ public class CoordinatorGrpc {
 
     /**
      */
+    public edu.umich.compaction.Coordination.Empty register(edu.umich.compaction.Coordination.RegisterReq request) {
+      return blockingUnaryCall(
+          getChannel(), METHOD_REGISTER, getCallOptions(), request);
+    }
+
+    /**
+     */
     public java.util.Iterator<edu.umich.compaction.Coordination.ExecCompaction> watchCompactions(
         edu.umich.compaction.Coordination.WatchReq request) {
       return blockingServerStreamingCall(
@@ -234,6 +272,14 @@ public class CoordinatorGrpc {
 
     /**
      */
+    public com.google.common.util.concurrent.ListenableFuture<edu.umich.compaction.Coordination.Empty> register(
+        edu.umich.compaction.Coordination.RegisterReq request) {
+      return futureUnaryCall(
+          getChannel().newCall(METHOD_REGISTER, getCallOptions()), request);
+    }
+
+    /**
+     */
     public com.google.common.util.concurrent.ListenableFuture<edu.umich.compaction.Coordination.Empty> updateLoad(
         edu.umich.compaction.Coordination.UpdateLoadReq request) {
       return futureUnaryCall(
@@ -249,9 +295,10 @@ public class CoordinatorGrpc {
     }
   }
 
-  private static final int METHODID_WATCH_COMPACTIONS = 0;
-  private static final int METHODID_UPDATE_LOAD = 1;
-  private static final int METHODID_QUEUE_COMPACTION = 2;
+  private static final int METHODID_REGISTER = 0;
+  private static final int METHODID_WATCH_COMPACTIONS = 1;
+  private static final int METHODID_UPDATE_LOAD = 2;
+  private static final int METHODID_QUEUE_COMPACTION = 3;
 
   private static class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -270,6 +317,10 @@ public class CoordinatorGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
+        case METHODID_REGISTER:
+          serviceImpl.register((edu.umich.compaction.Coordination.RegisterReq) request,
+              (io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty>) responseObserver);
+          break;
         case METHODID_WATCH_COMPACTIONS:
           serviceImpl.watchCompactions((edu.umich.compaction.Coordination.WatchReq) request,
               (io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.ExecCompaction>) responseObserver);
@@ -300,6 +351,7 @@ public class CoordinatorGrpc {
 
   public static io.grpc.ServiceDescriptor getServiceDescriptor() {
     return new io.grpc.ServiceDescriptor(SERVICE_NAME,
+        METHOD_REGISTER,
         METHOD_WATCH_COMPACTIONS,
         METHOD_UPDATE_LOAD,
         METHOD_QUEUE_COMPACTION);

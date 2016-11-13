@@ -1,5 +1,6 @@
 # Cassandra storage config YAML 
 
+compactions_coordinator: "127.0.0.1"
 compactions_enable: true
 key_cache_fake_response: true
 use_hedged_requests: true

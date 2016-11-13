@@ -37,6 +37,7 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
+    public String compactions_coordinator;
     public Boolean compactions_enable;
     public Boolean key_cache_fake_response;
     public Boolean use_hedged_requests;

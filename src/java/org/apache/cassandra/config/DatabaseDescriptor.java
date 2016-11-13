@@ -1268,6 +1268,7 @@ public class DatabaseDescriptor
     public static int getRateLimitWriteBatchSize() { return rateLimitWriteBatchSize; }
     public static int getRateLimitMaxIOPS() { return rateLimitMaxIOPS; }
 
+    public static String compactionCoordinator() { return conf.compactions_coordinator; }
     public static boolean shouldCompact() { return conf.compactions_enable; }
     public static boolean shouldKeyCacheSendFakeResponse() { return conf.key_cache_fake_response; }
     public static boolean useHedgedRequests() { return conf.use_hedged_requests; }

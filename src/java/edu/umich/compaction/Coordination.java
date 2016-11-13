@@ -14,6 +14,635 @@ public final class Coordination {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface RegisterReqOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:compaction.RegisterReq)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    java.lang.String getServerIp();
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getServerIpBytes();
+
+    /**
+     * <code>optional int32 write_batch_size = 2;</code>
+     */
+    int getWriteBatchSize();
+
+    /**
+     * <code>optional int32 max_iops = 3;</code>
+     */
+    int getMaxIops();
+  }
+  /**
+   * Protobuf type {@code compaction.RegisterReq}
+   */
+  public  static final class RegisterReq extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:compaction.RegisterReq)
+      RegisterReqOrBuilder {
+    // Use RegisterReq.newBuilder() to construct.
+    private RegisterReq(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private RegisterReq() {
+      serverIp_ = "";
+      writeBatchSize_ = 0;
+      maxIops_ = 0;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private RegisterReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              serverIp_ = s;
+              break;
+            }
+            case 16: {
+
+              writeBatchSize_ = input.readInt32();
+              break;
+            }
+            case 24: {
+
+              maxIops_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.umich.compaction.Coordination.internal_static_compaction_RegisterReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.umich.compaction.Coordination.internal_static_compaction_RegisterReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.umich.compaction.Coordination.RegisterReq.class, edu.umich.compaction.Coordination.RegisterReq.Builder.class);
+    }
+
+    public static final int SERVER_IP_FIELD_NUMBER = 1;
+    private volatile java.lang.Object serverIp_;
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    public java.lang.String getServerIp() {
+      java.lang.Object ref = serverIp_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        serverIp_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getServerIpBytes() {
+      java.lang.Object ref = serverIp_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        serverIp_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int WRITE_BATCH_SIZE_FIELD_NUMBER = 2;
+    private int writeBatchSize_;
+    /**
+     * <code>optional int32 write_batch_size = 2;</code>
+     */
+    public int getWriteBatchSize() {
+      return writeBatchSize_;
+    }
+
+    public static final int MAX_IOPS_FIELD_NUMBER = 3;
+    private int maxIops_;
+    /**
+     * <code>optional int32 max_iops = 3;</code>
+     */
+    public int getMaxIops() {
+      return maxIops_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getServerIpBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, serverIp_);
+      }
+      if (writeBatchSize_ != 0) {
+        output.writeInt32(2, writeBatchSize_);
+      }
+      if (maxIops_ != 0) {
+        output.writeInt32(3, maxIops_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getServerIpBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, serverIp_);
+      }
+      if (writeBatchSize_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, writeBatchSize_);
+      }
+      if (maxIops_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, maxIops_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof edu.umich.compaction.Coordination.RegisterReq)) {
+        return super.equals(obj);
+      }
+      edu.umich.compaction.Coordination.RegisterReq other = (edu.umich.compaction.Coordination.RegisterReq) obj;
+
+      boolean result = true;
+      result = result && getServerIp()
+          .equals(other.getServerIp());
+      result = result && (getWriteBatchSize()
+          == other.getWriteBatchSize());
+      result = result && (getMaxIops()
+          == other.getMaxIops());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + SERVER_IP_FIELD_NUMBER;
+      hash = (53 * hash) + getServerIp().hashCode();
+      hash = (37 * hash) + WRITE_BATCH_SIZE_FIELD_NUMBER;
+      hash = (53 * hash) + getWriteBatchSize();
+      hash = (37 * hash) + MAX_IOPS_FIELD_NUMBER;
+      hash = (53 * hash) + getMaxIops();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.umich.compaction.Coordination.RegisterReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(edu.umich.compaction.Coordination.RegisterReq prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code compaction.RegisterReq}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:compaction.RegisterReq)
+        edu.umich.compaction.Coordination.RegisterReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.umich.compaction.Coordination.internal_static_compaction_RegisterReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.umich.compaction.Coordination.internal_static_compaction_RegisterReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.umich.compaction.Coordination.RegisterReq.class, edu.umich.compaction.Coordination.RegisterReq.Builder.class);
+      }
+
+      // Construct using edu.umich.compaction.Coordination.RegisterReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        serverIp_ = "";
+
+        writeBatchSize_ = 0;
+
+        maxIops_ = 0;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.umich.compaction.Coordination.internal_static_compaction_RegisterReq_descriptor;
+      }
+
+      public edu.umich.compaction.Coordination.RegisterReq getDefaultInstanceForType() {
+        return edu.umich.compaction.Coordination.RegisterReq.getDefaultInstance();
+      }
+
+      public edu.umich.compaction.Coordination.RegisterReq build() {
+        edu.umich.compaction.Coordination.RegisterReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public edu.umich.compaction.Coordination.RegisterReq buildPartial() {
+        edu.umich.compaction.Coordination.RegisterReq result = new edu.umich.compaction.Coordination.RegisterReq(this);
+        result.serverIp_ = serverIp_;
+        result.writeBatchSize_ = writeBatchSize_;
+        result.maxIops_ = maxIops_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.umich.compaction.Coordination.RegisterReq) {
+          return mergeFrom((edu.umich.compaction.Coordination.RegisterReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.umich.compaction.Coordination.RegisterReq other) {
+        if (other == edu.umich.compaction.Coordination.RegisterReq.getDefaultInstance()) return this;
+        if (!other.getServerIp().isEmpty()) {
+          serverIp_ = other.serverIp_;
+          onChanged();
+        }
+        if (other.getWriteBatchSize() != 0) {
+          setWriteBatchSize(other.getWriteBatchSize());
+        }
+        if (other.getMaxIops() != 0) {
+          setMaxIops(other.getMaxIops());
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.umich.compaction.Coordination.RegisterReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.umich.compaction.Coordination.RegisterReq) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private java.lang.Object serverIp_ = "";
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public java.lang.String getServerIp() {
+        java.lang.Object ref = serverIp_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          serverIp_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getServerIpBytes() {
+        java.lang.Object ref = serverIp_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          serverIp_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder setServerIp(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder clearServerIp() {
+        
+        serverIp_ = getDefaultInstance().getServerIp();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder setServerIpBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int writeBatchSize_ ;
+      /**
+       * <code>optional int32 write_batch_size = 2;</code>
+       */
+      public int getWriteBatchSize() {
+        return writeBatchSize_;
+      }
+      /**
+       * <code>optional int32 write_batch_size = 2;</code>
+       */
+      public Builder setWriteBatchSize(int value) {
+        
+        writeBatchSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 write_batch_size = 2;</code>
+       */
+      public Builder clearWriteBatchSize() {
+        
+        writeBatchSize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int maxIops_ ;
+      /**
+       * <code>optional int32 max_iops = 3;</code>
+       */
+      public int getMaxIops() {
+        return maxIops_;
+      }
+      /**
+       * <code>optional int32 max_iops = 3;</code>
+       */
+      public Builder setMaxIops(int value) {
+        
+        maxIops_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 max_iops = 3;</code>
+       */
+      public Builder clearMaxIops() {
+        
+        maxIops_ = 0;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:compaction.RegisterReq)
+    }
+
+    // @@protoc_insertion_point(class_scope:compaction.RegisterReq)
+    private static final edu.umich.compaction.Coordination.RegisterReq DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new edu.umich.compaction.Coordination.RegisterReq();
+    }
+
+    public static edu.umich.compaction.Coordination.RegisterReq getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<RegisterReq>
+        PARSER = new com.google.protobuf.AbstractParser<RegisterReq>() {
+      public RegisterReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new RegisterReq(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<RegisterReq> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RegisterReq> getParserForType() {
+      return PARSER;
+    }
+
+    public edu.umich.compaction.Coordination.RegisterReq getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface WatchReqOrBuilder extends
       // @@protoc_insertion_point(interface_extends:compaction.WatchReq)
       com.google.protobuf.MessageOrBuilder {
@@ -520,6 +1149,16 @@ public final class Coordination {
   public interface ExecCompactionOrBuilder extends
       // @@protoc_insertion_point(interface_extends:compaction.ExecCompaction)
       com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional fixed64 compaction_id = 1;</code>
+     */
+    long getCompactionId();
+
+    /**
+     * <code>optional int32 iops_limit = 2;</code>
+     */
+    int getIopsLimit();
   }
   /**
    * Protobuf type {@code compaction.ExecCompaction}
@@ -533,6 +1172,8 @@ public final class Coordination {
       super(builder);
     }
     private ExecCompaction() {
+      compactionId_ = 0L;
+      iopsLimit_ = 0;
     }
 
     @java.lang.Override
@@ -545,6 +1186,7 @@ public final class Coordination {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      int mutable_bitField0_ = 0;
       try {
         boolean done = false;
         while (!done) {
@@ -557,6 +1199,16 @@ public final class Coordination {
               if (!input.skipField(tag)) {
                 done = true;
               }
+              break;
+            }
+            case 9: {
+
+              compactionId_ = input.readFixed64();
+              break;
+            }
+            case 16: {
+
+              iopsLimit_ = input.readInt32();
               break;
             }
           }
@@ -582,6 +1234,24 @@ public final class Coordination {
               edu.umich.compaction.Coordination.ExecCompaction.class, edu.umich.compaction.Coordination.ExecCompaction.Builder.class);
     }
 
+    public static final int COMPACTION_ID_FIELD_NUMBER = 1;
+    private long compactionId_;
+    /**
+     * <code>optional fixed64 compaction_id = 1;</code>
+     */
+    public long getCompactionId() {
+      return compactionId_;
+    }
+
+    public static final int IOPS_LIMIT_FIELD_NUMBER = 2;
+    private int iopsLimit_;
+    /**
+     * <code>optional int32 iops_limit = 2;</code>
+     */
+    public int getIopsLimit() {
+      return iopsLimit_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -594,6 +1264,12 @@ public final class Coordination {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (compactionId_ != 0L) {
+        output.writeFixed64(1, compactionId_);
+      }
+      if (iopsLimit_ != 0) {
+        output.writeInt32(2, iopsLimit_);
+      }
     }
 
     public int getSerializedSize() {
@@ -601,6 +1277,14 @@ public final class Coordination {
       if (size != -1) return size;
 
       size = 0;
+      if (compactionId_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeFixed64Size(1, compactionId_);
+      }
+      if (iopsLimit_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, iopsLimit_);
+      }
       memoizedSize = size;
       return size;
     }
@@ -617,6 +1301,10 @@ public final class Coordination {
       edu.umich.compaction.Coordination.ExecCompaction other = (edu.umich.compaction.Coordination.ExecCompaction) obj;
 
       boolean result = true;
+      result = result && (getCompactionId()
+          == other.getCompactionId());
+      result = result && (getIopsLimit()
+          == other.getIopsLimit());
       return result;
     }
 
@@ -627,6 +1315,11 @@ public final class Coordination {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + COMPACTION_ID_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getCompactionId());
+      hash = (37 * hash) + IOPS_LIMIT_FIELD_NUMBER;
+      hash = (53 * hash) + getIopsLimit();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -745,6 +1438,10 @@ public final class Coordination {
       }
       public Builder clear() {
         super.clear();
+        compactionId_ = 0L;
+
+        iopsLimit_ = 0;
+
         return this;
       }
 
@@ -767,6 +1464,8 @@ public final class Coordination {
 
       public edu.umich.compaction.Coordination.ExecCompaction buildPartial() {
         edu.umich.compaction.Coordination.ExecCompaction result = new edu.umich.compaction.Coordination.ExecCompaction(this);
+        result.compactionId_ = compactionId_;
+        result.iopsLimit_ = iopsLimit_;
         onBuilt();
         return result;
       }
@@ -808,6 +1507,12 @@ public final class Coordination {
 
       public Builder mergeFrom(edu.umich.compaction.Coordination.ExecCompaction other) {
         if (other == edu.umich.compaction.Coordination.ExecCompaction.getDefaultInstance()) return this;
+        if (other.getCompactionId() != 0L) {
+          setCompactionId(other.getCompactionId());
+        }
+        if (other.getIopsLimit() != 0) {
+          setIopsLimit(other.getIopsLimit());
+        }
         onChanged();
         return this;
       }
@@ -831,6 +1536,58 @@ public final class Coordination {
             mergeFrom(parsedMessage);
           }
         }
+        return this;
+      }
+
+      private long compactionId_ ;
+      /**
+       * <code>optional fixed64 compaction_id = 1;</code>
+       */
+      public long getCompactionId() {
+        return compactionId_;
+      }
+      /**
+       * <code>optional fixed64 compaction_id = 1;</code>
+       */
+      public Builder setCompactionId(long value) {
+        
+        compactionId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional fixed64 compaction_id = 1;</code>
+       */
+      public Builder clearCompactionId() {
+        
+        compactionId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private int iopsLimit_ ;
+      /**
+       * <code>optional int32 iops_limit = 2;</code>
+       */
+      public int getIopsLimit() {
+        return iopsLimit_;
+      }
+      /**
+       * <code>optional int32 iops_limit = 2;</code>
+       */
+      public Builder setIopsLimit(int value) {
+        
+        iopsLimit_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 iops_limit = 2;</code>
+       */
+      public Builder clearIopsLimit() {
+        
+        iopsLimit_ = 0;
+        onChanged();
         return this;
       }
       public final Builder setUnknownFields(
@@ -885,6 +1642,16 @@ public final class Coordination {
   public interface UpdateLoadReqOrBuilder extends
       // @@protoc_insertion_point(interface_extends:compaction.UpdateLoadReq)
       com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional int32 read_iops = 1;</code>
+     */
+    int getReadIops();
+
+    /**
+     * <code>optional int32 write_iops = 2;</code>
+     */
+    int getWriteIops();
   }
   /**
    * Protobuf type {@code compaction.UpdateLoadReq}
@@ -898,6 +1665,8 @@ public final class Coordination {
       super(builder);
     }
     private UpdateLoadReq() {
+      readIops_ = 0;
+      writeIops_ = 0;
     }
 
     @java.lang.Override
@@ -910,6 +1679,7 @@ public final class Coordination {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      int mutable_bitField0_ = 0;
       try {
         boolean done = false;
         while (!done) {
@@ -922,6 +1692,16 @@ public final class Coordination {
               if (!input.skipField(tag)) {
                 done = true;
               }
+              break;
+            }
+            case 8: {
+
+              readIops_ = input.readInt32();
+              break;
+            }
+            case 16: {
+
+              writeIops_ = input.readInt32();
               break;
             }
           }
@@ -947,6 +1727,24 @@ public final class Coordination {
               edu.umich.compaction.Coordination.UpdateLoadReq.class, edu.umich.compaction.Coordination.UpdateLoadReq.Builder.class);
     }
 
+    public static final int READ_IOPS_FIELD_NUMBER = 1;
+    private int readIops_;
+    /**
+     * <code>optional int32 read_iops = 1;</code>
+     */
+    public int getReadIops() {
+      return readIops_;
+    }
+
+    public static final int WRITE_IOPS_FIELD_NUMBER = 2;
+    private int writeIops_;
+    /**
+     * <code>optional int32 write_iops = 2;</code>
+     */
+    public int getWriteIops() {
+      return writeIops_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -959,6 +1757,12 @@ public final class Coordination {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (readIops_ != 0) {
+        output.writeInt32(1, readIops_);
+      }
+      if (writeIops_ != 0) {
+        output.writeInt32(2, writeIops_);
+      }
     }
 
     public int getSerializedSize() {
@@ -966,6 +1770,14 @@ public final class Coordination {
       if (size != -1) return size;
 
       size = 0;
+      if (readIops_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, readIops_);
+      }
+      if (writeIops_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, writeIops_);
+      }
       memoizedSize = size;
       return size;
     }
@@ -982,6 +1794,10 @@ public final class Coordination {
       edu.umich.compaction.Coordination.UpdateLoadReq other = (edu.umich.compaction.Coordination.UpdateLoadReq) obj;
 
       boolean result = true;
+      result = result && (getReadIops()
+          == other.getReadIops());
+      result = result && (getWriteIops()
+          == other.getWriteIops());
       return result;
     }
 
@@ -992,6 +1808,10 @@ public final class Coordination {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + READ_IOPS_FIELD_NUMBER;
+      hash = (53 * hash) + getReadIops();
+      hash = (37 * hash) + WRITE_IOPS_FIELD_NUMBER;
+      hash = (53 * hash) + getWriteIops();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1110,6 +1930,10 @@ public final class Coordination {
       }
       public Builder clear() {
         super.clear();
+        readIops_ = 0;
+
+        writeIops_ = 0;
+
         return this;
       }
 
@@ -1132,6 +1956,8 @@ public final class Coordination {
 
       public edu.umich.compaction.Coordination.UpdateLoadReq buildPartial() {
         edu.umich.compaction.Coordination.UpdateLoadReq result = new edu.umich.compaction.Coordination.UpdateLoadReq(this);
+        result.readIops_ = readIops_;
+        result.writeIops_ = writeIops_;
         onBuilt();
         return result;
       }
@@ -1173,6 +1999,12 @@ public final class Coordination {
 
       public Builder mergeFrom(edu.umich.compaction.Coordination.UpdateLoadReq other) {
         if (other == edu.umich.compaction.Coordination.UpdateLoadReq.getDefaultInstance()) return this;
+        if (other.getReadIops() != 0) {
+          setReadIops(other.getReadIops());
+        }
+        if (other.getWriteIops() != 0) {
+          setWriteIops(other.getWriteIops());
+        }
         onChanged();
         return this;
       }
@@ -1196,6 +2028,58 @@ public final class Coordination {
             mergeFrom(parsedMessage);
           }
         }
+        return this;
+      }
+
+      private int readIops_ ;
+      /**
+       * <code>optional int32 read_iops = 1;</code>
+       */
+      public int getReadIops() {
+        return readIops_;
+      }
+      /**
+       * <code>optional int32 read_iops = 1;</code>
+       */
+      public Builder setReadIops(int value) {
+        
+        readIops_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 read_iops = 1;</code>
+       */
+      public Builder clearReadIops() {
+        
+        readIops_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int writeIops_ ;
+      /**
+       * <code>optional int32 write_iops = 2;</code>
+       */
+      public int getWriteIops() {
+        return writeIops_;
+      }
+      /**
+       * <code>optional int32 write_iops = 2;</code>
+       */
+      public Builder setWriteIops(int value) {
+        
+        writeIops_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 write_iops = 2;</code>
+       */
+      public Builder clearWriteIops() {
+        
+        writeIops_ = 0;
+        onChanged();
         return this;
       }
       public final Builder setUnknownFields(
@@ -1262,9 +2146,24 @@ public final class Coordination {
         getServerIpBytes();
 
     /**
-     * <code>optional int64 compaction_id = 2;</code>
+     * <code>optional fixed64 compaction_id = 2;</code>
      */
     long getCompactionId();
+
+    /**
+     * <code>optional int64 expected_size = 3;</code>
+     */
+    long getExpectedSize();
+
+    /**
+     * <code>optional int64 start_size = 4;</code>
+     */
+    long getStartSize();
+
+    /**
+     * <code>optional int64 expected_table_count = 5;</code>
+     */
+    long getExpectedTableCount();
   }
   /**
    * Protobuf type {@code compaction.QueueCompactionReq}
@@ -1280,6 +2179,9 @@ public final class Coordination {
     private QueueCompactionReq() {
       serverIp_ = "";
       compactionId_ = 0L;
+      expectedSize_ = 0L;
+      startSize_ = 0L;
+      expectedTableCount_ = 0L;
     }
 
     @java.lang.Override
@@ -1313,9 +2215,24 @@ public final class Coordination {
               serverIp_ = s;
               break;
             }
-            case 16: {
+            case 17: {
 
-              compactionId_ = input.readInt64();
+              compactionId_ = input.readFixed64();
+              break;
+            }
+            case 24: {
+
+              expectedSize_ = input.readInt64();
+              break;
+            }
+            case 32: {
+
+              startSize_ = input.readInt64();
+              break;
+            }
+            case 40: {
+
+              expectedTableCount_ = input.readInt64();
               break;
             }
           }
@@ -1378,10 +2295,37 @@ public final class Coordination {
     public static final int COMPACTION_ID_FIELD_NUMBER = 2;
     private long compactionId_;
     /**
-     * <code>optional int64 compaction_id = 2;</code>
+     * <code>optional fixed64 compaction_id = 2;</code>
      */
     public long getCompactionId() {
       return compactionId_;
+    }
+
+    public static final int EXPECTED_SIZE_FIELD_NUMBER = 3;
+    private long expectedSize_;
+    /**
+     * <code>optional int64 expected_size = 3;</code>
+     */
+    public long getExpectedSize() {
+      return expectedSize_;
+    }
+
+    public static final int START_SIZE_FIELD_NUMBER = 4;
+    private long startSize_;
+    /**
+     * <code>optional int64 start_size = 4;</code>
+     */
+    public long getStartSize() {
+      return startSize_;
+    }
+
+    public static final int EXPECTED_TABLE_COUNT_FIELD_NUMBER = 5;
+    private long expectedTableCount_;
+    /**
+     * <code>optional int64 expected_table_count = 5;</code>
+     */
+    public long getExpectedTableCount() {
+      return expectedTableCount_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1400,7 +2344,16 @@ public final class Coordination {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, serverIp_);
       }
       if (compactionId_ != 0L) {
-        output.writeInt64(2, compactionId_);
+        output.writeFixed64(2, compactionId_);
+      }
+      if (expectedSize_ != 0L) {
+        output.writeInt64(3, expectedSize_);
+      }
+      if (startSize_ != 0L) {
+        output.writeInt64(4, startSize_);
+      }
+      if (expectedTableCount_ != 0L) {
+        output.writeInt64(5, expectedTableCount_);
       }
     }
 
@@ -1414,7 +2367,19 @@ public final class Coordination {
       }
       if (compactionId_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(2, compactionId_);
+          .computeFixed64Size(2, compactionId_);
+      }
+      if (expectedSize_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, expectedSize_);
+      }
+      if (startSize_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(4, startSize_);
+      }
+      if (expectedTableCount_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, expectedTableCount_);
       }
       memoizedSize = size;
       return size;
@@ -1436,6 +2401,12 @@ public final class Coordination {
           .equals(other.getServerIp());
       result = result && (getCompactionId()
           == other.getCompactionId());
+      result = result && (getExpectedSize()
+          == other.getExpectedSize());
+      result = result && (getStartSize()
+          == other.getStartSize());
+      result = result && (getExpectedTableCount()
+          == other.getExpectedTableCount());
       return result;
     }
 
@@ -1451,6 +2422,15 @@ public final class Coordination {
       hash = (37 * hash) + COMPACTION_ID_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getCompactionId());
+      hash = (37 * hash) + EXPECTED_SIZE_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getExpectedSize());
+      hash = (37 * hash) + START_SIZE_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getStartSize());
+      hash = (37 * hash) + EXPECTED_TABLE_COUNT_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getExpectedTableCount());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1573,6 +2553,12 @@ public final class Coordination {
 
         compactionId_ = 0L;
 
+        expectedSize_ = 0L;
+
+        startSize_ = 0L;
+
+        expectedTableCount_ = 0L;
+
         return this;
       }
 
@@ -1597,6 +2583,9 @@ public final class Coordination {
         edu.umich.compaction.Coordination.QueueCompactionReq result = new edu.umich.compaction.Coordination.QueueCompactionReq(this);
         result.serverIp_ = serverIp_;
         result.compactionId_ = compactionId_;
+        result.expectedSize_ = expectedSize_;
+        result.startSize_ = startSize_;
+        result.expectedTableCount_ = expectedTableCount_;
         onBuilt();
         return result;
       }
@@ -1644,6 +2633,15 @@ public final class Coordination {
         }
         if (other.getCompactionId() != 0L) {
           setCompactionId(other.getCompactionId());
+        }
+        if (other.getExpectedSize() != 0L) {
+          setExpectedSize(other.getExpectedSize());
+        }
+        if (other.getStartSize() != 0L) {
+          setStartSize(other.getStartSize());
+        }
+        if (other.getExpectedTableCount() != 0L) {
+          setExpectedTableCount(other.getExpectedTableCount());
         }
         onChanged();
         return this;
@@ -1742,13 +2740,13 @@ public final class Coordination {
 
       private long compactionId_ ;
       /**
-       * <code>optional int64 compaction_id = 2;</code>
+       * <code>optional fixed64 compaction_id = 2;</code>
        */
       public long getCompactionId() {
         return compactionId_;
       }
       /**
-       * <code>optional int64 compaction_id = 2;</code>
+       * <code>optional fixed64 compaction_id = 2;</code>
        */
       public Builder setCompactionId(long value) {
         
@@ -1757,11 +2755,89 @@ public final class Coordination {
         return this;
       }
       /**
-       * <code>optional int64 compaction_id = 2;</code>
+       * <code>optional fixed64 compaction_id = 2;</code>
        */
       public Builder clearCompactionId() {
         
         compactionId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long expectedSize_ ;
+      /**
+       * <code>optional int64 expected_size = 3;</code>
+       */
+      public long getExpectedSize() {
+        return expectedSize_;
+      }
+      /**
+       * <code>optional int64 expected_size = 3;</code>
+       */
+      public Builder setExpectedSize(long value) {
+        
+        expectedSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 expected_size = 3;</code>
+       */
+      public Builder clearExpectedSize() {
+        
+        expectedSize_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long startSize_ ;
+      /**
+       * <code>optional int64 start_size = 4;</code>
+       */
+      public long getStartSize() {
+        return startSize_;
+      }
+      /**
+       * <code>optional int64 start_size = 4;</code>
+       */
+      public Builder setStartSize(long value) {
+        
+        startSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 start_size = 4;</code>
+       */
+      public Builder clearStartSize() {
+        
+        startSize_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long expectedTableCount_ ;
+      /**
+       * <code>optional int64 expected_table_count = 5;</code>
+       */
+      public long getExpectedTableCount() {
+        return expectedTableCount_;
+      }
+      /**
+       * <code>optional int64 expected_table_count = 5;</code>
+       */
+      public Builder setExpectedTableCount(long value) {
+        
+        expectedTableCount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 expected_table_count = 5;</code>
+       */
+      public Builder clearExpectedTableCount() {
+        
+        expectedTableCount_ = 0L;
         onChanged();
         return this;
       }
@@ -2180,6 +3256,11 @@ public final class Coordination {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_compaction_RegisterReq_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_compaction_RegisterReq_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_compaction_WatchReq_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -2213,17 +3294,25 @@ public final class Coordination {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\020compaction.proto\022\ncompaction\"\035\n\010WatchR" +
-      "eq\022\021\n\tserver_ip\030\001 \001(\t\"\020\n\016ExecCompaction\"" +
-      "\017\n\rUpdateLoadReq\">\n\022QueueCompactionReq\022\021" +
-      "\n\tserver_ip\030\001 \001(\t\022\025\n\rcompaction_id\030\002 \001(\003" +
-      "\"\007\n\005Empty2\327\001\n\013Coordinator\022F\n\020WatchCompac" +
-      "tions\022\024.compaction.WatchReq\032\032.compaction" +
-      ".ExecCompaction0\001\022:\n\nUpdateLoad\022\031.compac" +
-      "tion.UpdateLoadReq\032\021.compaction.Empty\022D\n" +
-      "\017QueueCompaction\022\036.compaction.QueueCompa" +
-      "ctionReq\032\021.compaction.EmptyB$\n\024edu.umich",
-      ".compactionB\014Coordinationb\006proto3"
+      "\n\020compaction.proto\022\ncompaction\"L\n\013Regist" +
+      "erReq\022\021\n\tserver_ip\030\001 \001(\t\022\030\n\020write_batch_" +
+      "size\030\002 \001(\005\022\020\n\010max_iops\030\003 \001(\005\"\035\n\010WatchReq" +
+      "\022\021\n\tserver_ip\030\001 \001(\t\";\n\016ExecCompaction\022\025\n" +
+      "\rcompaction_id\030\001 \001(\006\022\022\n\niops_limit\030\002 \001(\005" +
+      "\"6\n\rUpdateLoadReq\022\021\n\tread_iops\030\001 \001(\005\022\022\n\n" +
+      "write_iops\030\002 \001(\005\"\207\001\n\022QueueCompactionReq\022" +
+      "\021\n\tserver_ip\030\001 \001(\t\022\025\n\rcompaction_id\030\002 \001(" +
+      "\006\022\025\n\rexpected_size\030\003 \001(\003\022\022\n\nstart_size\030\004" +
+      " \001(\003\022\034\n\024expected_table_count\030\005 \001(\003\"\007\n\005Em",
+      "pty2\217\002\n\013Coordinator\0226\n\010Register\022\027.compac" +
+      "tion.RegisterReq\032\021.compaction.Empty\022F\n\020W" +
+      "atchCompactions\022\024.compaction.WatchReq\032\032." +
+      "compaction.ExecCompaction0\001\022:\n\nUpdateLoa" +
+      "d\022\031.compaction.UpdateLoadReq\032\021.compactio" +
+      "n.Empty\022D\n\017QueueCompaction\022\036.compaction." +
+      "QueueCompactionReq\032\021.compaction.EmptyB$\n" +
+      "\024edu.umich.compactionB\014Coordinationb\006pro" +
+      "to3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2237,32 +3326,38 @@ public final class Coordination {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_compaction_WatchReq_descriptor =
+    internal_static_compaction_RegisterReq_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_compaction_RegisterReq_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_compaction_RegisterReq_descriptor,
+        new java.lang.String[] { "ServerIp", "WriteBatchSize", "MaxIops", });
+    internal_static_compaction_WatchReq_descriptor =
+      getDescriptor().getMessageTypes().get(1);
     internal_static_compaction_WatchReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_WatchReq_descriptor,
         new java.lang.String[] { "ServerIp", });
     internal_static_compaction_ExecCompaction_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(2);
     internal_static_compaction_ExecCompaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_ExecCompaction_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "CompactionId", "IopsLimit", });
     internal_static_compaction_UpdateLoadReq_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_compaction_UpdateLoadReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_UpdateLoadReq_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "ReadIops", "WriteIops", });
     internal_static_compaction_QueueCompactionReq_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_compaction_QueueCompactionReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_QueueCompactionReq_descriptor,
-        new java.lang.String[] { "ServerIp", "CompactionId", });
+        new java.lang.String[] { "ServerIp", "CompactionId", "ExpectedSize", "StartSize", "ExpectedTableCount", });
     internal_static_compaction_Empty_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_compaction_Empty_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_Empty_descriptor,
