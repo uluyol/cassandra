@@ -1151,9 +1151,14 @@ public final class Coordination {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional fixed64 compaction_id = 1;</code>
+     * <code>optional string compaction_id = 1;</code>
      */
-    long getCompactionId();
+    java.lang.String getCompactionId();
+    /**
+     * <code>optional string compaction_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getCompactionIdBytes();
 
     /**
      * <code>optional int32 iops_limit = 2;</code>
@@ -1172,7 +1177,7 @@ public final class Coordination {
       super(builder);
     }
     private ExecCompaction() {
-      compactionId_ = 0L;
+      compactionId_ = "";
       iopsLimit_ = 0;
     }
 
@@ -1201,9 +1206,10 @@ public final class Coordination {
               }
               break;
             }
-            case 9: {
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
 
-              compactionId_ = input.readFixed64();
+              compactionId_ = s;
               break;
             }
             case 16: {
@@ -1235,12 +1241,37 @@ public final class Coordination {
     }
 
     public static final int COMPACTION_ID_FIELD_NUMBER = 1;
-    private long compactionId_;
+    private volatile java.lang.Object compactionId_;
     /**
-     * <code>optional fixed64 compaction_id = 1;</code>
+     * <code>optional string compaction_id = 1;</code>
      */
-    public long getCompactionId() {
-      return compactionId_;
+    public java.lang.String getCompactionId() {
+      java.lang.Object ref = compactionId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        compactionId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string compaction_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCompactionIdBytes() {
+      java.lang.Object ref = compactionId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        compactionId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int IOPS_LIMIT_FIELD_NUMBER = 2;
@@ -1264,8 +1295,8 @@ public final class Coordination {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (compactionId_ != 0L) {
-        output.writeFixed64(1, compactionId_);
+      if (!getCompactionIdBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, compactionId_);
       }
       if (iopsLimit_ != 0) {
         output.writeInt32(2, iopsLimit_);
@@ -1277,9 +1308,8 @@ public final class Coordination {
       if (size != -1) return size;
 
       size = 0;
-      if (compactionId_ != 0L) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeFixed64Size(1, compactionId_);
+      if (!getCompactionIdBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, compactionId_);
       }
       if (iopsLimit_ != 0) {
         size += com.google.protobuf.CodedOutputStream
@@ -1301,8 +1331,8 @@ public final class Coordination {
       edu.umich.compaction.Coordination.ExecCompaction other = (edu.umich.compaction.Coordination.ExecCompaction) obj;
 
       boolean result = true;
-      result = result && (getCompactionId()
-          == other.getCompactionId());
+      result = result && getCompactionId()
+          .equals(other.getCompactionId());
       result = result && (getIopsLimit()
           == other.getIopsLimit());
       return result;
@@ -1316,8 +1346,7 @@ public final class Coordination {
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
       hash = (37 * hash) + COMPACTION_ID_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getCompactionId());
+      hash = (53 * hash) + getCompactionId().hashCode();
       hash = (37 * hash) + IOPS_LIMIT_FIELD_NUMBER;
       hash = (53 * hash) + getIopsLimit();
       hash = (29 * hash) + unknownFields.hashCode();
@@ -1438,7 +1467,7 @@ public final class Coordination {
       }
       public Builder clear() {
         super.clear();
-        compactionId_ = 0L;
+        compactionId_ = "";
 
         iopsLimit_ = 0;
 
@@ -1507,8 +1536,9 @@ public final class Coordination {
 
       public Builder mergeFrom(edu.umich.compaction.Coordination.ExecCompaction other) {
         if (other == edu.umich.compaction.Coordination.ExecCompaction.getDefaultInstance()) return this;
-        if (other.getCompactionId() != 0L) {
-          setCompactionId(other.getCompactionId());
+        if (!other.getCompactionId().isEmpty()) {
+          compactionId_ = other.compactionId_;
+          onChanged();
         }
         if (other.getIopsLimit() != 0) {
           setIopsLimit(other.getIopsLimit());
@@ -1539,28 +1569,71 @@ public final class Coordination {
         return this;
       }
 
-      private long compactionId_ ;
+      private java.lang.Object compactionId_ = "";
       /**
-       * <code>optional fixed64 compaction_id = 1;</code>
+       * <code>optional string compaction_id = 1;</code>
        */
-      public long getCompactionId() {
-        return compactionId_;
+      public java.lang.String getCompactionId() {
+        java.lang.Object ref = compactionId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          compactionId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional fixed64 compaction_id = 1;</code>
+       * <code>optional string compaction_id = 1;</code>
        */
-      public Builder setCompactionId(long value) {
-        
+      public com.google.protobuf.ByteString
+          getCompactionIdBytes() {
+        java.lang.Object ref = compactionId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          compactionId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string compaction_id = 1;</code>
+       */
+      public Builder setCompactionId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
         compactionId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional fixed64 compaction_id = 1;</code>
+       * <code>optional string compaction_id = 1;</code>
        */
       public Builder clearCompactionId() {
         
-        compactionId_ = 0L;
+        compactionId_ = getDefaultInstance().getCompactionId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string compaction_id = 1;</code>
+       */
+      public Builder setCompactionIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        compactionId_ = value;
         onChanged();
         return this;
       }
@@ -1644,14 +1717,14 @@ public final class Coordination {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional int32 read_iops = 1;</code>
+     * <code>optional int64 read_ios = 1;</code>
      */
-    int getReadIops();
+    long getReadIos();
 
     /**
-     * <code>optional int32 write_iops = 2;</code>
+     * <code>optional int64 write_ios = 2;</code>
      */
-    int getWriteIops();
+    long getWriteIos();
   }
   /**
    * Protobuf type {@code compaction.UpdateLoadReq}
@@ -1665,8 +1738,8 @@ public final class Coordination {
       super(builder);
     }
     private UpdateLoadReq() {
-      readIops_ = 0;
-      writeIops_ = 0;
+      readIos_ = 0L;
+      writeIos_ = 0L;
     }
 
     @java.lang.Override
@@ -1696,12 +1769,12 @@ public final class Coordination {
             }
             case 8: {
 
-              readIops_ = input.readInt32();
+              readIos_ = input.readInt64();
               break;
             }
             case 16: {
 
-              writeIops_ = input.readInt32();
+              writeIos_ = input.readInt64();
               break;
             }
           }
@@ -1727,22 +1800,22 @@ public final class Coordination {
               edu.umich.compaction.Coordination.UpdateLoadReq.class, edu.umich.compaction.Coordination.UpdateLoadReq.Builder.class);
     }
 
-    public static final int READ_IOPS_FIELD_NUMBER = 1;
-    private int readIops_;
+    public static final int READ_IOS_FIELD_NUMBER = 1;
+    private long readIos_;
     /**
-     * <code>optional int32 read_iops = 1;</code>
+     * <code>optional int64 read_ios = 1;</code>
      */
-    public int getReadIops() {
-      return readIops_;
+    public long getReadIos() {
+      return readIos_;
     }
 
-    public static final int WRITE_IOPS_FIELD_NUMBER = 2;
-    private int writeIops_;
+    public static final int WRITE_IOS_FIELD_NUMBER = 2;
+    private long writeIos_;
     /**
-     * <code>optional int32 write_iops = 2;</code>
+     * <code>optional int64 write_ios = 2;</code>
      */
-    public int getWriteIops() {
-      return writeIops_;
+    public long getWriteIos() {
+      return writeIos_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1757,11 +1830,11 @@ public final class Coordination {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (readIops_ != 0) {
-        output.writeInt32(1, readIops_);
+      if (readIos_ != 0L) {
+        output.writeInt64(1, readIos_);
       }
-      if (writeIops_ != 0) {
-        output.writeInt32(2, writeIops_);
+      if (writeIos_ != 0L) {
+        output.writeInt64(2, writeIos_);
       }
     }
 
@@ -1770,13 +1843,13 @@ public final class Coordination {
       if (size != -1) return size;
 
       size = 0;
-      if (readIops_ != 0) {
+      if (readIos_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, readIops_);
+          .computeInt64Size(1, readIos_);
       }
-      if (writeIops_ != 0) {
+      if (writeIos_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, writeIops_);
+          .computeInt64Size(2, writeIos_);
       }
       memoizedSize = size;
       return size;
@@ -1794,10 +1867,10 @@ public final class Coordination {
       edu.umich.compaction.Coordination.UpdateLoadReq other = (edu.umich.compaction.Coordination.UpdateLoadReq) obj;
 
       boolean result = true;
-      result = result && (getReadIops()
-          == other.getReadIops());
-      result = result && (getWriteIops()
-          == other.getWriteIops());
+      result = result && (getReadIos()
+          == other.getReadIos());
+      result = result && (getWriteIos()
+          == other.getWriteIos());
       return result;
     }
 
@@ -1808,10 +1881,12 @@ public final class Coordination {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
-      hash = (37 * hash) + READ_IOPS_FIELD_NUMBER;
-      hash = (53 * hash) + getReadIops();
-      hash = (37 * hash) + WRITE_IOPS_FIELD_NUMBER;
-      hash = (53 * hash) + getWriteIops();
+      hash = (37 * hash) + READ_IOS_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getReadIos());
+      hash = (37 * hash) + WRITE_IOS_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getWriteIos());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1930,9 +2005,9 @@ public final class Coordination {
       }
       public Builder clear() {
         super.clear();
-        readIops_ = 0;
+        readIos_ = 0L;
 
-        writeIops_ = 0;
+        writeIos_ = 0L;
 
         return this;
       }
@@ -1956,8 +2031,8 @@ public final class Coordination {
 
       public edu.umich.compaction.Coordination.UpdateLoadReq buildPartial() {
         edu.umich.compaction.Coordination.UpdateLoadReq result = new edu.umich.compaction.Coordination.UpdateLoadReq(this);
-        result.readIops_ = readIops_;
-        result.writeIops_ = writeIops_;
+        result.readIos_ = readIos_;
+        result.writeIos_ = writeIos_;
         onBuilt();
         return result;
       }
@@ -1999,11 +2074,11 @@ public final class Coordination {
 
       public Builder mergeFrom(edu.umich.compaction.Coordination.UpdateLoadReq other) {
         if (other == edu.umich.compaction.Coordination.UpdateLoadReq.getDefaultInstance()) return this;
-        if (other.getReadIops() != 0) {
-          setReadIops(other.getReadIops());
+        if (other.getReadIos() != 0L) {
+          setReadIos(other.getReadIos());
         }
-        if (other.getWriteIops() != 0) {
-          setWriteIops(other.getWriteIops());
+        if (other.getWriteIos() != 0L) {
+          setWriteIos(other.getWriteIos());
         }
         onChanged();
         return this;
@@ -2031,54 +2106,54 @@ public final class Coordination {
         return this;
       }
 
-      private int readIops_ ;
+      private long readIos_ ;
       /**
-       * <code>optional int32 read_iops = 1;</code>
+       * <code>optional int64 read_ios = 1;</code>
        */
-      public int getReadIops() {
-        return readIops_;
+      public long getReadIos() {
+        return readIos_;
       }
       /**
-       * <code>optional int32 read_iops = 1;</code>
+       * <code>optional int64 read_ios = 1;</code>
        */
-      public Builder setReadIops(int value) {
+      public Builder setReadIos(long value) {
         
-        readIops_ = value;
+        readIos_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 read_iops = 1;</code>
+       * <code>optional int64 read_ios = 1;</code>
        */
-      public Builder clearReadIops() {
+      public Builder clearReadIos() {
         
-        readIops_ = 0;
+        readIos_ = 0L;
         onChanged();
         return this;
       }
 
-      private int writeIops_ ;
+      private long writeIos_ ;
       /**
-       * <code>optional int32 write_iops = 2;</code>
+       * <code>optional int64 write_ios = 2;</code>
        */
-      public int getWriteIops() {
-        return writeIops_;
+      public long getWriteIos() {
+        return writeIos_;
       }
       /**
-       * <code>optional int32 write_iops = 2;</code>
+       * <code>optional int64 write_ios = 2;</code>
        */
-      public Builder setWriteIops(int value) {
+      public Builder setWriteIos(long value) {
         
-        writeIops_ = value;
+        writeIos_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 write_iops = 2;</code>
+       * <code>optional int64 write_ios = 2;</code>
        */
-      public Builder clearWriteIops() {
+      public Builder clearWriteIos() {
         
-        writeIops_ = 0;
+        writeIos_ = 0L;
         onChanged();
         return this;
       }
@@ -2146,9 +2221,14 @@ public final class Coordination {
         getServerIpBytes();
 
     /**
-     * <code>optional fixed64 compaction_id = 2;</code>
+     * <code>optional string compaction_id = 2;</code>
      */
-    long getCompactionId();
+    java.lang.String getCompactionId();
+    /**
+     * <code>optional string compaction_id = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getCompactionIdBytes();
 
     /**
      * <code>optional int64 expected_size = 3;</code>
@@ -2178,7 +2258,7 @@ public final class Coordination {
     }
     private QueueCompactionReq() {
       serverIp_ = "";
-      compactionId_ = 0L;
+      compactionId_ = "";
       expectedSize_ = 0L;
       startSize_ = 0L;
       expectedTableCount_ = 0L;
@@ -2215,9 +2295,10 @@ public final class Coordination {
               serverIp_ = s;
               break;
             }
-            case 17: {
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
 
-              compactionId_ = input.readFixed64();
+              compactionId_ = s;
               break;
             }
             case 24: {
@@ -2293,12 +2374,37 @@ public final class Coordination {
     }
 
     public static final int COMPACTION_ID_FIELD_NUMBER = 2;
-    private long compactionId_;
+    private volatile java.lang.Object compactionId_;
     /**
-     * <code>optional fixed64 compaction_id = 2;</code>
+     * <code>optional string compaction_id = 2;</code>
      */
-    public long getCompactionId() {
-      return compactionId_;
+    public java.lang.String getCompactionId() {
+      java.lang.Object ref = compactionId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        compactionId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string compaction_id = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCompactionIdBytes() {
+      java.lang.Object ref = compactionId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        compactionId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
     public static final int EXPECTED_SIZE_FIELD_NUMBER = 3;
@@ -2343,8 +2449,8 @@ public final class Coordination {
       if (!getServerIpBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, serverIp_);
       }
-      if (compactionId_ != 0L) {
-        output.writeFixed64(2, compactionId_);
+      if (!getCompactionIdBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, compactionId_);
       }
       if (expectedSize_ != 0L) {
         output.writeInt64(3, expectedSize_);
@@ -2365,9 +2471,8 @@ public final class Coordination {
       if (!getServerIpBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, serverIp_);
       }
-      if (compactionId_ != 0L) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeFixed64Size(2, compactionId_);
+      if (!getCompactionIdBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, compactionId_);
       }
       if (expectedSize_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
@@ -2399,8 +2504,8 @@ public final class Coordination {
       boolean result = true;
       result = result && getServerIp()
           .equals(other.getServerIp());
-      result = result && (getCompactionId()
-          == other.getCompactionId());
+      result = result && getCompactionId()
+          .equals(other.getCompactionId());
       result = result && (getExpectedSize()
           == other.getExpectedSize());
       result = result && (getStartSize()
@@ -2420,8 +2525,7 @@ public final class Coordination {
       hash = (37 * hash) + SERVER_IP_FIELD_NUMBER;
       hash = (53 * hash) + getServerIp().hashCode();
       hash = (37 * hash) + COMPACTION_ID_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getCompactionId());
+      hash = (53 * hash) + getCompactionId().hashCode();
       hash = (37 * hash) + EXPECTED_SIZE_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getExpectedSize());
@@ -2551,7 +2655,7 @@ public final class Coordination {
         super.clear();
         serverIp_ = "";
 
-        compactionId_ = 0L;
+        compactionId_ = "";
 
         expectedSize_ = 0L;
 
@@ -2631,8 +2735,9 @@ public final class Coordination {
           serverIp_ = other.serverIp_;
           onChanged();
         }
-        if (other.getCompactionId() != 0L) {
-          setCompactionId(other.getCompactionId());
+        if (!other.getCompactionId().isEmpty()) {
+          compactionId_ = other.compactionId_;
+          onChanged();
         }
         if (other.getExpectedSize() != 0L) {
           setExpectedSize(other.getExpectedSize());
@@ -2738,28 +2843,71 @@ public final class Coordination {
         return this;
       }
 
-      private long compactionId_ ;
+      private java.lang.Object compactionId_ = "";
       /**
-       * <code>optional fixed64 compaction_id = 2;</code>
+       * <code>optional string compaction_id = 2;</code>
        */
-      public long getCompactionId() {
-        return compactionId_;
+      public java.lang.String getCompactionId() {
+        java.lang.Object ref = compactionId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          compactionId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional fixed64 compaction_id = 2;</code>
+       * <code>optional string compaction_id = 2;</code>
        */
-      public Builder setCompactionId(long value) {
-        
+      public com.google.protobuf.ByteString
+          getCompactionIdBytes() {
+        java.lang.Object ref = compactionId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          compactionId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string compaction_id = 2;</code>
+       */
+      public Builder setCompactionId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
         compactionId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional fixed64 compaction_id = 2;</code>
+       * <code>optional string compaction_id = 2;</code>
        */
       public Builder clearCompactionId() {
         
-        compactionId_ = 0L;
+        compactionId_ = getDefaultInstance().getCompactionId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string compaction_id = 2;</code>
+       */
+      public Builder setCompactionIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        compactionId_ = value;
         onChanged();
         return this;
       }
@@ -3298,21 +3446,21 @@ public final class Coordination {
       "erReq\022\021\n\tserver_ip\030\001 \001(\t\022\030\n\020write_batch_" +
       "size\030\002 \001(\005\022\020\n\010max_iops\030\003 \001(\005\"\035\n\010WatchReq" +
       "\022\021\n\tserver_ip\030\001 \001(\t\";\n\016ExecCompaction\022\025\n" +
-      "\rcompaction_id\030\001 \001(\006\022\022\n\niops_limit\030\002 \001(\005" +
-      "\"6\n\rUpdateLoadReq\022\021\n\tread_iops\030\001 \001(\005\022\022\n\n" +
-      "write_iops\030\002 \001(\005\"\207\001\n\022QueueCompactionReq\022" +
-      "\021\n\tserver_ip\030\001 \001(\t\022\025\n\rcompaction_id\030\002 \001(" +
-      "\006\022\025\n\rexpected_size\030\003 \001(\003\022\022\n\nstart_size\030\004" +
-      " \001(\003\022\034\n\024expected_table_count\030\005 \001(\003\"\007\n\005Em",
-      "pty2\217\002\n\013Coordinator\0226\n\010Register\022\027.compac" +
-      "tion.RegisterReq\032\021.compaction.Empty\022F\n\020W" +
-      "atchCompactions\022\024.compaction.WatchReq\032\032." +
-      "compaction.ExecCompaction0\001\022:\n\nUpdateLoa" +
-      "d\022\031.compaction.UpdateLoadReq\032\021.compactio" +
-      "n.Empty\022D\n\017QueueCompaction\022\036.compaction." +
-      "QueueCompactionReq\032\021.compaction.EmptyB$\n" +
-      "\024edu.umich.compactionB\014Coordinationb\006pro" +
-      "to3"
+      "\rcompaction_id\030\001 \001(\t\022\022\n\niops_limit\030\002 \001(\005" +
+      "\"4\n\rUpdateLoadReq\022\020\n\010read_ios\030\001 \001(\003\022\021\n\tw" +
+      "rite_ios\030\002 \001(\003\"\207\001\n\022QueueCompactionReq\022\021\n" +
+      "\tserver_ip\030\001 \001(\t\022\025\n\rcompaction_id\030\002 \001(\t\022" +
+      "\025\n\rexpected_size\030\003 \001(\003\022\022\n\nstart_size\030\004 \001" +
+      "(\003\022\034\n\024expected_table_count\030\005 \001(\003\"\007\n\005Empt",
+      "y2\217\002\n\013Coordinator\0226\n\010Register\022\027.compacti" +
+      "on.RegisterReq\032\021.compaction.Empty\022F\n\020Wat" +
+      "chCompactions\022\024.compaction.WatchReq\032\032.co" +
+      "mpaction.ExecCompaction0\001\022:\n\nUpdateLoad\022" +
+      "\031.compaction.UpdateLoadReq\032\021.compaction." +
+      "Empty\022D\n\017QueueCompaction\022\036.compaction.Qu" +
+      "eueCompactionReq\032\021.compaction.EmptyB$\n\024e" +
+      "du.umich.compactionB\014Coordinationb\006proto" +
+      "3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3349,7 +3497,7 @@ public final class Coordination {
     internal_static_compaction_UpdateLoadReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_UpdateLoadReq_descriptor,
-        new java.lang.String[] { "ReadIops", "WriteIops", });
+        new java.lang.String[] { "ReadIos", "WriteIos", });
     internal_static_compaction_QueueCompactionReq_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_compaction_QueueCompactionReq_fieldAccessorTable = new
