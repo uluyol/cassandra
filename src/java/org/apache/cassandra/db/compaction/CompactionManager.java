@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -31,6 +33,8 @@ import javax.management.openmbean.TabularData;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.*;
 import com.google.common.util.concurrent.*;
+import edu.umich.compaction.Coordination;
+import org.apache.cassandra.service.CompactionCoordinatorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,6 +124,8 @@ public class CompactionManager implements CompactionManagerMBean
     private final Multiset<ColumnFamilyStore> compactingCF = ConcurrentHashMultiset.create();
 
     private final RateLimiter compactionRateLimiter = RateLimiter.create(Double.MAX_VALUE);
+    private final HashMap<UUID, AbstractCompactionTask> waitingTasks = new HashMap<UUID, AbstractCompactionTask>();
+    public final Lock waitingTaskListLock = new ReentrantLock();
 
     /**
      * Gets compaction rate limiter.
@@ -264,13 +270,41 @@ public class CompactionManager implements CompactionManagerMBean
                 }
                 try {
                     task.execute(metrics);
-                } finally {}
+                    UUID taskId = task.transaction.opId();
+                    int numberOfTables = task.transaction.originals().size();
+                    long expectedWriteSize = cfs.getExpectedCompactedFileSize(task.transaction.originals(), task.compactionType);
+                    long startsize = SSTableReader.getTotalBytes(task.transaction.originals());
+                    long earlySSTableEstimate = Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes());
+                    waitingTaskListLock.lock();
+                    waitingTasks.put(taskId, task);
+                    String serverIp = DatabaseDescriptor.getBroadcastAddress().toString();
+                    Coordination.QueueCompactionReq compactionReq = Coordination.QueueCompactionReq.newBuilder().setServerIp(serverIp).setCompactionId(taskId.toString())
+                                                                    .setExpectedSize(expectedWriteSize).setExpectedTableCount(earlySSTableEstimate)
+                                                                    .setStartSize(startsize).build();
+                    CompactionCoordinatorService.queueCompaction(compactionReq);
+
+                    //XXX something like client.send(parameters)
+                } finally {
+                    waitingTaskListLock.unlock();
+                }
             }
             finally
             {
                 compactingCF.remove(cfs);
             }
             submitBackground(cfs);
+        }
+    }
+
+    public void runGivenTask(String taskIDString) {
+        UUID taskID = UUID.fromString(taskIDString);
+        AbstractCompactionTask task = waitingTasks.get(taskID);
+        try {
+            task.execute(metrics);
+            waitingTaskListLock.lock();
+            waitingTasks.remove(taskID);
+        } finally {
+            waitingTaskListLock.unlock();
         }
     }
 

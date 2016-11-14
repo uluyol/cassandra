@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -78,7 +79,7 @@ public final class CompactionCoordinatorService {
                 Iterator<Coordination.ExecCompaction> reqs = blockingStub.watchCompactions(req);
                 reqs.forEachRemaining((compaction) ->
                                       {
-                                          System.out.println("x"); // TODO: fixme
+                                          CompactionManager.instance.runGivenTask(compaction.getCompactionId());
                                       });
             }
         }).start();
