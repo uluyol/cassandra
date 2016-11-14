@@ -1717,12 +1717,22 @@ public final class Coordination {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional int64 read_ios = 1;</code>
+     * <code>optional string server_ip = 1;</code>
+     */
+    java.lang.String getServerIp();
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getServerIpBytes();
+
+    /**
+     * <code>optional int64 read_ios = 2;</code>
      */
     long getReadIos();
 
     /**
-     * <code>optional int64 write_ios = 2;</code>
+     * <code>optional int64 write_ios = 3;</code>
      */
     long getWriteIos();
   }
@@ -1738,6 +1748,7 @@ public final class Coordination {
       super(builder);
     }
     private UpdateLoadReq() {
+      serverIp_ = "";
       readIos_ = 0L;
       writeIos_ = 0L;
     }
@@ -1767,12 +1778,18 @@ public final class Coordination {
               }
               break;
             }
-            case 8: {
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              serverIp_ = s;
+              break;
+            }
+            case 16: {
 
               readIos_ = input.readInt64();
               break;
             }
-            case 16: {
+            case 24: {
 
               writeIos_ = input.readInt64();
               break;
@@ -1800,19 +1817,53 @@ public final class Coordination {
               edu.umich.compaction.Coordination.UpdateLoadReq.class, edu.umich.compaction.Coordination.UpdateLoadReq.Builder.class);
     }
 
-    public static final int READ_IOS_FIELD_NUMBER = 1;
+    public static final int SERVER_IP_FIELD_NUMBER = 1;
+    private volatile java.lang.Object serverIp_;
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    public java.lang.String getServerIp() {
+      java.lang.Object ref = serverIp_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        serverIp_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getServerIpBytes() {
+      java.lang.Object ref = serverIp_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        serverIp_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int READ_IOS_FIELD_NUMBER = 2;
     private long readIos_;
     /**
-     * <code>optional int64 read_ios = 1;</code>
+     * <code>optional int64 read_ios = 2;</code>
      */
     public long getReadIos() {
       return readIos_;
     }
 
-    public static final int WRITE_IOS_FIELD_NUMBER = 2;
+    public static final int WRITE_IOS_FIELD_NUMBER = 3;
     private long writeIos_;
     /**
-     * <code>optional int64 write_ios = 2;</code>
+     * <code>optional int64 write_ios = 3;</code>
      */
     public long getWriteIos() {
       return writeIos_;
@@ -1830,11 +1881,14 @@ public final class Coordination {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (!getServerIpBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, serverIp_);
+      }
       if (readIos_ != 0L) {
-        output.writeInt64(1, readIos_);
+        output.writeInt64(2, readIos_);
       }
       if (writeIos_ != 0L) {
-        output.writeInt64(2, writeIos_);
+        output.writeInt64(3, writeIos_);
       }
     }
 
@@ -1843,13 +1897,16 @@ public final class Coordination {
       if (size != -1) return size;
 
       size = 0;
+      if (!getServerIpBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, serverIp_);
+      }
       if (readIos_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(1, readIos_);
+          .computeInt64Size(2, readIos_);
       }
       if (writeIos_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(2, writeIos_);
+          .computeInt64Size(3, writeIos_);
       }
       memoizedSize = size;
       return size;
@@ -1867,6 +1924,8 @@ public final class Coordination {
       edu.umich.compaction.Coordination.UpdateLoadReq other = (edu.umich.compaction.Coordination.UpdateLoadReq) obj;
 
       boolean result = true;
+      result = result && getServerIp()
+          .equals(other.getServerIp());
       result = result && (getReadIos()
           == other.getReadIos());
       result = result && (getWriteIos()
@@ -1881,6 +1940,8 @@ public final class Coordination {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + SERVER_IP_FIELD_NUMBER;
+      hash = (53 * hash) + getServerIp().hashCode();
       hash = (37 * hash) + READ_IOS_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getReadIos());
@@ -2005,6 +2066,8 @@ public final class Coordination {
       }
       public Builder clear() {
         super.clear();
+        serverIp_ = "";
+
         readIos_ = 0L;
 
         writeIos_ = 0L;
@@ -2031,6 +2094,7 @@ public final class Coordination {
 
       public edu.umich.compaction.Coordination.UpdateLoadReq buildPartial() {
         edu.umich.compaction.Coordination.UpdateLoadReq result = new edu.umich.compaction.Coordination.UpdateLoadReq(this);
+        result.serverIp_ = serverIp_;
         result.readIos_ = readIos_;
         result.writeIos_ = writeIos_;
         onBuilt();
@@ -2074,6 +2138,10 @@ public final class Coordination {
 
       public Builder mergeFrom(edu.umich.compaction.Coordination.UpdateLoadReq other) {
         if (other == edu.umich.compaction.Coordination.UpdateLoadReq.getDefaultInstance()) return this;
+        if (!other.getServerIp().isEmpty()) {
+          serverIp_ = other.serverIp_;
+          onChanged();
+        }
         if (other.getReadIos() != 0L) {
           setReadIos(other.getReadIos());
         }
@@ -2106,15 +2174,84 @@ public final class Coordination {
         return this;
       }
 
+      private java.lang.Object serverIp_ = "";
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public java.lang.String getServerIp() {
+        java.lang.Object ref = serverIp_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          serverIp_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getServerIpBytes() {
+        java.lang.Object ref = serverIp_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          serverIp_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder setServerIp(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder clearServerIp() {
+        
+        serverIp_ = getDefaultInstance().getServerIp();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder setServerIpBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+
       private long readIos_ ;
       /**
-       * <code>optional int64 read_ios = 1;</code>
+       * <code>optional int64 read_ios = 2;</code>
        */
       public long getReadIos() {
         return readIos_;
       }
       /**
-       * <code>optional int64 read_ios = 1;</code>
+       * <code>optional int64 read_ios = 2;</code>
        */
       public Builder setReadIos(long value) {
         
@@ -2123,7 +2260,7 @@ public final class Coordination {
         return this;
       }
       /**
-       * <code>optional int64 read_ios = 1;</code>
+       * <code>optional int64 read_ios = 2;</code>
        */
       public Builder clearReadIos() {
         
@@ -2134,13 +2271,13 @@ public final class Coordination {
 
       private long writeIos_ ;
       /**
-       * <code>optional int64 write_ios = 2;</code>
+       * <code>optional int64 write_ios = 3;</code>
        */
       public long getWriteIos() {
         return writeIos_;
       }
       /**
-       * <code>optional int64 write_ios = 2;</code>
+       * <code>optional int64 write_ios = 3;</code>
        */
       public Builder setWriteIos(long value) {
         
@@ -2149,7 +2286,7 @@ public final class Coordination {
         return this;
       }
       /**
-       * <code>optional int64 write_ios = 2;</code>
+       * <code>optional int64 write_ios = 3;</code>
        */
       public Builder clearWriteIos() {
         
@@ -3447,20 +3584,20 @@ public final class Coordination {
       "size\030\002 \001(\005\022\020\n\010max_iops\030\003 \001(\005\"\035\n\010WatchReq" +
       "\022\021\n\tserver_ip\030\001 \001(\t\";\n\016ExecCompaction\022\025\n" +
       "\rcompaction_id\030\001 \001(\t\022\022\n\niops_limit\030\002 \001(\005" +
-      "\"4\n\rUpdateLoadReq\022\020\n\010read_ios\030\001 \001(\003\022\021\n\tw" +
-      "rite_ios\030\002 \001(\003\"\207\001\n\022QueueCompactionReq\022\021\n" +
-      "\tserver_ip\030\001 \001(\t\022\025\n\rcompaction_id\030\002 \001(\t\022" +
-      "\025\n\rexpected_size\030\003 \001(\003\022\022\n\nstart_size\030\004 \001" +
-      "(\003\022\034\n\024expected_table_count\030\005 \001(\003\"\007\n\005Empt",
-      "y2\217\002\n\013Coordinator\0226\n\010Register\022\027.compacti" +
-      "on.RegisterReq\032\021.compaction.Empty\022F\n\020Wat" +
-      "chCompactions\022\024.compaction.WatchReq\032\032.co" +
-      "mpaction.ExecCompaction0\001\022:\n\nUpdateLoad\022" +
-      "\031.compaction.UpdateLoadReq\032\021.compaction." +
-      "Empty\022D\n\017QueueCompaction\022\036.compaction.Qu" +
-      "eueCompactionReq\032\021.compaction.EmptyB$\n\024e" +
-      "du.umich.compactionB\014Coordinationb\006proto" +
-      "3"
+      "\"G\n\rUpdateLoadReq\022\021\n\tserver_ip\030\001 \001(\t\022\020\n\010" +
+      "read_ios\030\002 \001(\003\022\021\n\twrite_ios\030\003 \001(\003\"\207\001\n\022Qu" +
+      "eueCompactionReq\022\021\n\tserver_ip\030\001 \001(\t\022\025\n\rc" +
+      "ompaction_id\030\002 \001(\t\022\025\n\rexpected_size\030\003 \001(" +
+      "\003\022\022\n\nstart_size\030\004 \001(\003\022\034\n\024expected_table_",
+      "count\030\005 \001(\003\"\007\n\005Empty2\217\002\n\013Coordinator\0226\n\010" +
+      "Register\022\027.compaction.RegisterReq\032\021.comp" +
+      "action.Empty\022F\n\020WatchCompactions\022\024.compa" +
+      "ction.WatchReq\032\032.compaction.ExecCompacti" +
+      "on0\001\022:\n\nUpdateLoad\022\031.compaction.UpdateLo" +
+      "adReq\032\021.compaction.Empty\022D\n\017QueueCompact" +
+      "ion\022\036.compaction.QueueCompactionReq\032\021.co" +
+      "mpaction.EmptyB$\n\024edu.umich.compactionB\014" +
+      "Coordinationb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3497,7 +3634,7 @@ public final class Coordination {
     internal_static_compaction_UpdateLoadReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_UpdateLoadReq_descriptor,
-        new java.lang.String[] { "ReadIos", "WriteIos", });
+        new java.lang.String[] { "ServerIp", "ReadIos", "WriteIos", });
     internal_static_compaction_QueueCompactionReq_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_compaction_QueueCompactionReq_fieldAccessorTable = new

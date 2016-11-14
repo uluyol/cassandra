@@ -87,6 +87,7 @@ public final class CompactionCoordinatorService {
     private void startLoadUpdateThread() {
         if (SystemUtils.IS_OS_LINUX) {
             new Thread(() -> {
+                String ip = DatabaseDescriptor.getBroadcastAddress().toString();
                 Set<String> devNames = new HashSet<String>();
                 for (String p : DatabaseDescriptor.getAllDataFileLocations()) {
                     String out;
@@ -124,16 +125,28 @@ public final class CompactionCoordinatorService {
                 }
 
                 while (true) {
+                    long readIOs = 0;
+                    long writeIOs = 0;
                     for (String name : devNames) {
                         try {
                             String stats = new String(Files.readAllBytes(Paths.get("/sys/block", name, "stat")), "utf-8");
                             String[] fields = StringUtils.split(stats);
-
+                            if (fields.length < 5) {
+                                logger.warn("Invalid stats: %s", stats);
+                                continue;
+                            }
+                            readIOs += Long.parseLong(fields[0]);
+                            writeIOs += Long.parseLong(fields[1]);
                         } catch (Exception e) {
                             logger.warn("Error occurred while getting stats for %s: %s", name, e);
                             continue;
                         }
                     }
+                    stub.updateLoad(Coordination.UpdateLoadReq.newBuilder()
+                                                              .setServerIp(ip)
+                                                              .setReadIos(readIOs)
+                                                              .setWriteIos(writeIOs)
+                                                              .build());
                 }
             }).start();
         }
