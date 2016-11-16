@@ -52,7 +52,7 @@ public final class CompactionCoordinatorService {
 
     private CompactionCoordinatorService(String addr) {
         this.addr = addr;
-        channel = ManagedChannelBuilder.forAddress(addr, 50051).build();
+        channel = ManagedChannelBuilder.forAddress(addr, 50051).usePlaintext(true).build();
         stub = CoordinatorGrpc.newFutureStub(channel);
         blockingStub = CoordinatorGrpc.newBlockingStub(channel);
     }

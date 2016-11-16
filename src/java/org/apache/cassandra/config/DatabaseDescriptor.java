@@ -147,6 +147,7 @@ public class DatabaseDescriptor
     public static void computeRateLimitParams(MutableInt batchSize, MutableInt iops) throws Exception {
         String[] dataFilePaths = getAllDataFileLocations();
         String os = "";
+        logger.info("Collecting rate limiting param measurements");
         if (SystemUtils.IS_OS_WINDOWS) {
             os = "windows";
         } else if (SystemUtils.IS_OS_MAC_OSX) {
