@@ -42,6 +42,8 @@ import io.grpc.ManagedChannelBuilder;
 import org.apache.cassandra.config.DatabaseDescriptor;
 
 public final class CompactionCoordinatorService {
+    private static final long UPDATE_LOAD_PERIOD_MS = 500;
+
     private static final Logger logger = LoggerFactory.getLogger(CompactionCoordinatorService.class);
     private static CompactionCoordinatorService instance;
 
@@ -128,6 +130,7 @@ public final class CompactionCoordinatorService {
                 while (true) {
                     long readIOs = 0;
                     long writeIOs = 0;
+                    long startTime = System.currentTimeMillis();
                     for (String name : devNames) {
                         try {
                             String stats = new String(Files.readAllBytes(Paths.get("/sys/block", name, "stat")), "utf-8");
@@ -148,6 +151,11 @@ public final class CompactionCoordinatorService {
                                                               .setReadIos(readIOs)
                                                               .setWriteIos(writeIOs)
                                                               .build());
+                    while (System.currentTimeMillis() < startTime+UPDATE_LOAD_PERIOD_MS) {
+                        try {
+                            Thread.sleep(System.currentTimeMillis()-startTime);
+                        } catch (InterruptedException e) {}
+                    }
                 }
             }).start();
         }
