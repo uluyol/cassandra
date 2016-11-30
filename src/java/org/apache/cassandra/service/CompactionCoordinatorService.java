@@ -130,17 +130,21 @@ public final class CompactionCoordinatorService {
                 while (true) {
                     long readIOs = 0;
                     long writeIOs = 0;
+                    long readBytes = 0;
+                    long writeBytes = 0;
                     long startTime = System.currentTimeMillis();
                     for (String name : devNames) {
                         try {
                             String stats = new String(Files.readAllBytes(Paths.get("/sys/block", name, "stat")), "utf-8");
                             String[] fields = StringUtils.split(stats);
-                            if (fields.length < 5) {
+                            if (fields.length < 8) {
                                 logger.warn("Invalid stats: %s", stats);
                                 continue;
                             }
                             readIOs += Long.parseLong(fields[0]);
-                            writeIOs += Long.parseLong(fields[1]);
+                            writeIOs += Long.parseLong(fields[4]);
+                            readBytes += Long.parseLong(fields[2])*512;
+                            writeBytes += Long.parseLong(fields[6])*512;
                         } catch (Exception e) {
                             logger.warn("Error occurred while getting stats for %s: %s", name, e);
                             continue;
@@ -150,6 +154,8 @@ public final class CompactionCoordinatorService {
                                                               .setServerIp(ip)
                                                               .setReadIos(readIOs)
                                                               .setWriteIos(writeIOs)
+                                                              .setReadBytes(readBytes)
+                                                              .setWriteBytes(writeBytes)
                                                               .build());
                     while (System.currentTimeMillis() < startTime+UPDATE_LOAD_PERIOD_MS) {
                         try {
