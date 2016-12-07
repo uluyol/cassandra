@@ -55,13 +55,13 @@ public class CoordinatorGrpc {
           io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.UpdateLoadReq.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.Empty.getDefaultInstance()));
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  public static final io.grpc.MethodDescriptor<edu.umich.compaction.Coordination.QueueCompactionReq,
-      edu.umich.compaction.Coordination.Empty> METHOD_QUEUE_COMPACTION =
+  public static final io.grpc.MethodDescriptor<edu.umich.compaction.Coordination.SyncCompactionsReq,
+      edu.umich.compaction.Coordination.Empty> METHOD_SYNC_COMPACTIONS =
       io.grpc.MethodDescriptor.create(
           io.grpc.MethodDescriptor.MethodType.UNARY,
           generateFullMethodName(
-              "compaction.Coordinator", "QueueCompaction"),
-          io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.QueueCompactionReq.getDefaultInstance()),
+              "compaction.Coordinator", "SyncCompactions"),
+          io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.SyncCompactionsReq.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(edu.umich.compaction.Coordination.Empty.getDefaultInstance()));
 
   /**
@@ -114,9 +114,9 @@ public class CoordinatorGrpc {
 
     /**
      */
-    public void queueCompaction(edu.umich.compaction.Coordination.QueueCompactionReq request,
+    public void syncCompactions(edu.umich.compaction.Coordination.SyncCompactionsReq request,
         io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty> responseObserver) {
-      asyncUnimplementedUnaryCall(METHOD_QUEUE_COMPACTION, responseObserver);
+      asyncUnimplementedUnaryCall(METHOD_SYNC_COMPACTIONS, responseObserver);
     }
 
     @java.lang.Override public io.grpc.ServerServiceDefinition bindService() {
@@ -143,12 +143,12 @@ public class CoordinatorGrpc {
                 edu.umich.compaction.Coordination.Empty>(
                   this, METHODID_UPDATE_LOAD)))
           .addMethod(
-            METHOD_QUEUE_COMPACTION,
+            METHOD_SYNC_COMPACTIONS,
             asyncUnaryCall(
               new MethodHandlers<
-                edu.umich.compaction.Coordination.QueueCompactionReq,
+                edu.umich.compaction.Coordination.SyncCompactionsReq,
                 edu.umich.compaction.Coordination.Empty>(
-                  this, METHODID_QUEUE_COMPACTION)))
+                  this, METHODID_SYNC_COMPACTIONS)))
           .build();
     }
   }
@@ -197,10 +197,10 @@ public class CoordinatorGrpc {
 
     /**
      */
-    public void queueCompaction(edu.umich.compaction.Coordination.QueueCompactionReq request,
+    public void syncCompactions(edu.umich.compaction.Coordination.SyncCompactionsReq request,
         io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty> responseObserver) {
       asyncUnaryCall(
-          getChannel().newCall(METHOD_QUEUE_COMPACTION, getCallOptions()), request, responseObserver);
+          getChannel().newCall(METHOD_SYNC_COMPACTIONS, getCallOptions()), request, responseObserver);
     }
   }
 
@@ -246,9 +246,9 @@ public class CoordinatorGrpc {
 
     /**
      */
-    public edu.umich.compaction.Coordination.Empty queueCompaction(edu.umich.compaction.Coordination.QueueCompactionReq request) {
+    public edu.umich.compaction.Coordination.Empty syncCompactions(edu.umich.compaction.Coordination.SyncCompactionsReq request) {
       return blockingUnaryCall(
-          getChannel(), METHOD_QUEUE_COMPACTION, getCallOptions(), request);
+          getChannel(), METHOD_SYNC_COMPACTIONS, getCallOptions(), request);
     }
   }
 
@@ -288,17 +288,17 @@ public class CoordinatorGrpc {
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<edu.umich.compaction.Coordination.Empty> queueCompaction(
-        edu.umich.compaction.Coordination.QueueCompactionReq request) {
+    public com.google.common.util.concurrent.ListenableFuture<edu.umich.compaction.Coordination.Empty> syncCompactions(
+        edu.umich.compaction.Coordination.SyncCompactionsReq request) {
       return futureUnaryCall(
-          getChannel().newCall(METHOD_QUEUE_COMPACTION, getCallOptions()), request);
+          getChannel().newCall(METHOD_SYNC_COMPACTIONS, getCallOptions()), request);
     }
   }
 
   private static final int METHODID_REGISTER = 0;
   private static final int METHODID_WATCH_COMPACTIONS = 1;
   private static final int METHODID_UPDATE_LOAD = 2;
-  private static final int METHODID_QUEUE_COMPACTION = 3;
+  private static final int METHODID_SYNC_COMPACTIONS = 3;
 
   private static class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -329,8 +329,8 @@ public class CoordinatorGrpc {
           serviceImpl.updateLoad((edu.umich.compaction.Coordination.UpdateLoadReq) request,
               (io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty>) responseObserver);
           break;
-        case METHODID_QUEUE_COMPACTION:
-          serviceImpl.queueCompaction((edu.umich.compaction.Coordination.QueueCompactionReq) request,
+        case METHODID_SYNC_COMPACTIONS:
+          serviceImpl.syncCompactions((edu.umich.compaction.Coordination.SyncCompactionsReq) request,
               (io.grpc.stub.StreamObserver<edu.umich.compaction.Coordination.Empty>) responseObserver);
           break;
         default:
@@ -354,7 +354,7 @@ public class CoordinatorGrpc {
         METHOD_REGISTER,
         METHOD_WATCH_COMPACTIONS,
         METHOD_UPDATE_LOAD,
-        METHOD_QUEUE_COMPACTION);
+        METHOD_SYNC_COMPACTIONS);
   }
 
 }

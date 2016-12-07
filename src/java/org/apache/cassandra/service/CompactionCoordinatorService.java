@@ -42,7 +42,8 @@ import io.grpc.ManagedChannelBuilder;
 import org.apache.cassandra.config.DatabaseDescriptor;
 
 public final class CompactionCoordinatorService {
-    private static final long UPDATE_LOAD_PERIOD_MS = 500;
+    private static final long UPDATE_LOAD_PERIOD_MS = 500L;
+    public static final long SYNC_COMPACTION_PERIOD_MS = 1000L;
 
     private static final Logger logger = LoggerFactory.getLogger(CompactionCoordinatorService.class);
     private static CompactionCoordinatorService instance;
@@ -76,13 +77,17 @@ public final class CompactionCoordinatorService {
         new Thread(() -> {
             String ip = DatabaseDescriptor.getBroadcastAddress().toString();
             Coordination.WatchReq req = Coordination.WatchReq.newBuilder().setServerIp(ip).build();
-            while (true)
-            {
-                Iterator<Coordination.ExecCompaction> reqs = blockingStub.watchCompactions(req);
-                reqs.forEachRemaining((compaction) ->
-                                      {
-                                          CompactionManager.instance.runGivenTask(compaction.getCompactionId());
-                                      });
+
+            while (true) {
+                logger.info("Watching for compactions from coordinator");
+                try {
+                    Iterator<Coordination.ExecCompaction> reqs = blockingStub.watchCompactions(req);
+                    reqs.forEachRemaining((compaction) -> {
+                        CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
+                    });
+                } catch (Exception e) {
+                    logger.warn("Encountered exception when listening to or executing compaction", e);
+                }
             }
         }).start();
     }
@@ -150,6 +155,7 @@ public final class CompactionCoordinatorService {
                             continue;
                         }
                     }
+                    logger.info("Sending updated disk stats to coordinator");
                     stub.updateLoad(Coordination.UpdateLoadReq.newBuilder()
                                                               .setServerIp(ip)
                                                               .setReadIos(readIOs)
@@ -168,7 +174,10 @@ public final class CompactionCoordinatorService {
         // don't know what to do for other OS's
     }
 
-    public static void queueCompaction(Coordination.QueueCompactionReq req) { instance.stub.queueCompaction(req); }
+    public static void syncCompactions(Coordination.SyncCompactionsReq req) {
+        logger.info("Syncing compactions with coordinator");
+        instance.stub.syncCompactions(req);
+    }
 
     private static String execGetOutput(String[] cmd) throws Exception {
         Runtime rt = Runtime.getRuntime();

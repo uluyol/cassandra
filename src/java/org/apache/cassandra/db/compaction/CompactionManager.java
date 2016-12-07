@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -124,8 +122,41 @@ public class CompactionManager implements CompactionManagerMBean
     private final Multiset<ColumnFamilyStore> compactingCF = ConcurrentHashMultiset.create();
 
     private final RateLimiter compactionRateLimiter = RateLimiter.create(Double.MAX_VALUE);
-    private final HashMap<UUID, AbstractCompactionTask> waitingTasks = new HashMap<UUID, AbstractCompactionTask>();
-    public final Lock waitingTaskListLock = new ReentrantLock();
+
+    // Always synchronize on waitingTasks for the following two fields
+    private final List<WaitingTask> waitingTasks = new ArrayList<>();
+    private Coordination.SyncCompactionsReq cachedSyncCompactionsReq = Coordination.SyncCompactionsReq.getDefaultInstance();
+
+    public CompactionManager() {
+        // start bg thread for syncing compactions periodically
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(CompactionCoordinatorService.SYNC_COMPACTION_PERIOD_MS);
+                } catch (InterruptedException e) {}
+                try
+                {
+                    Coordination.SyncCompactionsReq req;
+                    synchronized (waitingTasks) {
+                        req = cachedSyncCompactionsReq;
+                    }
+                    CompactionCoordinatorService.syncCompactions(req);
+                } catch (Exception e) {
+                    logger.warn("Encountered error while syncing compactions", e);
+                }
+            }
+        }).start();
+    }
+
+    private static final class WaitingTask {
+        public final long queueTimeMs;
+        public final AbstractCompactionTask task;
+
+        public WaitingTask(AbstractCompactionTask t) {
+            task = t;
+            queueTimeMs = System.currentTimeMillis();
+        }
+    }
 
     /**
      * Gets compaction rate limiter.
@@ -268,25 +299,30 @@ public class CompactionManager implements CompactionManagerMBean
                     logger.trace("No tasks available");
                     return;
                 }
-                try {
-                    task.execute(metrics);
-                    UUID taskId = task.transaction.opId();
-                    int numberOfTables = task.transaction.originals().size();
-                    long expectedWriteSize = cfs.getExpectedCompactedFileSize(task.transaction.originals(), task.compactionType);
-                    long startsize = SSTableReader.getTotalBytes(task.transaction.originals());
-                    long earlySSTableEstimate = Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes());
-                    waitingTaskListLock.lock();
-                    waitingTasks.put(taskId, task);
-                    String serverIp = DatabaseDescriptor.getBroadcastAddress().toString();
-                    Coordination.QueueCompactionReq compactionReq = Coordination.QueueCompactionReq.newBuilder().setServerIp(serverIp).setCompactionId(taskId.toString())
-                                                                    .setExpectedSize(expectedWriteSize).setExpectedTableCount(earlySSTableEstimate)
-                                                                    .setStartSize(startsize).build();
-                    CompactionCoordinatorService.queueCompaction(compactionReq);
-
-                    //XXX something like client.send(parameters)
-                } finally {
-                    waitingTaskListLock.unlock();
+                //task.execute(metrics);
+                UUID taskId = task.transaction.opId();
+                int numberOfTables = task.transaction.originals().size();
+                long expectedWriteSize = cfs.getExpectedCompactedFileSize(task.transaction.originals(), task.compactionType);
+                long startsize = SSTableReader.getTotalBytes(task.transaction.originals());
+                long earlySSTableEstimate = Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes());
+                Coordination.SyncCompactionsReq.Builder scb = Coordination.SyncCompactionsReq.newBuilder();
+                scb.setServerIp(DatabaseDescriptor.getBroadcastAddress().toString());
+                Coordination.SyncCompactionsReq req = null;
+                synchronized (waitingTasks) {
+                    waitingTasks.add(new WaitingTask(task));
+                    for (WaitingTask t : waitingTasks) {
+                        scb.addCompactions(Coordination.Compaction.newBuilder()
+                                                                  .setQueueTimeMs(t.queueTimeMs)
+                                                                  .setCompactionId(taskId.toString())
+                                                                  .setExpectedSize(expectedWriteSize)
+                                                                  .setExpectedTableCount(earlySSTableEstimate)
+                                                                  .setStartSize(startsize)
+                                                                  .build());
+                    }
+                    req = scb.build();
+                    cachedSyncCompactionsReq = req;
                 }
+                CompactionCoordinatorService.syncCompactions(req);
             }
             finally
             {
@@ -296,16 +332,22 @@ public class CompactionManager implements CompactionManagerMBean
         }
     }
 
-    public void runGivenTask(String taskIDString) {
+    public void runGivenTaskAndClear(String taskIDString) {
         UUID taskID = UUID.fromString(taskIDString);
-        AbstractCompactionTask task = waitingTasks.get(taskID);
-        try {
-            task.execute(metrics);
-            waitingTaskListLock.lock();
-            waitingTasks.remove(taskID);
-        } finally {
-            waitingTaskListLock.unlock();
+        AbstractCompactionTask task = null;
+        synchronized (waitingTasks) {
+            for (WaitingTask t : waitingTasks) {
+                if (t.task.transaction.opId().equals(taskID)) {
+                    task = t.task;
+                    waitingTasks.clear();
+                    break;
+                }
+            }
         }
+        if (task == null) {
+            return;
+        }
+        task.execute(metrics);
     }
 
     @SuppressWarnings("resource")

@@ -2471,19 +2471,9 @@ public final class Coordination {
 
   }
 
-  public interface QueueCompactionReqOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:compaction.QueueCompactionReq)
+  public interface CompactionOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:compaction.Compaction)
       com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>optional string server_ip = 1;</code>
-     */
-    java.lang.String getServerIp();
-    /**
-     * <code>optional string server_ip = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getServerIpBytes();
 
     /**
      * <code>optional string compaction_id = 2;</code>
@@ -2509,24 +2499,29 @@ public final class Coordination {
      * <code>optional int64 expected_table_count = 5;</code>
      */
     long getExpectedTableCount();
+
+    /**
+     * <code>optional uint64 queue_time_ms = 6;</code>
+     */
+    long getQueueTimeMs();
   }
   /**
-   * Protobuf type {@code compaction.QueueCompactionReq}
+   * Protobuf type {@code compaction.Compaction}
    */
-  public  static final class QueueCompactionReq extends
+  public  static final class Compaction extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:compaction.QueueCompactionReq)
-      QueueCompactionReqOrBuilder {
-    // Use QueueCompactionReq.newBuilder() to construct.
-    private QueueCompactionReq(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      // @@protoc_insertion_point(message_implements:compaction.Compaction)
+      CompactionOrBuilder {
+    // Use Compaction.newBuilder() to construct.
+    private Compaction(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private QueueCompactionReq() {
-      serverIp_ = "";
+    private Compaction() {
       compactionId_ = "";
       expectedSize_ = 0L;
       startSize_ = 0L;
       expectedTableCount_ = 0L;
+      queueTimeMs_ = 0L;
     }
 
     @java.lang.Override
@@ -2534,7 +2529,7 @@ public final class Coordination {
     getUnknownFields() {
       return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
     }
-    private QueueCompactionReq(
+    private Compaction(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2552,12 +2547,6 @@ public final class Coordination {
               if (!input.skipField(tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              serverIp_ = s;
               break;
             }
             case 18: {
@@ -2581,6 +2570,11 @@ public final class Coordination {
               expectedTableCount_ = input.readInt64();
               break;
             }
+            case 48: {
+
+              queueTimeMs_ = input.readUInt64();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2594,48 +2588,14 @@ public final class Coordination {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return edu.umich.compaction.Coordination.internal_static_compaction_QueueCompactionReq_descriptor;
+      return edu.umich.compaction.Coordination.internal_static_compaction_Compaction_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return edu.umich.compaction.Coordination.internal_static_compaction_QueueCompactionReq_fieldAccessorTable
+      return edu.umich.compaction.Coordination.internal_static_compaction_Compaction_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              edu.umich.compaction.Coordination.QueueCompactionReq.class, edu.umich.compaction.Coordination.QueueCompactionReq.Builder.class);
-    }
-
-    public static final int SERVER_IP_FIELD_NUMBER = 1;
-    private volatile java.lang.Object serverIp_;
-    /**
-     * <code>optional string server_ip = 1;</code>
-     */
-    public java.lang.String getServerIp() {
-      java.lang.Object ref = serverIp_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        serverIp_ = s;
-        return s;
-      }
-    }
-    /**
-     * <code>optional string server_ip = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getServerIpBytes() {
-      java.lang.Object ref = serverIp_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        serverIp_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+              edu.umich.compaction.Coordination.Compaction.class, edu.umich.compaction.Coordination.Compaction.Builder.class);
     }
 
     public static final int COMPACTION_ID_FIELD_NUMBER = 2;
@@ -2699,6 +2659,15 @@ public final class Coordination {
       return expectedTableCount_;
     }
 
+    public static final int QUEUE_TIME_MS_FIELD_NUMBER = 6;
+    private long queueTimeMs_;
+    /**
+     * <code>optional uint64 queue_time_ms = 6;</code>
+     */
+    public long getQueueTimeMs() {
+      return queueTimeMs_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2711,9 +2680,6 @@ public final class Coordination {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (!getServerIpBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, serverIp_);
-      }
       if (!getCompactionIdBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, compactionId_);
       }
@@ -2726,6 +2692,9 @@ public final class Coordination {
       if (expectedTableCount_ != 0L) {
         output.writeInt64(5, expectedTableCount_);
       }
+      if (queueTimeMs_ != 0L) {
+        output.writeUInt64(6, queueTimeMs_);
+      }
     }
 
     public int getSerializedSize() {
@@ -2733,9 +2702,6 @@ public final class Coordination {
       if (size != -1) return size;
 
       size = 0;
-      if (!getServerIpBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, serverIp_);
-      }
       if (!getCompactionIdBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, compactionId_);
       }
@@ -2751,6 +2717,10 @@ public final class Coordination {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(5, expectedTableCount_);
       }
+      if (queueTimeMs_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(6, queueTimeMs_);
+      }
       memoizedSize = size;
       return size;
     }
@@ -2761,14 +2731,12 @@ public final class Coordination {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof edu.umich.compaction.Coordination.QueueCompactionReq)) {
+      if (!(obj instanceof edu.umich.compaction.Coordination.Compaction)) {
         return super.equals(obj);
       }
-      edu.umich.compaction.Coordination.QueueCompactionReq other = (edu.umich.compaction.Coordination.QueueCompactionReq) obj;
+      edu.umich.compaction.Coordination.Compaction other = (edu.umich.compaction.Coordination.Compaction) obj;
 
       boolean result = true;
-      result = result && getServerIp()
-          .equals(other.getServerIp());
       result = result && getCompactionId()
           .equals(other.getCompactionId());
       result = result && (getExpectedSize()
@@ -2777,6 +2745,8 @@ public final class Coordination {
           == other.getStartSize());
       result = result && (getExpectedTableCount()
           == other.getExpectedTableCount());
+      result = result && (getQueueTimeMs()
+          == other.getQueueTimeMs());
       return result;
     }
 
@@ -2787,8 +2757,6 @@ public final class Coordination {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptorForType().hashCode();
-      hash = (37 * hash) + SERVER_IP_FIELD_NUMBER;
-      hash = (53 * hash) + getServerIp().hashCode();
       hash = (37 * hash) + COMPACTION_ID_FIELD_NUMBER;
       hash = (53 * hash) + getCompactionId().hashCode();
       hash = (37 * hash) + EXPECTED_SIZE_FIELD_NUMBER;
@@ -2800,63 +2768,66 @@ public final class Coordination {
       hash = (37 * hash) + EXPECTED_TABLE_COUNT_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getExpectedTableCount());
+      hash = (37 * hash) + QUEUE_TIME_MS_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getQueueTimeMs());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(byte[] data)
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(java.io.InputStream input)
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseDelimitedFrom(java.io.InputStream input)
+    public static edu.umich.compaction.Coordination.Compaction parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseDelimitedFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static edu.umich.compaction.Coordination.QueueCompactionReq parseFrom(
+    public static edu.umich.compaction.Coordination.Compaction parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -2868,7 +2839,7 @@ public final class Coordination {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(edu.umich.compaction.Coordination.QueueCompactionReq prototype) {
+    public static Builder newBuilder(edu.umich.compaction.Coordination.Compaction prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -2883,25 +2854,25 @@ public final class Coordination {
       return builder;
     }
     /**
-     * Protobuf type {@code compaction.QueueCompactionReq}
+     * Protobuf type {@code compaction.Compaction}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:compaction.QueueCompactionReq)
-        edu.umich.compaction.Coordination.QueueCompactionReqOrBuilder {
+        // @@protoc_insertion_point(builder_implements:compaction.Compaction)
+        edu.umich.compaction.Coordination.CompactionOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return edu.umich.compaction.Coordination.internal_static_compaction_QueueCompactionReq_descriptor;
+        return edu.umich.compaction.Coordination.internal_static_compaction_Compaction_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return edu.umich.compaction.Coordination.internal_static_compaction_QueueCompactionReq_fieldAccessorTable
+        return edu.umich.compaction.Coordination.internal_static_compaction_Compaction_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                edu.umich.compaction.Coordination.QueueCompactionReq.class, edu.umich.compaction.Coordination.QueueCompactionReq.Builder.class);
+                edu.umich.compaction.Coordination.Compaction.class, edu.umich.compaction.Coordination.Compaction.Builder.class);
       }
 
-      // Construct using edu.umich.compaction.Coordination.QueueCompactionReq.newBuilder()
+      // Construct using edu.umich.compaction.Coordination.Compaction.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -2918,8 +2889,6 @@ public final class Coordination {
       }
       public Builder clear() {
         super.clear();
-        serverIp_ = "";
-
         compactionId_ = "";
 
         expectedSize_ = 0L;
@@ -2928,33 +2897,35 @@ public final class Coordination {
 
         expectedTableCount_ = 0L;
 
+        queueTimeMs_ = 0L;
+
         return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return edu.umich.compaction.Coordination.internal_static_compaction_QueueCompactionReq_descriptor;
+        return edu.umich.compaction.Coordination.internal_static_compaction_Compaction_descriptor;
       }
 
-      public edu.umich.compaction.Coordination.QueueCompactionReq getDefaultInstanceForType() {
-        return edu.umich.compaction.Coordination.QueueCompactionReq.getDefaultInstance();
+      public edu.umich.compaction.Coordination.Compaction getDefaultInstanceForType() {
+        return edu.umich.compaction.Coordination.Compaction.getDefaultInstance();
       }
 
-      public edu.umich.compaction.Coordination.QueueCompactionReq build() {
-        edu.umich.compaction.Coordination.QueueCompactionReq result = buildPartial();
+      public edu.umich.compaction.Coordination.Compaction build() {
+        edu.umich.compaction.Coordination.Compaction result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public edu.umich.compaction.Coordination.QueueCompactionReq buildPartial() {
-        edu.umich.compaction.Coordination.QueueCompactionReq result = new edu.umich.compaction.Coordination.QueueCompactionReq(this);
-        result.serverIp_ = serverIp_;
+      public edu.umich.compaction.Coordination.Compaction buildPartial() {
+        edu.umich.compaction.Coordination.Compaction result = new edu.umich.compaction.Coordination.Compaction(this);
         result.compactionId_ = compactionId_;
         result.expectedSize_ = expectedSize_;
         result.startSize_ = startSize_;
         result.expectedTableCount_ = expectedTableCount_;
+        result.queueTimeMs_ = queueTimeMs_;
         onBuilt();
         return result;
       }
@@ -2986,20 +2957,16 @@ public final class Coordination {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof edu.umich.compaction.Coordination.QueueCompactionReq) {
-          return mergeFrom((edu.umich.compaction.Coordination.QueueCompactionReq)other);
+        if (other instanceof edu.umich.compaction.Coordination.Compaction) {
+          return mergeFrom((edu.umich.compaction.Coordination.Compaction)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(edu.umich.compaction.Coordination.QueueCompactionReq other) {
-        if (other == edu.umich.compaction.Coordination.QueueCompactionReq.getDefaultInstance()) return this;
-        if (!other.getServerIp().isEmpty()) {
-          serverIp_ = other.serverIp_;
-          onChanged();
-        }
+      public Builder mergeFrom(edu.umich.compaction.Coordination.Compaction other) {
+        if (other == edu.umich.compaction.Coordination.Compaction.getDefaultInstance()) return this;
         if (!other.getCompactionId().isEmpty()) {
           compactionId_ = other.compactionId_;
           onChanged();
@@ -3013,6 +2980,9 @@ public final class Coordination {
         if (other.getExpectedTableCount() != 0L) {
           setExpectedTableCount(other.getExpectedTableCount());
         }
+        if (other.getQueueTimeMs() != 0L) {
+          setQueueTimeMs(other.getQueueTimeMs());
+        }
         onChanged();
         return this;
       }
@@ -3025,86 +2995,17 @@ public final class Coordination {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        edu.umich.compaction.Coordination.QueueCompactionReq parsedMessage = null;
+        edu.umich.compaction.Coordination.Compaction parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (edu.umich.compaction.Coordination.QueueCompactionReq) e.getUnfinishedMessage();
+          parsedMessage = (edu.umich.compaction.Coordination.Compaction) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
             mergeFrom(parsedMessage);
           }
         }
-        return this;
-      }
-
-      private java.lang.Object serverIp_ = "";
-      /**
-       * <code>optional string server_ip = 1;</code>
-       */
-      public java.lang.String getServerIp() {
-        java.lang.Object ref = serverIp_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          serverIp_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>optional string server_ip = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getServerIpBytes() {
-        java.lang.Object ref = serverIp_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          serverIp_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>optional string server_ip = 1;</code>
-       */
-      public Builder setServerIp(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        serverIp_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string server_ip = 1;</code>
-       */
-      public Builder clearServerIp() {
-        
-        serverIp_ = getDefaultInstance().getServerIp();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional string server_ip = 1;</code>
-       */
-      public Builder setServerIpBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        serverIp_ = value;
-        onChanged();
         return this;
       }
 
@@ -3254,6 +3155,32 @@ public final class Coordination {
         onChanged();
         return this;
       }
+
+      private long queueTimeMs_ ;
+      /**
+       * <code>optional uint64 queue_time_ms = 6;</code>
+       */
+      public long getQueueTimeMs() {
+        return queueTimeMs_;
+      }
+      /**
+       * <code>optional uint64 queue_time_ms = 6;</code>
+       */
+      public Builder setQueueTimeMs(long value) {
+        
+        queueTimeMs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 queue_time_ms = 6;</code>
+       */
+      public Builder clearQueueTimeMs() {
+        
+        queueTimeMs_ = 0L;
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return this;
@@ -3265,39 +3192,914 @@ public final class Coordination {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:compaction.QueueCompactionReq)
+      // @@protoc_insertion_point(builder_scope:compaction.Compaction)
     }
 
-    // @@protoc_insertion_point(class_scope:compaction.QueueCompactionReq)
-    private static final edu.umich.compaction.Coordination.QueueCompactionReq DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:compaction.Compaction)
+    private static final edu.umich.compaction.Coordination.Compaction DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new edu.umich.compaction.Coordination.QueueCompactionReq();
+      DEFAULT_INSTANCE = new edu.umich.compaction.Coordination.Compaction();
     }
 
-    public static edu.umich.compaction.Coordination.QueueCompactionReq getDefaultInstance() {
+    public static edu.umich.compaction.Coordination.Compaction getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<QueueCompactionReq>
-        PARSER = new com.google.protobuf.AbstractParser<QueueCompactionReq>() {
-      public QueueCompactionReq parsePartialFrom(
+    private static final com.google.protobuf.Parser<Compaction>
+        PARSER = new com.google.protobuf.AbstractParser<Compaction>() {
+      public Compaction parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new QueueCompactionReq(input, extensionRegistry);
+          return new Compaction(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<QueueCompactionReq> parser() {
+    public static com.google.protobuf.Parser<Compaction> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<QueueCompactionReq> getParserForType() {
+    public com.google.protobuf.Parser<Compaction> getParserForType() {
       return PARSER;
     }
 
-    public edu.umich.compaction.Coordination.QueueCompactionReq getDefaultInstanceForType() {
+    public edu.umich.compaction.Coordination.Compaction getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SyncCompactionsReqOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:compaction.SyncCompactionsReq)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    java.lang.String getServerIp();
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getServerIpBytes();
+
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    java.util.List<edu.umich.compaction.Coordination.Compaction> 
+        getCompactionsList();
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    edu.umich.compaction.Coordination.Compaction getCompactions(int index);
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    int getCompactionsCount();
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    java.util.List<? extends edu.umich.compaction.Coordination.CompactionOrBuilder> 
+        getCompactionsOrBuilderList();
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    edu.umich.compaction.Coordination.CompactionOrBuilder getCompactionsOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code compaction.SyncCompactionsReq}
+   */
+  public  static final class SyncCompactionsReq extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:compaction.SyncCompactionsReq)
+      SyncCompactionsReqOrBuilder {
+    // Use SyncCompactionsReq.newBuilder() to construct.
+    private SyncCompactionsReq(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SyncCompactionsReq() {
+      serverIp_ = "";
+      compactions_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private SyncCompactionsReq(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              serverIp_ = s;
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                compactions_ = new java.util.ArrayList<edu.umich.compaction.Coordination.Compaction>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              compactions_.add(
+                  input.readMessage(edu.umich.compaction.Coordination.Compaction.parser(), extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          compactions_ = java.util.Collections.unmodifiableList(compactions_);
+        }
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.umich.compaction.Coordination.internal_static_compaction_SyncCompactionsReq_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.umich.compaction.Coordination.internal_static_compaction_SyncCompactionsReq_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.umich.compaction.Coordination.SyncCompactionsReq.class, edu.umich.compaction.Coordination.SyncCompactionsReq.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int SERVER_IP_FIELD_NUMBER = 1;
+    private volatile java.lang.Object serverIp_;
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    public java.lang.String getServerIp() {
+      java.lang.Object ref = serverIp_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        serverIp_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string server_ip = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getServerIpBytes() {
+      java.lang.Object ref = serverIp_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        serverIp_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int COMPACTIONS_FIELD_NUMBER = 2;
+    private java.util.List<edu.umich.compaction.Coordination.Compaction> compactions_;
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    public java.util.List<edu.umich.compaction.Coordination.Compaction> getCompactionsList() {
+      return compactions_;
+    }
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    public java.util.List<? extends edu.umich.compaction.Coordination.CompactionOrBuilder> 
+        getCompactionsOrBuilderList() {
+      return compactions_;
+    }
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    public int getCompactionsCount() {
+      return compactions_.size();
+    }
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    public edu.umich.compaction.Coordination.Compaction getCompactions(int index) {
+      return compactions_.get(index);
+    }
+    /**
+     * <code>repeated .compaction.Compaction compactions = 2;</code>
+     */
+    public edu.umich.compaction.Coordination.CompactionOrBuilder getCompactionsOrBuilder(
+        int index) {
+      return compactions_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getServerIpBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, serverIp_);
+      }
+      for (int i = 0; i < compactions_.size(); i++) {
+        output.writeMessage(2, compactions_.get(i));
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getServerIpBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, serverIp_);
+      }
+      for (int i = 0; i < compactions_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, compactions_.get(i));
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof edu.umich.compaction.Coordination.SyncCompactionsReq)) {
+        return super.equals(obj);
+      }
+      edu.umich.compaction.Coordination.SyncCompactionsReq other = (edu.umich.compaction.Coordination.SyncCompactionsReq) obj;
+
+      boolean result = true;
+      result = result && getServerIp()
+          .equals(other.getServerIp());
+      result = result && getCompactionsList()
+          .equals(other.getCompactionsList());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + SERVER_IP_FIELD_NUMBER;
+      hash = (53 * hash) + getServerIp().hashCode();
+      if (getCompactionsCount() > 0) {
+        hash = (37 * hash) + COMPACTIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getCompactionsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(edu.umich.compaction.Coordination.SyncCompactionsReq prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code compaction.SyncCompactionsReq}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:compaction.SyncCompactionsReq)
+        edu.umich.compaction.Coordination.SyncCompactionsReqOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.umich.compaction.Coordination.internal_static_compaction_SyncCompactionsReq_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.umich.compaction.Coordination.internal_static_compaction_SyncCompactionsReq_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.umich.compaction.Coordination.SyncCompactionsReq.class, edu.umich.compaction.Coordination.SyncCompactionsReq.Builder.class);
+      }
+
+      // Construct using edu.umich.compaction.Coordination.SyncCompactionsReq.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getCompactionsFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        serverIp_ = "";
+
+        if (compactionsBuilder_ == null) {
+          compactions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          compactionsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.umich.compaction.Coordination.internal_static_compaction_SyncCompactionsReq_descriptor;
+      }
+
+      public edu.umich.compaction.Coordination.SyncCompactionsReq getDefaultInstanceForType() {
+        return edu.umich.compaction.Coordination.SyncCompactionsReq.getDefaultInstance();
+      }
+
+      public edu.umich.compaction.Coordination.SyncCompactionsReq build() {
+        edu.umich.compaction.Coordination.SyncCompactionsReq result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public edu.umich.compaction.Coordination.SyncCompactionsReq buildPartial() {
+        edu.umich.compaction.Coordination.SyncCompactionsReq result = new edu.umich.compaction.Coordination.SyncCompactionsReq(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        result.serverIp_ = serverIp_;
+        if (compactionsBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            compactions_ = java.util.Collections.unmodifiableList(compactions_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.compactions_ = compactions_;
+        } else {
+          result.compactions_ = compactionsBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.umich.compaction.Coordination.SyncCompactionsReq) {
+          return mergeFrom((edu.umich.compaction.Coordination.SyncCompactionsReq)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.umich.compaction.Coordination.SyncCompactionsReq other) {
+        if (other == edu.umich.compaction.Coordination.SyncCompactionsReq.getDefaultInstance()) return this;
+        if (!other.getServerIp().isEmpty()) {
+          serverIp_ = other.serverIp_;
+          onChanged();
+        }
+        if (compactionsBuilder_ == null) {
+          if (!other.compactions_.isEmpty()) {
+            if (compactions_.isEmpty()) {
+              compactions_ = other.compactions_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureCompactionsIsMutable();
+              compactions_.addAll(other.compactions_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.compactions_.isEmpty()) {
+            if (compactionsBuilder_.isEmpty()) {
+              compactionsBuilder_.dispose();
+              compactionsBuilder_ = null;
+              compactions_ = other.compactions_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              compactionsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getCompactionsFieldBuilder() : null;
+            } else {
+              compactionsBuilder_.addAllMessages(other.compactions_);
+            }
+          }
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.umich.compaction.Coordination.SyncCompactionsReq parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.umich.compaction.Coordination.SyncCompactionsReq) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object serverIp_ = "";
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public java.lang.String getServerIp() {
+        java.lang.Object ref = serverIp_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          serverIp_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getServerIpBytes() {
+        java.lang.Object ref = serverIp_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          serverIp_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder setServerIp(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder clearServerIp() {
+        
+        serverIp_ = getDefaultInstance().getServerIp();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string server_ip = 1;</code>
+       */
+      public Builder setServerIpBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        serverIp_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<edu.umich.compaction.Coordination.Compaction> compactions_ =
+        java.util.Collections.emptyList();
+      private void ensureCompactionsIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          compactions_ = new java.util.ArrayList<edu.umich.compaction.Coordination.Compaction>(compactions_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          edu.umich.compaction.Coordination.Compaction, edu.umich.compaction.Coordination.Compaction.Builder, edu.umich.compaction.Coordination.CompactionOrBuilder> compactionsBuilder_;
+
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public java.util.List<edu.umich.compaction.Coordination.Compaction> getCompactionsList() {
+        if (compactionsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(compactions_);
+        } else {
+          return compactionsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public int getCompactionsCount() {
+        if (compactionsBuilder_ == null) {
+          return compactions_.size();
+        } else {
+          return compactionsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public edu.umich.compaction.Coordination.Compaction getCompactions(int index) {
+        if (compactionsBuilder_ == null) {
+          return compactions_.get(index);
+        } else {
+          return compactionsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder setCompactions(
+          int index, edu.umich.compaction.Coordination.Compaction value) {
+        if (compactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCompactionsIsMutable();
+          compactions_.set(index, value);
+          onChanged();
+        } else {
+          compactionsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder setCompactions(
+          int index, edu.umich.compaction.Coordination.Compaction.Builder builderForValue) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          compactionsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder addCompactions(edu.umich.compaction.Coordination.Compaction value) {
+        if (compactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCompactionsIsMutable();
+          compactions_.add(value);
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder addCompactions(
+          int index, edu.umich.compaction.Coordination.Compaction value) {
+        if (compactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCompactionsIsMutable();
+          compactions_.add(index, value);
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder addCompactions(
+          edu.umich.compaction.Coordination.Compaction.Builder builderForValue) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.add(builderForValue.build());
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder addCompactions(
+          int index, edu.umich.compaction.Coordination.Compaction.Builder builderForValue) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder addAllCompactions(
+          java.lang.Iterable<? extends edu.umich.compaction.Coordination.Compaction> values) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, compactions_);
+          onChanged();
+        } else {
+          compactionsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder clearCompactions() {
+        if (compactionsBuilder_ == null) {
+          compactions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          compactionsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public Builder removeCompactions(int index) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.remove(index);
+          onChanged();
+        } else {
+          compactionsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public edu.umich.compaction.Coordination.Compaction.Builder getCompactionsBuilder(
+          int index) {
+        return getCompactionsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public edu.umich.compaction.Coordination.CompactionOrBuilder getCompactionsOrBuilder(
+          int index) {
+        if (compactionsBuilder_ == null) {
+          return compactions_.get(index);  } else {
+          return compactionsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public java.util.List<? extends edu.umich.compaction.Coordination.CompactionOrBuilder> 
+           getCompactionsOrBuilderList() {
+        if (compactionsBuilder_ != null) {
+          return compactionsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(compactions_);
+        }
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public edu.umich.compaction.Coordination.Compaction.Builder addCompactionsBuilder() {
+        return getCompactionsFieldBuilder().addBuilder(
+            edu.umich.compaction.Coordination.Compaction.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public edu.umich.compaction.Coordination.Compaction.Builder addCompactionsBuilder(
+          int index) {
+        return getCompactionsFieldBuilder().addBuilder(
+            index, edu.umich.compaction.Coordination.Compaction.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .compaction.Compaction compactions = 2;</code>
+       */
+      public java.util.List<edu.umich.compaction.Coordination.Compaction.Builder> 
+           getCompactionsBuilderList() {
+        return getCompactionsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          edu.umich.compaction.Coordination.Compaction, edu.umich.compaction.Coordination.Compaction.Builder, edu.umich.compaction.Coordination.CompactionOrBuilder> 
+          getCompactionsFieldBuilder() {
+        if (compactionsBuilder_ == null) {
+          compactionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              edu.umich.compaction.Coordination.Compaction, edu.umich.compaction.Coordination.Compaction.Builder, edu.umich.compaction.Coordination.CompactionOrBuilder>(
+                  compactions_,
+                  ((bitField0_ & 0x00000002) == 0x00000002),
+                  getParentForChildren(),
+                  isClean());
+          compactions_ = null;
+        }
+        return compactionsBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:compaction.SyncCompactionsReq)
+    }
+
+    // @@protoc_insertion_point(class_scope:compaction.SyncCompactionsReq)
+    private static final edu.umich.compaction.Coordination.SyncCompactionsReq DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new edu.umich.compaction.Coordination.SyncCompactionsReq();
+    }
+
+    public static edu.umich.compaction.Coordination.SyncCompactionsReq getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<SyncCompactionsReq>
+        PARSER = new com.google.protobuf.AbstractParser<SyncCompactionsReq>() {
+      public SyncCompactionsReq parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new SyncCompactionsReq(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SyncCompactionsReq> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SyncCompactionsReq> getParserForType() {
+      return PARSER;
+    }
+
+    public edu.umich.compaction.Coordination.SyncCompactionsReq getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3689,10 +4491,15 @@ public final class Coordination {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_compaction_UpdateLoadReq_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_compaction_QueueCompactionReq_descriptor;
+    internal_static_compaction_Compaction_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_compaction_QueueCompactionReq_fieldAccessorTable;
+      internal_static_compaction_Compaction_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_compaction_SyncCompactionsReq_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_compaction_SyncCompactionsReq_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_compaction_Empty_descriptor;
   private static final 
@@ -3714,19 +4521,21 @@ public final class Coordination {
       "\rcompaction_id\030\001 \001(\t\022\022\n\niops_limit\030\002 \001(\005" +
       "\"p\n\rUpdateLoadReq\022\021\n\tserver_ip\030\001 \001(\t\022\020\n\010" +
       "read_ios\030\002 \001(\003\022\021\n\twrite_ios\030\003 \001(\003\022\022\n\nrea" +
-      "d_bytes\030\004 \001(\003\022\023\n\013write_bytes\030\005 \001(\003\"\207\001\n\022Q" +
-      "ueueCompactionReq\022\021\n\tserver_ip\030\001 \001(\t\022\025\n\r" +
-      "compaction_id\030\002 \001(\t\022\025\n\rexpected_size\030\003 \001",
-      "(\003\022\022\n\nstart_size\030\004 \001(\003\022\034\n\024expected_table" +
-      "_count\030\005 \001(\003\"\007\n\005Empty2\217\002\n\013Coordinator\0226\n" +
-      "\010Register\022\027.compaction.RegisterReq\032\021.com" +
-      "paction.Empty\022F\n\020WatchCompactions\022\024.comp" +
-      "action.WatchReq\032\032.compaction.ExecCompact" +
-      "ion0\001\022:\n\nUpdateLoad\022\031.compaction.UpdateL" +
-      "oadReq\032\021.compaction.Empty\022D\n\017QueueCompac" +
-      "tion\022\036.compaction.QueueCompactionReq\032\021.c" +
-      "ompaction.EmptyB$\n\024edu.umich.compactionB" +
-      "\014Coordinationb\006proto3"
+      "d_bytes\030\004 \001(\003\022\023\n\013write_bytes\030\005 \001(\003\"\203\001\n\nC" +
+      "ompaction\022\025\n\rcompaction_id\030\002 \001(\t\022\025\n\rexpe" +
+      "cted_size\030\003 \001(\003\022\022\n\nstart_size\030\004 \001(\003\022\034\n\024e",
+      "xpected_table_count\030\005 \001(\003\022\025\n\rqueue_time_" +
+      "ms\030\006 \001(\004\"T\n\022SyncCompactionsReq\022\021\n\tserver" +
+      "_ip\030\001 \001(\t\022+\n\013compactions\030\002 \003(\0132\026.compact" +
+      "ion.Compaction\"\007\n\005Empty2\217\002\n\013Coordinator\022" +
+      "6\n\010Register\022\027.compaction.RegisterReq\032\021.c" +
+      "ompaction.Empty\022F\n\020WatchCompactions\022\024.co" +
+      "mpaction.WatchReq\032\032.compaction.ExecCompa" +
+      "ction0\001\022:\n\nUpdateLoad\022\031.compaction.Updat" +
+      "eLoadReq\032\021.compaction.Empty\022D\n\017SyncCompa" +
+      "ctions\022\036.compaction.SyncCompactionsReq\032\021",
+      ".compaction.EmptyB$\n\024edu.umich.compactio" +
+      "nB\014Coordinationb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3764,14 +4573,20 @@ public final class Coordination {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_UpdateLoadReq_descriptor,
         new java.lang.String[] { "ServerIp", "ReadIos", "WriteIos", "ReadBytes", "WriteBytes", });
-    internal_static_compaction_QueueCompactionReq_descriptor =
+    internal_static_compaction_Compaction_descriptor =
       getDescriptor().getMessageTypes().get(4);
-    internal_static_compaction_QueueCompactionReq_fieldAccessorTable = new
+    internal_static_compaction_Compaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_compaction_QueueCompactionReq_descriptor,
-        new java.lang.String[] { "ServerIp", "CompactionId", "ExpectedSize", "StartSize", "ExpectedTableCount", });
-    internal_static_compaction_Empty_descriptor =
+        internal_static_compaction_Compaction_descriptor,
+        new java.lang.String[] { "CompactionId", "ExpectedSize", "StartSize", "ExpectedTableCount", "QueueTimeMs", });
+    internal_static_compaction_SyncCompactionsReq_descriptor =
       getDescriptor().getMessageTypes().get(5);
+    internal_static_compaction_SyncCompactionsReq_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_compaction_SyncCompactionsReq_descriptor,
+        new java.lang.String[] { "ServerIp", "Compactions", });
+    internal_static_compaction_Empty_descriptor =
+      getDescriptor().getMessageTypes().get(6);
     internal_static_compaction_Empty_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_Empty_descriptor,
