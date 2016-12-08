@@ -76,6 +76,7 @@ public class CompactionTask extends AbstractCompactionTask
         return totalBytesCompacted += bytesCompacted;
     }
 
+    @Override
     protected int executeInternal(CompactionExecutorStatsCollector collector)
     {
         this.collector = collector;

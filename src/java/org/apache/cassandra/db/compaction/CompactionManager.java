@@ -166,7 +166,7 @@ public class CompactionManager implements CompactionManagerMBean
      */
     public RateLimiter getRateLimiter()
     {
-        setRate(DatabaseDescriptor.getCompactionThroughputMbPerSec());
+        setRateMBps(DatabaseDescriptor.getCompactionThroughputMbPerSec());
         return compactionRateLimiter;
     }
 
@@ -175,7 +175,7 @@ public class CompactionManager implements CompactionManagerMBean
      * this sets the rate to Double.MAX_VALUE bytes per second.
      * @param throughPutMbPerSec throughput to set in mb per second
      */
-    public void setRate(final double throughPutMbPerSec)
+    public void setRateMBps(final double throughPutMbPerSec)
     {
         double throughput = throughPutMbPerSec * 1024.0 * 1024.0;
         // if throughput is set to 0, throttling is disabled
@@ -183,6 +183,16 @@ public class CompactionManager implements CompactionManagerMBean
             throughput = Double.MAX_VALUE;
         if (compactionRateLimiter.getRate() != throughput)
             compactionRateLimiter.setRate(throughput);
+    }
+
+    public void setRateBps(final double throughputBps) {
+        double throughput = throughputBps;
+        if (StorageService.instance.isBootstrapMode()) {
+            throughput = Double.MAX_VALUE;
+        }
+        if (compactionRateLimiter.getRate() != throughput) {
+            compactionRateLimiter.setRate(throughput);
+        }
     }
 
     /**

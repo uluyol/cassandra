@@ -83,6 +83,8 @@ public final class CompactionCoordinatorService {
                 try {
                     Iterator<Coordination.ExecCompaction> reqs = blockingStub.watchCompactions(req);
                     reqs.forEachRemaining((compaction) -> {
+                        CompactionManager.instance.setRateBps(
+                            compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize());
                         CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
                     });
                 } catch (Exception e) {
