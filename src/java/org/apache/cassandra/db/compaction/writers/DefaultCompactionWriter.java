@@ -64,7 +64,7 @@ public class DefaultCompactionWriter extends CompactionAwareWriter
     public void switchCompactionLocation(Directories.DataDirectory directory)
     {
         @SuppressWarnings("resource")
-        SSTableWriter writer = SSTableWriter.create(Descriptor.fromFilename(cfs.getSSTablePath(getDirectories().getLocationForDisk(directory))),
+        SSTableWriter writer = SSTableWriter.createForCompaction(Descriptor.fromFilename(cfs.getSSTablePath(getDirectories().getLocationForDisk(directory))),
                                                     estimatedTotalKeys,
                                                     minRepairedAt,
                                                     cfs.metadata,
