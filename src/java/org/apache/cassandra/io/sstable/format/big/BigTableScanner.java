@@ -71,6 +71,11 @@ public class BigTableScanner implements ISSTableScanner
         return new BigTableScanner(sstable, ColumnFilter.all(sstable.metadata), null, limiter, false, Iterators.singletonIterator(fullRange(sstable)));
     }
 
+    public static ISSTableScanner getScanner(int bufferSize, SSTableReader sstable, RateLimiter limiter)
+    {
+        return new BigTableScanner(bufferSize, sstable, ColumnFilter.all(sstable.metadata), null, limiter, false, Iterators.singletonIterator(fullRange(sstable)));
+    }
+
     public static ISSTableScanner getScanner(SSTableReader sstable, ColumnFilter columns, DataRange dataRange, RateLimiter limiter, boolean isForThrift)
     {
         return new BigTableScanner(sstable, columns, dataRange, limiter, isForThrift, makeBounds(sstable, dataRange).iterator());
@@ -86,6 +91,16 @@ public class BigTableScanner implements ISSTableScanner
         return new BigTableScanner(sstable, ColumnFilter.all(sstable.metadata), null, limiter, false, makeBounds(sstable, tokenRanges).iterator());
     }
 
+    public static ISSTableScanner getScanner(int bufferSize, SSTableReader sstable, Collection<Range<Token>> tokenRanges, RateLimiter limiter)
+    {
+        // We want to avoid allocating a SSTableScanner if the range don't overlap the sstable (#5249)
+        List<Pair<Long, Long>> positions = sstable.getPositionsForRanges(tokenRanges);
+        if (positions.isEmpty())
+            return new EmptySSTableScanner(sstable);
+
+        return new BigTableScanner(bufferSize, sstable, ColumnFilter.all(sstable.metadata), null, limiter, false, makeBounds(sstable, tokenRanges).iterator());
+    }
+
     private BigTableScanner(SSTableReader sstable, ColumnFilter columns, DataRange dataRange, RateLimiter limiter, boolean isForThrift, Iterator<AbstractBounds<PartitionPosition>> rangeIterator)
     {
         assert sstable != null;
@@ -98,6 +113,22 @@ public class BigTableScanner implements ISSTableScanner
         this.rowIndexEntrySerializer = sstable.descriptor.version.getSSTableFormat().getIndexSerializer(sstable.metadata,
                                                                                                         sstable.descriptor.version,
                                                                                                         sstable.header);
+        this.isForThrift = isForThrift;
+        this.rangeIterator = rangeIterator;
+    }
+
+    private BigTableScanner(int bufferSize, SSTableReader sstable, ColumnFilter columns, DataRange dataRange, RateLimiter limiter, boolean isForThrift, Iterator<AbstractBounds<PartitionPosition>> rangeIterator)
+    {
+        assert sstable != null;
+
+        this.dfile = limiter == null ? sstable.openDataReader(bufferSize) : sstable.openDataReader(bufferSize, limiter);
+        this.ifile = sstable.openIndexReader();
+        this.sstable = sstable;
+        this.columns = columns;
+        this.dataRange = dataRange;
+        this.rowIndexEntrySerializer = sstable.descriptor.version.getSSTableFormat().getIndexSerializer(sstable.metadata,
+                sstable.descriptor.version,
+                sstable.header);
         this.isForThrift = isForThrift;
         this.rangeIterator = rangeIterator;
     }

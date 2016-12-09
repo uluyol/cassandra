@@ -119,6 +119,14 @@ public abstract class SegmentedFile extends SharedCloseableImpl
                .build();
     }
 
+    public RandomAccessReader createReader(int bufSize)
+    {
+        return new RandomAccessReader.Builder(channel)
+                .overrideLength(length)
+                .bufferSize(bufSize)
+                .build();
+    }
+
     public RandomAccessReader createReader(RateLimiter limiter)
     {
         return new RandomAccessReader.Builder(channel)
@@ -126,6 +134,15 @@ public abstract class SegmentedFile extends SharedCloseableImpl
                .bufferSize(bufferSize)
                .limiter(limiter)
                .build();
+    }
+
+    public RandomAccessReader createReader(int bufSize, RateLimiter limiter)
+    {
+        return new RandomAccessReader.Builder(channel)
+                .overrideLength(length)
+                .bufferSize(bufSize)
+                .limiter(limiter)
+                .build();
     }
 
     public FileDataInput createReader(long position)

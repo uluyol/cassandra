@@ -20,6 +20,7 @@ package org.apache.cassandra.io.sstable.format.big;
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.cassandra.cache.KeyCacheKey;
 import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.db.rows.SliceableUnfilteredRowIterator;
 import org.apache.cassandra.db.filter.ColumnFilter;
@@ -102,7 +103,28 @@ public class BigTableReader extends SSTableReader
         return BigTableScanner.getScanner(this, ranges, limiter);
     }
 
+    /**
+     * Direct I/O SSTableScanner over the full sstable.
+     *
+     * @return A Scanner for reading the full SSTable.
+     */
+    public ISSTableScanner getScannerForCompaction(RateLimiter limiter)
+    {
+        int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize() * 1024 * 1024;
+        return BigTableScanner.getScanner(bufferSize, this, limiter);
+    }
 
+    /**
+     * Direct I/O SSTableScanner over a defined collection of ranges of tokens.
+     *
+     * @param ranges the range of keys to cover
+     * @return A Scanner for seeking over the rows of the SSTable.
+     */
+    public ISSTableScanner getScannerForCompaction(Collection<Range<Token>> ranges, RateLimiter limiter)
+    {
+        int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize() * 1024 * 1024;
+        return BigTableScanner.getScanner(bufferSize, this, ranges, limiter);
+    }
     /**
      * @param key The key to apply as the rhs to the given Operator. A 'fake' key is allowed to
      * allow key selection by token bounds but only if op != * EQ

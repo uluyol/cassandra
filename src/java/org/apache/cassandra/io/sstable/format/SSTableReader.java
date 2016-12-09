@@ -1743,9 +1743,13 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
     public ISSTableScanner getScanner(Range<Token> range, RateLimiter limiter)
     {
         if (range == null)
-            return getScanner(limiter);
-        return getScanner(Collections.singletonList(range), limiter);
+            return getScannerForCompaction(limiter);
+        return getScannerForCompaction(Collections.singletonList(range), limiter);
     }
+
+    public abstract ISSTableScanner getScannerForCompaction(RateLimiter limiter);
+
+    public abstract ISSTableScanner getScannerForCompaction(Collection<Range<Token>> ranges, RateLimiter limiter);
 
     /**
      * Direct I/O SSTableScanner over the entirety of the sstable..
@@ -1965,9 +1969,20 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
         return dfile.createReader(limiter);
     }
 
+    public RandomAccessReader openDataReader(int bufferSize, RateLimiter limiter)
+    {
+        assert limiter != null;
+        return dfile.createReader(bufferSize, limiter);
+    }
+
     public RandomAccessReader openDataReader()
     {
         return dfile.createReader();
+    }
+
+    public RandomAccessReader openDataReader(int bufferSize)
+    {
+        return dfile.createReader(bufferSize);
     }
 
     public RandomAccessReader openIndexReader()
