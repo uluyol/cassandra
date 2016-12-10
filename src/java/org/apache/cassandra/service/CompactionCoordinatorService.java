@@ -25,6 +25,14 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.commons.io.FilenameUtils;
@@ -42,7 +50,7 @@ import io.grpc.ManagedChannelBuilder;
 import org.apache.cassandra.config.DatabaseDescriptor;
 
 public final class CompactionCoordinatorService {
-    private static final long UPDATE_LOAD_PERIOD_MS = 500L;
+    private static final long UPDATE_LOAD_PERIOD_MS = 1000L;
     public static final long SYNC_COMPACTION_PERIOD_MS = 1000L;
 
     private static final Logger logger = LoggerFactory.getLogger(CompactionCoordinatorService.class);
@@ -52,6 +60,9 @@ public final class CompactionCoordinatorService {
     private final Channel channel;
     private final CoordinatorGrpc.CoordinatorFutureStub stub;
     private final CoordinatorGrpc.CoordinatorBlockingStub blockingStub;
+
+    public static final Object syncVersionNoLock = new Object();
+    public static long syncVersionNo = 0;
 
     private CompactionCoordinatorService(String addr) {
         this.addr = addr;
@@ -64,14 +75,18 @@ public final class CompactionCoordinatorService {
         instance = new CompactionCoordinatorService(DatabaseDescriptor.compactionCoordinator());
         String ip = DatabaseDescriptor.getBroadcastAddress().toString();
         instance.blockingStub.register(
-        Coordination.RegisterReq.newBuilder()
-                                .setServerIp(ip)
-                                .setWriteBatchSize(DatabaseDescriptor.getRateLimitWriteBatchSize())
-                                .setMaxIops(DatabaseDescriptor.getRateLimitMaxIOPS())
-                                .build());
+                Coordination.RegisterReq.newBuilder()
+                                        .setServerIp(ip)
+                                        .setWriteBatchSize(DatabaseDescriptor.getRateLimitWriteBatchSize())
+                                        .setMaxIops(DatabaseDescriptor.getRateLimitMaxIOPS())
+                                        .build());
         instance.startWatchThread();
         instance.startLoadUpdateThread();
     }
+
+    private final AtomicBoolean compactionIsExecuting = new AtomicBoolean(false);
+    private final ListeningExecutorService compactionExecutors =
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
 
     private void startWatchThread() {
         new Thread(() -> {
@@ -83,15 +98,55 @@ public final class CompactionCoordinatorService {
                 try {
                     Iterator<Coordination.ExecCompaction> reqs = blockingStub.watchCompactions(req);
                     reqs.forEachRemaining((compaction) -> {
-                        CompactionManager.instance.setRateBps(
-                            compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize());
-                        CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
+                        if (!compactionIsExecuting.compareAndSet(false, true)) {
+                            // compaction is already executing, discard this message
+                            logger.info("Discarding msg to execute {}, already executing a compaction",
+                                        compaction.getCompactionId());
+                            return;
+                        }
+                        ListenableFuture f = compactionExecutors.submit(() -> {
+                            logger.info("Executing compaction {}", compaction.getCompactionId());
+                            CompactionManager.instance.setRateBps(
+                                    compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize());
+                            CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
+                            compactionIsExecuting.set(false);
+                            logger.info("Done executing compaction {}", compaction.getCompactionId());
+                            return true;
+                        });
                     });
                 } catch (Exception e) {
                     logger.warn("Encountered exception when listening to or executing compaction", e);
+                    compactionIsExecuting.set(false);
+                    // reregister
+                    loopReregister();
                 }
             }
         }).start();
+    }
+
+    private void loopReregister() {
+        String ip = DatabaseDescriptor.getBroadcastAddress().toString();
+        boolean success = false;
+        while (!success)
+        {
+            try {
+                instance.blockingStub.register(
+                Coordination.RegisterReq.newBuilder()
+                                        .setServerIp(ip)
+                                        .setWriteBatchSize(DatabaseDescriptor.getRateLimitWriteBatchSize())
+                                        .setMaxIops(DatabaseDescriptor.getRateLimitMaxIOPS())
+                                        .build());
+                success = true;
+            } catch (Exception e) {
+                logger.info("Retrying reregister in 1 second");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e2) {}
+            }
+        }
+        synchronized (syncVersionNoLock) {
+            syncVersionNo = 0;
+        }
     }
 
     private void startLoadUpdateThread() {
@@ -176,8 +231,21 @@ public final class CompactionCoordinatorService {
         // don't know what to do for other OS's
     }
 
-    public static void syncCompactions(Coordination.SyncCompactionsReq req) {
-        logger.info("Syncing compactions with coordinator");
+    public static void syncCompactions(Coordination.SyncCompactionsReq req, long versionNo) {
+        if (instance.compactionIsExecuting.get()) {
+            return;
+        }
+        synchronized (syncVersionNoLock) {
+            if (syncVersionNo >= versionNo) {
+                // already sent
+                return;
+            }
+            syncVersionNo = versionNo;
+        }
+        logger.info("Syncing {} compactions with coordinator", req.getCompactionsCount());
+        req.getCompactionsList().forEach((c) -> {
+            logger.info("Got compaction {}", c.toString());
+        });
         instance.stub.syncCompactions(req);
     }
 

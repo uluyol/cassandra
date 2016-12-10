@@ -126,6 +126,7 @@ public class CompactionManager implements CompactionManagerMBean
     // Always synchronize on waitingTasks for the following two fields
     private final List<WaitingTask> waitingTasks = new ArrayList<>();
     private Coordination.SyncCompactionsReq cachedSyncCompactionsReq = Coordination.SyncCompactionsReq.getDefaultInstance();
+    private long cachedSyncCompactionsReqVersionNo = 0;
 
     public CompactionManager() {
         // start bg thread for syncing compactions periodically
@@ -137,10 +138,12 @@ public class CompactionManager implements CompactionManagerMBean
                 try
                 {
                     Coordination.SyncCompactionsReq req;
+                    long version = 0;
                     synchronized (waitingTasks) {
                         req = cachedSyncCompactionsReq;
+                        version = cachedSyncCompactionsReqVersionNo;
                     }
-                    CompactionCoordinatorService.syncCompactions(req);
+                    CompactionCoordinatorService.syncCompactions(req, version);
                 } catch (Exception e) {
                     logger.warn("Encountered error while syncing compactions", e);
                 }
@@ -310,29 +313,17 @@ public class CompactionManager implements CompactionManagerMBean
                     return;
                 }
                 //task.execute(metrics);
-                UUID taskId = task.transaction.opId();
-                int numberOfTables = task.transaction.originals().size();
-                long expectedWriteSize = cfs.getExpectedCompactedFileSize(task.transaction.originals(), task.compactionType);
-                long startsize = SSTableReader.getTotalBytes(task.transaction.originals());
-                long earlySSTableEstimate = Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes());
-                Coordination.SyncCompactionsReq.Builder scb = Coordination.SyncCompactionsReq.newBuilder();
-                scb.setServerIp(DatabaseDescriptor.getBroadcastAddress().toString());
+                //int numberOfTables = task.transaction.originals().size();
+                //long expectedWriteSize = cfs.getExpectedCompactedFileSize(task.transaction.originals(), task.compactionType);
+                //long earlySSTableEstimate = Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes());
                 Coordination.SyncCompactionsReq req = null;
                 synchronized (waitingTasks) {
                     waitingTasks.add(new WaitingTask(task));
-                    for (WaitingTask t : waitingTasks) {
-                        scb.addCompactions(Coordination.Compaction.newBuilder()
-                                                                  .setQueueTimeMs(t.queueTimeMs)
-                                                                  .setCompactionId(taskId.toString())
-                                                                  .setExpectedSize(expectedWriteSize)
-                                                                  .setExpectedTableCount(earlySSTableEstimate)
-                                                                  .setStartSize(startsize)
-                                                                  .build());
-                    }
-                    req = scb.build();
+                    req = createSyncCompactionsReq(waitingTasks);
                     cachedSyncCompactionsReq = req;
+                    cachedSyncCompactionsReqVersionNo++;
                 }
-                CompactionCoordinatorService.syncCompactions(req);
+                CompactionCoordinatorService.syncCompactions(req, cachedSyncCompactionsReqVersionNo);
             }
             finally
             {
@@ -342,19 +333,41 @@ public class CompactionManager implements CompactionManagerMBean
         }
     }
 
+    private static Coordination.SyncCompactionsReq createSyncCompactionsReq(Iterable<WaitingTask> waitingTasks) {
+        Coordination.SyncCompactionsReq.Builder scb = Coordination.SyncCompactionsReq.newBuilder();
+        scb.setServerIp(DatabaseDescriptor.getBroadcastAddress().toString());
+        for (WaitingTask t : waitingTasks) {
+            ColumnFamilyStore cfs = t.task.cfs;
+            CompactionStrategyManager strategy = cfs.getCompactionStrategyManager();
+            long expectedWriteSize = cfs.getExpectedCompactedFileSize(t.task.transaction.originals(), t.task.compactionType);
+            scb.addCompactions(
+                    Coordination.Compaction.newBuilder()
+                                           .setQueueTimeMs(t.queueTimeMs)
+                                           .setCompactionId(t.task.transaction.opId().toString())
+                                           .setExpectedSize(expectedWriteSize)
+                                           .setExpectedTableCount(Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes()))
+                                           .setStartSize(SSTableReader.getTotalBytes(t.task.transaction.originals()))
+                                           .build());
+        }
+        return scb.build();
+    }
+
     public void runGivenTaskAndClear(String taskIDString) {
         UUID taskID = UUID.fromString(taskIDString);
         AbstractCompactionTask task = null;
         synchronized (waitingTasks) {
-            for (WaitingTask t : waitingTasks) {
+            for (int i = 0; i < waitingTasks.size(); i++) {
+                WaitingTask t = waitingTasks.get(i);
                 if (t.task.transaction.opId().equals(taskID)) {
                     task = t.task;
-                    waitingTasks.clear();
-                    break;
+                    waitingTasks.remove(i);
                 }
             }
+            cachedSyncCompactionsReq = createSyncCompactionsReq(waitingTasks);
+            cachedSyncCompactionsReqVersionNo++;
         }
         if (task == null) {
+            logger.warn("Compaction task with UUID {} not found", taskID);
             return;
         }
         task.execute(metrics);

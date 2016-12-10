@@ -171,22 +171,44 @@ public class DatabaseDescriptor
         int bs = Integer.MAX_VALUE;
         int mops = 0;
         for (String p : dataFilePaths) {
-            if (!Files.exists(Paths.get(p))) {
-                Files.createDirectories(Paths.get(p));
+            // cached measurement results
+            Path resultPath = Paths.get(p, ".detectbatchresult");
+            InputStream outst = null;
+            boolean isCached = false;
+            if (Files.exists(resultPath)) {
+                logger.info("Using cached disk measurements for {}", resultPath);
+                outst = Files.newInputStream(resultPath);
+                isCached = true;
+            } else {
+                if (!Files.exists(Paths.get(p)))
+                {
+                    Files.createDirectories(Paths.get(p));
+                }
+                Process proc = rt.exec(new String[]{ tmp.toString(), p });
+                outst = proc.getInputStream();
+                String err = StringUtils.strip(IOUtils.toString(proc.getErrorStream(), "utf-8"));
+                proc.waitFor();
+                int ret = proc.exitValue();
+                if (ret != 0) {
+                    throw new Exception("Batch size detection failed: " + err);
+                }
             }
-            Process proc = rt.exec(new String[]{tmp.toString(), p});
-            InputStream outst = proc.getInputStream();
             String out = StringUtils.strip(IOUtils.toString(outst, "utf-8"));
-            String err = StringUtils.strip(IOUtils.toString(proc.getErrorStream(), "utf-8"));
-            proc.waitFor();
-            int ret = proc.exitValue();
-            if (ret != 0) {
-                throw new Exception("Batch size detection failed: " + err);
+            if (!isCached) {
+                OutputStream resultOut = Files.newOutputStream(resultPath);
+                IOUtils.write(out, resultOut, "utf-8");
+                resultOut.close();
             }
-            String[] cols = out.split(" ");
-            bs = Integer.min(bs, Integer.parseInt(cols[0]));
-            double diops = Double.parseDouble(cols[1]);
-            mops += (int)diops;
+            try {
+                String[] cols = out.split(" ");
+                bs = Integer.min(bs, Integer.parseInt(cols[0]));
+                double diops = Double.parseDouble(cols[1]);
+                mops += (int)diops;
+            } catch (Exception e) {
+                // delete bad cached data
+                Files.delete(resultPath);
+                throw e;
+            }
         }
         batchSize.setValue(bs);
         iops.setValue(mops);
