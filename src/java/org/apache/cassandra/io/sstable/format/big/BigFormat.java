@@ -103,7 +103,7 @@ public class BigFormat implements SSTableFormat
                                   Collection<SSTableFlushObserver> observers,
                                   LifecycleTransaction txn)
         {
-            int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize() * 1024 * 1024;
+            int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize();
             return new BigTableWriter(bufferSize, descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers, txn);
         }
     }

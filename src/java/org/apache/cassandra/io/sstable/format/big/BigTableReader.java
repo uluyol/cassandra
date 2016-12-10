@@ -110,7 +110,7 @@ public class BigTableReader extends SSTableReader
      */
     public ISSTableScanner getScannerForCompaction(RateLimiter limiter)
     {
-        int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize() * 1024 * 1024;
+        int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize();
         return BigTableScanner.getScanner(bufferSize, this, limiter);
     }
 
@@ -122,7 +122,7 @@ public class BigTableReader extends SSTableReader
      */
     public ISSTableScanner getScannerForCompaction(Collection<Range<Token>> ranges, RateLimiter limiter)
     {
-        int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize() * 1024 * 1024;
+        int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize();
         return BigTableScanner.getScanner(bufferSize, this, ranges, limiter);
     }
     /**
