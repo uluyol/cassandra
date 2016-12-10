@@ -87,6 +87,36 @@ public class BigTableWriter extends SSTableWriter
         iwriter = new IndexWriter(keyCount, dataFile);
     }
 
+    public BigTableWriter(int bufferSize,
+                          Descriptor descriptor,
+                          Long keyCount,
+                          Long repairedAt,
+                          CFMetaData metadata,
+                          MetadataCollector metadataCollector,
+                          SerializationHeader header,
+                          Collection<SSTableFlushObserver> observers,
+                          LifecycleTransaction txn)
+    {
+        super(descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers);
+        txn.trackNew(this); // must track before any files are created
+
+        if (compression)
+        {
+            dataFile = SequentialWriter.open(bufferSize,
+                    getFilename(),
+                    descriptor.filenameFor(Component.COMPRESSION_INFO),
+                    metadata.params.compression,
+                    metadataCollector);
+            dbuilder = SegmentedFile.getCompressedBuilder((CompressedSequentialWriter) dataFile);
+        }
+        else
+        {
+            dataFile = SequentialWriter.open(bufferSize, new File(getFilename()), new File(descriptor.filenameFor(Component.CRC)));
+            dbuilder = SegmentedFile.getBuilder(DatabaseDescriptor.getDiskAccessMode(), false);
+        }
+        iwriter = new IndexWriter(keyCount, dataFile);
+    }
+
     public void mark()
     {
         dataMark = dataFile.mark();

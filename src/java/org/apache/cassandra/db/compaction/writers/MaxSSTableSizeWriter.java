@@ -83,7 +83,7 @@ public class MaxSSTableSizeWriter extends CompactionAwareWriter
     public void switchCompactionLocation(Directories.DataDirectory location)
     {
         sstableDirectory = location;
-        SSTableWriter writer = SSTableWriter.create(Descriptor.fromFilename(cfs.getSSTablePath(getDirectories().getLocationForDisk(sstableDirectory))),
+        SSTableWriter writer = SSTableWriter.createForCompaction(Descriptor.fromFilename(cfs.getSSTablePath(getDirectories().getLocationForDisk(sstableDirectory))),
                                                     estimatedTotalKeys / estimatedSSTables,
                                                     minRepairedAt,
                                                     cfs.metadata,

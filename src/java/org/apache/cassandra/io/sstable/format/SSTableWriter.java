@@ -101,6 +101,19 @@ public abstract class SSTableWriter extends SSTable implements Transactional
         return writerFactory.open(descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers(descriptor, indexes, txn.opType()), txn);
     }
 
+    public static SSTableWriter createForCompaction(Descriptor descriptor,
+                                       Long keyCount,
+                                       Long repairedAt,
+                                       CFMetaData metadata,
+                                       MetadataCollector metadataCollector,
+                                       SerializationHeader header,
+                                       Collection<Index> indexes,
+                                       LifecycleTransaction txn)
+    {
+        Factory writerFactory = descriptor.getFormat().getWriterFactory();
+        return writerFactory.openForCompaction(descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers(descriptor, indexes, txn.opType()), txn);
+    }
+
     public static SSTableWriter create(Descriptor descriptor,
                                        long keyCount,
                                        long repairedAt,
@@ -333,5 +346,15 @@ public abstract class SSTableWriter extends SSTable implements Transactional
                                            SerializationHeader header,
                                            Collection<SSTableFlushObserver> observers,
                                            LifecycleTransaction txn);
+
+        public abstract SSTableWriter openForCompaction(Descriptor descriptor,
+                                           long keyCount,
+                                           long repairedAt,
+                                           CFMetaData metadata,
+                                           MetadataCollector metadataCollector,
+                                           SerializationHeader header,
+                                           Collection<SSTableFlushObserver> observers,
+                                           LifecycleTransaction txn);
+
     }
 }

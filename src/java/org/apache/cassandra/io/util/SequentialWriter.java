@@ -155,12 +155,26 @@ public class SequentialWriter extends BufferedDataOutputStreamPlus implements Tr
         return new ChecksummedSequentialWriter(file, DEFAULT_BUFFER_SIZE, crcPath);
     }
 
+    public static ChecksummedSequentialWriter open(int bufferSize, File file, File crcPath)
+    {
+        return new ChecksummedSequentialWriter(file, bufferSize, crcPath);
+    }
+
     public static CompressedSequentialWriter open(String dataFilePath,
                                                   String offsetsPath,
                                                   CompressionParams parameters,
                                                   MetadataCollector sstableMetadataCollector)
     {
         return new CompressedSequentialWriter(new File(dataFilePath), offsetsPath, parameters, sstableMetadataCollector);
+    }
+
+    public static CompressedSequentialWriter open(int bufferSize,
+                                                  String dataFilePath,
+                                                  String offsetsPath,
+                                                  CompressionParams parameters,
+                                                  MetadataCollector sstableMetadataCollector)
+    {
+        return new CompressedSequentialWriter(bufferSize, new File(dataFilePath), offsetsPath, parameters, sstableMetadataCollector);
     }
 
     public SequentialWriter finishOnClose()

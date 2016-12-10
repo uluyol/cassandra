@@ -79,6 +79,25 @@ public class CompressedSequentialWriter extends SequentialWriter
         crcMetadata = new DataIntegrityMetadata.ChecksumWriter(new DataOutputStream(Channels.newOutputStream(channel)));
     }
 
+    public CompressedSequentialWriter(int bufferSize,
+                                      File file,
+                                      String offsetsPath,
+                                      CompressionParams parameters,
+                                      MetadataCollector sstableMetadataCollector)
+    {
+        super(file, bufferSize, parameters.getSstableCompressor().preferredBufferType());
+        this.compressor = parameters.getSstableCompressor();
+
+        // buffer for compression should be the same size as buffer itself
+        compressed = compressor.preferredBufferType().allocate(compressor.initialCompressedBufferLength(buffer.capacity()));
+
+        /* Index File (-CompressionInfo.db component) and it's header */
+        metadataWriter = CompressionMetadata.Writer.open(parameters, offsetsPath);
+
+        this.sstableMetadataCollector = sstableMetadataCollector;
+        crcMetadata = new DataIntegrityMetadata.ChecksumWriter(new DataOutputStream(Channels.newOutputStream(channel)));
+    }
+
     @Override
     public long getOnDiskFilePointer()
     {

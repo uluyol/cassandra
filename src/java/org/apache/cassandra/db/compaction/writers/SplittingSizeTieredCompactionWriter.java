@@ -105,7 +105,7 @@ public class SplittingSizeTieredCompactionWriter extends CompactionAwareWriter
     {
         this.location = location;
         long currentPartitionsToWrite = Math.round(ratios[currentRatioIndex] * estimatedTotalKeys);
-        SSTableWriter writer = SSTableWriter.create(Descriptor.fromFilename(cfs.getSSTablePath(getDirectories().getLocationForDisk(location))),
+        SSTableWriter writer = SSTableWriter.createForCompaction(Descriptor.fromFilename(cfs.getSSTablePath(getDirectories().getLocationForDisk(location))),
                                                     currentPartitionsToWrite,
                                                     minRepairedAt,
                                                     cfs.metadata,

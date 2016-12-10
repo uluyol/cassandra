@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.RowIndexEntry;
 import org.apache.cassandra.db.SerializationHeader;
 import org.apache.cassandra.db.lifecycle.LifecycleTransaction;
@@ -90,6 +91,20 @@ public class BigFormat implements SSTableFormat
                                   LifecycleTransaction txn)
         {
             return new BigTableWriter(descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers, txn);
+        }
+
+        @Override
+        public SSTableWriter openForCompaction(Descriptor descriptor,
+                                  long keyCount,
+                                  long repairedAt,
+                                  CFMetaData metadata,
+                                  MetadataCollector metadataCollector,
+                                  SerializationHeader header,
+                                  Collection<SSTableFlushObserver> observers,
+                                  LifecycleTransaction txn)
+        {
+            int bufferSize = DatabaseDescriptor.getRateLimitWriteBatchSize() * 1024 * 1024;
+            return new BigTableWriter(bufferSize, descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers, txn);
         }
     }
 
