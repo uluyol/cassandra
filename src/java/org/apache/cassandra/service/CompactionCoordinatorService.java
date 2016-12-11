@@ -212,7 +212,7 @@ public final class CompactionCoordinatorService {
                             continue;
                         }
                     }
-                    logger.info("Sending updated disk stats to coordinator");
+                    logger.debug("Sending updated disk stats to coordinator");
                     stub.updateLoad(Coordination.UpdateLoadReq.newBuilder()
                                                               .setServerIp(ip)
                                                               .setReadIos(readIOs)
