@@ -86,7 +86,7 @@ public final class CompactionCoordinatorService {
 
     private final AtomicBoolean compactionIsExecuting = new AtomicBoolean(false);
     private final ListeningExecutorService compactionExecutors =
-            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+            MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 
     private void startWatchThread() {
         new Thread(() -> {
@@ -105,8 +105,9 @@ public final class CompactionCoordinatorService {
                             return;
                         }
                         ListenableFuture f = compactionExecutors.submit(() -> {
-                            logger.info("Executing compaction {} because {}",
+                            logger.info("Executing compaction {} at {} B/s because {}",
                                         compaction.getCompactionId(),
+                                        compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize(),
                                         compaction.getReason());
                             CompactionManager.instance.setRateBps(
                                     compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize());
