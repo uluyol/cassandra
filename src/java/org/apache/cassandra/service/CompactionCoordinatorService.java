@@ -109,8 +109,13 @@ public final class CompactionCoordinatorService {
                                         compaction.getCompactionId(),
                                         compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize(),
                                         compaction.getReason());
-                            CompactionManager.instance.setRateBps(
-                                    compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize());
+
+                            double tputBps = compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize();
+                            if (tputBps <= 0) {
+                                logger.error("Got compaction rate limit ≤ 0: " + tputBps);
+                            } else {
+                                CompactionManager.instance.setRateBps(tputBps);
+                            }
                             CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
                             compactionIsExecuting.set(false);
                             logger.info("Done executing compaction {}", compaction.getCompactionId());
