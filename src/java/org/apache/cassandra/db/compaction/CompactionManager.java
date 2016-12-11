@@ -370,6 +370,7 @@ public class CompactionManager implements CompactionManagerMBean
                 if (t.task.transaction.opId().equals(taskID)) {
                     task = t.task;
                     waitingTasks.remove(i);
+                    break;
                 }
             }
             cachedSyncCompactionsReq = createSyncCompactionsReq(waitingTasks);

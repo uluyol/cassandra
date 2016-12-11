@@ -26,12 +26,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import org.apache.cassandra.concurrent.NamedThreadFactory;
 import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -84,7 +87,7 @@ public final class CompactionCoordinatorService {
 
     private final AtomicBoolean compactionIsExecuting = new AtomicBoolean(false);
     private final ListeningExecutorService compactionExecutors =
-            MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+            MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new NamedThreadFactory("CoordinatorCompactionExecutors")));
 
     private void startWatchThread() {
         new Thread(() -> {
@@ -114,7 +117,11 @@ public final class CompactionCoordinatorService {
                             } else {
                                 CompactionManager.instance.setRateBps(tputBps);
                             }
-                            CompactionManager.instance.runGivenTask(compaction.getCompactionId());
+                            try  {
+                                CompactionManager.instance.runGivenTask(compaction.getCompactionId());
+                            } catch (Throwable e) {
+                                logger.error("Compaction {} errored", compaction.getCompactionId(), e);
+                            }
                             compactionIsExecuting.set(false);
                             logger.info("Done executing compaction {}", compaction.getCompactionId());
                             return true;
