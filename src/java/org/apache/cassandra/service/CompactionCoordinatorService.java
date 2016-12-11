@@ -27,10 +27,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -116,7 +114,7 @@ public final class CompactionCoordinatorService {
                             } else {
                                 CompactionManager.instance.setRateBps(tputBps);
                             }
-                            CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
+                            CompactionManager.instance.runGivenTask(compaction.getCompactionId());
                             compactionIsExecuting.set(false);
                             logger.info("Done executing compaction {}", compaction.getCompactionId());
                             return true;

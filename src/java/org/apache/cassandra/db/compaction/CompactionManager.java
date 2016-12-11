@@ -312,18 +312,27 @@ public class CompactionManager implements CompactionManagerMBean
                     logger.trace("No tasks available");
                     return;
                 }
-                //task.execute(metrics);
+                if (task.transaction.opType() == OperationType.COMPACTION
+                    || task.transaction.opType() == OperationType.TOMBSTONE_COMPACTION
+                    || task.transaction.opType() == OperationType.KEY_CACHE_SAVE
+                    || task.transaction.opType() == OperationType.COUNTER_CACHE_SAVE
+                    || task.transaction.opType() == OperationType.ROW_CACHE_SAVE)
+                {
+                    Coordination.SyncCompactionsReq req = null;
+                    synchronized (waitingTasks) {
+                        waitingTasks.add(new WaitingTask(task));
+                        req = createSyncCompactionsReq(waitingTasks);
+                        cachedSyncCompactionsReq = req;
+                        cachedSyncCompactionsReqVersionNo++;
+                    }
+                    CompactionCoordinatorService.syncCompactions(req, cachedSyncCompactionsReqVersionNo);
+                } else {
+                    task.execute(metrics);
+                }
                 //int numberOfTables = task.transaction.originals().size();
                 //long expectedWriteSize = cfs.getExpectedCompactedFileSize(task.transaction.originals(), task.compactionType);
                 //long earlySSTableEstimate = Math.max(1, expectedWriteSize / strategy.getMaxSSTableBytes());
-                Coordination.SyncCompactionsReq req = null;
-                synchronized (waitingTasks) {
-                    waitingTasks.add(new WaitingTask(task));
-                    req = createSyncCompactionsReq(waitingTasks);
-                    cachedSyncCompactionsReq = req;
-                    cachedSyncCompactionsReqVersionNo++;
-                }
-                CompactionCoordinatorService.syncCompactions(req, cachedSyncCompactionsReqVersionNo);
+
             }
             finally
             {
@@ -352,7 +361,7 @@ public class CompactionManager implements CompactionManagerMBean
         return scb.build();
     }
 
-    public void runGivenTaskAndClear(String taskIDString) {
+    public void runGivenTask(String taskIDString) {
         UUID taskID = UUID.fromString(taskIDString);
         AbstractCompactionTask task = null;
         synchronized (waitingTasks) {
