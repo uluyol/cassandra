@@ -105,7 +105,9 @@ public final class CompactionCoordinatorService {
                             return;
                         }
                         ListenableFuture f = compactionExecutors.submit(() -> {
-                            logger.info("Executing compaction {}", compaction.getCompactionId());
+                            logger.info("Executing compaction {} because {}",
+                                        compaction.getCompactionId(),
+                                        compaction.getReason());
                             CompactionManager.instance.setRateBps(
                                     compaction.getIopsLimit() * DatabaseDescriptor.getRateLimitWriteBatchSize());
                             CompactionManager.instance.runGivenTaskAndClear(compaction.getCompactionId());
@@ -243,9 +245,9 @@ public final class CompactionCoordinatorService {
             syncVersionNo = versionNo;
         }
         logger.info("Syncing {} compactions with coordinator", req.getCompactionsCount());
-        req.getCompactionsList().forEach((c) -> {
-            logger.info("Got compaction {}", c.toString());
-        });
+        //req.getCompactionsList().forEach((c) -> {
+        //    logger.info("Got compaction {}", c.toString());
+        //});
         instance.stub.syncCompactions(req);
     }
 

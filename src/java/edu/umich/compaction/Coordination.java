@@ -1164,6 +1164,16 @@ public final class Coordination {
      * <code>optional int32 iops_limit = 2;</code>
      */
     int getIopsLimit();
+
+    /**
+     * <code>optional string reason = 3;</code>
+     */
+    java.lang.String getReason();
+    /**
+     * <code>optional string reason = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getReasonBytes();
   }
   /**
    * Protobuf type {@code compaction.ExecCompaction}
@@ -1179,6 +1189,7 @@ public final class Coordination {
     private ExecCompaction() {
       compactionId_ = "";
       iopsLimit_ = 0;
+      reason_ = "";
     }
 
     @java.lang.Override
@@ -1215,6 +1226,12 @@ public final class Coordination {
             case 16: {
 
               iopsLimit_ = input.readInt32();
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              reason_ = s;
               break;
             }
           }
@@ -1283,6 +1300,40 @@ public final class Coordination {
       return iopsLimit_;
     }
 
+    public static final int REASON_FIELD_NUMBER = 3;
+    private volatile java.lang.Object reason_;
+    /**
+     * <code>optional string reason = 3;</code>
+     */
+    public java.lang.String getReason() {
+      java.lang.Object ref = reason_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        reason_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>optional string reason = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getReasonBytes() {
+      java.lang.Object ref = reason_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        reason_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1301,6 +1352,9 @@ public final class Coordination {
       if (iopsLimit_ != 0) {
         output.writeInt32(2, iopsLimit_);
       }
+      if (!getReasonBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, reason_);
+      }
     }
 
     public int getSerializedSize() {
@@ -1314,6 +1368,9 @@ public final class Coordination {
       if (iopsLimit_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, iopsLimit_);
+      }
+      if (!getReasonBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, reason_);
       }
       memoizedSize = size;
       return size;
@@ -1335,6 +1392,8 @@ public final class Coordination {
           .equals(other.getCompactionId());
       result = result && (getIopsLimit()
           == other.getIopsLimit());
+      result = result && getReason()
+          .equals(other.getReason());
       return result;
     }
 
@@ -1349,6 +1408,8 @@ public final class Coordination {
       hash = (53 * hash) + getCompactionId().hashCode();
       hash = (37 * hash) + IOPS_LIMIT_FIELD_NUMBER;
       hash = (53 * hash) + getIopsLimit();
+      hash = (37 * hash) + REASON_FIELD_NUMBER;
+      hash = (53 * hash) + getReason().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1471,6 +1532,8 @@ public final class Coordination {
 
         iopsLimit_ = 0;
 
+        reason_ = "";
+
         return this;
       }
 
@@ -1495,6 +1558,7 @@ public final class Coordination {
         edu.umich.compaction.Coordination.ExecCompaction result = new edu.umich.compaction.Coordination.ExecCompaction(this);
         result.compactionId_ = compactionId_;
         result.iopsLimit_ = iopsLimit_;
+        result.reason_ = reason_;
         onBuilt();
         return result;
       }
@@ -1542,6 +1606,10 @@ public final class Coordination {
         }
         if (other.getIopsLimit() != 0) {
           setIopsLimit(other.getIopsLimit());
+        }
+        if (!other.getReason().isEmpty()) {
+          reason_ = other.reason_;
+          onChanged();
         }
         onChanged();
         return this;
@@ -1660,6 +1728,75 @@ public final class Coordination {
       public Builder clearIopsLimit() {
         
         iopsLimit_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object reason_ = "";
+      /**
+       * <code>optional string reason = 3;</code>
+       */
+      public java.lang.String getReason() {
+        java.lang.Object ref = reason_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          reason_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string reason = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getReasonBytes() {
+        java.lang.Object ref = reason_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          reason_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string reason = 3;</code>
+       */
+      public Builder setReason(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        reason_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string reason = 3;</code>
+       */
+      public Builder clearReason() {
+        
+        reason_ = getDefaultInstance().getReason();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string reason = 3;</code>
+       */
+      public Builder setReasonBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        reason_ = value;
         onChanged();
         return this;
       }
@@ -4517,25 +4654,25 @@ public final class Coordination {
       "\n\020compaction.proto\022\ncompaction\"L\n\013Regist" +
       "erReq\022\021\n\tserver_ip\030\001 \001(\t\022\030\n\020write_batch_" +
       "size\030\002 \001(\005\022\020\n\010max_iops\030\003 \001(\005\"\035\n\010WatchReq" +
-      "\022\021\n\tserver_ip\030\001 \001(\t\";\n\016ExecCompaction\022\025\n" +
+      "\022\021\n\tserver_ip\030\001 \001(\t\"K\n\016ExecCompaction\022\025\n" +
       "\rcompaction_id\030\001 \001(\t\022\022\n\niops_limit\030\002 \001(\005" +
-      "\"p\n\rUpdateLoadReq\022\021\n\tserver_ip\030\001 \001(\t\022\020\n\010" +
-      "read_ios\030\002 \001(\003\022\021\n\twrite_ios\030\003 \001(\003\022\022\n\nrea" +
-      "d_bytes\030\004 \001(\003\022\023\n\013write_bytes\030\005 \001(\003\"\203\001\n\nC" +
-      "ompaction\022\025\n\rcompaction_id\030\002 \001(\t\022\025\n\rexpe" +
-      "cted_size\030\003 \001(\003\022\022\n\nstart_size\030\004 \001(\003\022\034\n\024e",
-      "xpected_table_count\030\005 \001(\003\022\025\n\rqueue_time_" +
-      "ms\030\006 \001(\004\"T\n\022SyncCompactionsReq\022\021\n\tserver" +
-      "_ip\030\001 \001(\t\022+\n\013compactions\030\002 \003(\0132\026.compact" +
-      "ion.Compaction\"\007\n\005Empty2\217\002\n\013Coordinator\022" +
-      "6\n\010Register\022\027.compaction.RegisterReq\032\021.c" +
-      "ompaction.Empty\022F\n\020WatchCompactions\022\024.co" +
-      "mpaction.WatchReq\032\032.compaction.ExecCompa" +
-      "ction0\001\022:\n\nUpdateLoad\022\031.compaction.Updat" +
-      "eLoadReq\032\021.compaction.Empty\022D\n\017SyncCompa" +
-      "ctions\022\036.compaction.SyncCompactionsReq\032\021",
-      ".compaction.EmptyB$\n\024edu.umich.compactio" +
-      "nB\014Coordinationb\006proto3"
+      "\022\016\n\006reason\030\003 \001(\t\"p\n\rUpdateLoadReq\022\021\n\tser" +
+      "ver_ip\030\001 \001(\t\022\020\n\010read_ios\030\002 \001(\003\022\021\n\twrite_" +
+      "ios\030\003 \001(\003\022\022\n\nread_bytes\030\004 \001(\003\022\023\n\013write_b" +
+      "ytes\030\005 \001(\003\"\203\001\n\nCompaction\022\025\n\rcompaction_" +
+      "id\030\002 \001(\t\022\025\n\rexpected_size\030\003 \001(\003\022\022\n\nstart",
+      "_size\030\004 \001(\003\022\034\n\024expected_table_count\030\005 \001(" +
+      "\003\022\025\n\rqueue_time_ms\030\006 \001(\004\"T\n\022SyncCompacti" +
+      "onsReq\022\021\n\tserver_ip\030\001 \001(\t\022+\n\013compactions" +
+      "\030\002 \003(\0132\026.compaction.Compaction\"\007\n\005Empty2" +
+      "\217\002\n\013Coordinator\0226\n\010Register\022\027.compaction" +
+      ".RegisterReq\032\021.compaction.Empty\022F\n\020Watch" +
+      "Compactions\022\024.compaction.WatchReq\032\032.comp" +
+      "action.ExecCompaction0\001\022:\n\nUpdateLoad\022\031." +
+      "compaction.UpdateLoadReq\032\021.compaction.Em" +
+      "pty\022D\n\017SyncCompactions\022\036.compaction.Sync",
+      "CompactionsReq\032\021.compaction.EmptyB$\n\024edu" +
+      ".umich.compactionB\014Coordinationb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4566,7 +4703,7 @@ public final class Coordination {
     internal_static_compaction_ExecCompaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_ExecCompaction_descriptor,
-        new java.lang.String[] { "CompactionId", "IopsLimit", });
+        new java.lang.String[] { "CompactionId", "IopsLimit", "Reason", });
     internal_static_compaction_UpdateLoadReq_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_compaction_UpdateLoadReq_fieldAccessorTable = new
