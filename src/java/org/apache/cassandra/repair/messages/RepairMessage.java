@@ -18,6 +18,7 @@
 package org.apache.cassandra.repair.messages;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
@@ -79,7 +80,7 @@ public abstract class RepairMessage
 
     public MessageOut<RepairMessage> createMessage()
     {
-        return new MessageOut<>(MessagingService.Verb.REPAIR_MESSAGE, this, RepairMessage.serializer);
+        return new MessageOut<>(MessagingService.Verb.REPAIR_MESSAGE, this, RepairMessage.serializer, Optional.empty());
     }
 
     public static class RepairMessageSerializer implements MessageSerializer<RepairMessage>

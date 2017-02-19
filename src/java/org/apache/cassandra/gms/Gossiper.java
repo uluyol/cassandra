@@ -151,7 +151,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                                                                            gDigests);
                     MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
                                                                                           digestSynMessage,
-                                                                                          GossipDigestSyn.serializer);
+                                                                                          GossipDigestSyn.serializer,
+                                                                                          Optional.empty());
                     /* Gossip to some random live member */
                     boolean gossipedToSeed = doGossipToLiveMember(message);
 
@@ -963,7 +964,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
 
         localState.markDead();
 
-        MessageOut<EchoMessage> echoMessage = new MessageOut<EchoMessage>(MessagingService.Verb.ECHO, EchoMessage.instance, EchoMessage.serializer);
+        MessageOut<EchoMessage> echoMessage = new MessageOut<EchoMessage>(MessagingService.Verb.ECHO, EchoMessage.instance, EchoMessage.serializer, Optional.empty());
         logger.trace("Sending a EchoMessage to {}", addr);
         IAsyncCallback echoHandler = new IAsyncCallback()
         {
@@ -1330,8 +1331,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 DatabaseDescriptor.getPartitionerName(),
                 gDigests);
         MessageOut<GossipDigestSyn> message = new MessageOut<GossipDigestSyn>(MessagingService.Verb.GOSSIP_DIGEST_SYN,
-                digestSynMessage,
-                GossipDigestSyn.serializer);
+                digestSynMessage, GossipDigestSyn.serializer, Optional.empty());
 
         inShadowRound = true;
         int slept = 0;
@@ -1463,7 +1463,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         {
             logger.info("Announcing shutdown");
             addLocalApplicationState(ApplicationState.STATUS, StorageService.instance.valueFactory.shutdown(true));
-            MessageOut message = new MessageOut(MessagingService.Verb.GOSSIP_SHUTDOWN);
+            MessageOut message = new MessageOut(MessagingService.Verb.GOSSIP_SHUTDOWN, Optional.empty());
             for (InetAddress ep : liveEndpoints)
                 MessagingService.instance().sendOneWay(message, ep);
             Uninterruptibles.sleepUninterruptibly(Integer.getInteger("cassandra.shutdown_announce_in_ms", 2000), TimeUnit.MILLISECONDS);

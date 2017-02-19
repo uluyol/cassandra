@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.db;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class SchemaCheckVerbHandler implements IVerbHandler
     public void doVerb(MessageIn message, int id)
     {
         logger.trace("Received schema check request.");
-        MessageOut<UUID> response = new MessageOut<UUID>(MessagingService.Verb.INTERNAL_RESPONSE, Schema.instance.getVersion(), UUIDSerializer.serializer);
+        MessageOut<UUID> response = new MessageOut<UUID>(MessagingService.Verb.INTERNAL_RESPONSE, Schema.instance.getVersion(), UUIDSerializer.serializer, Optional.empty());
         MessagingService.instance().sendReply(response, id, message.from);
     }
 }

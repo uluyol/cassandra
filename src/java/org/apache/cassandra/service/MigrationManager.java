@@ -517,7 +517,8 @@ public class MigrationManager
     {
         MessageOut<Collection<Mutation>> msg = new MessageOut<>(MessagingService.Verb.DEFINITIONS_UPDATE,
                                                                 schema,
-                                                                MigrationsSerializer.instance);
+                                                                MigrationsSerializer.instance,
+                                                                Optional.empty());
         MessagingService.instance().sendOneWay(msg, endpoint);
     }
 

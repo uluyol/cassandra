@@ -18,6 +18,7 @@
 package org.apache.cassandra.db;
 
 import java.util.Collection;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,8 @@ public class MigrationRequestVerbHandler implements IVerbHandler
         logger.trace("Received migration request from {}.", message.from);
         MessageOut<Collection<Mutation>> response = new MessageOut<>(MessagingService.Verb.INTERNAL_RESPONSE,
                                                                      SchemaKeyspace.convertSchemaToMutations(),
-                                                                     MigrationManager.MigrationsSerializer.instance);
+                                                                     MigrationManager.MigrationsSerializer.instance,
+                                                                     Optional.empty());
         MessagingService.instance().sendReply(response, id, message.from);
     }
 }

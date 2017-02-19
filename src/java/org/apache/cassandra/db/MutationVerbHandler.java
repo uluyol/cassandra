@@ -20,6 +20,7 @@ package org.apache.cassandra.db;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.apache.cassandra.batchlog.LegacyBatchlogMigrator;
@@ -31,10 +32,10 @@ import org.apache.cassandra.tracing.Tracing;
 
 public class MutationVerbHandler implements IVerbHandler<Mutation>
 {
-    private void reply(int id, InetAddress replyTo)
+    private void reply(int id, InetAddress replyTo, MessageIn.MessageMeta inMeta)
     {
         Tracing.trace("Enqueuing response to {}", replyTo);
-        MessagingService.instance().sendReply(WriteResponse.createMessage(), id, replyTo);
+        MessagingService.instance().sendReply(WriteResponse.createMessage(Optional.of(inMeta)), id, replyTo);
     }
 
     private void failed()
@@ -44,6 +45,7 @@ public class MutationVerbHandler implements IVerbHandler<Mutation>
 
     public void doVerb(MessageIn<Mutation> message, int id)  throws IOException
     {
+        message.meta.hist = Hists.writes;
         // Check if there were any forwarding headers in this message
         byte[] from = message.parameters.get(Mutation.FORWARD_FROM);
         InetAddress replyTo;
@@ -61,18 +63,13 @@ public class MutationVerbHandler implements IVerbHandler<Mutation>
 
         try
         {
-            message.meta.setQueueEnd();
             if (message.version < MessagingService.VERSION_30 && LegacyBatchlogMigrator.isLegacyBatchlogMutation(message.payload))
             {
                 LegacyBatchlogMigrator.handleLegacyMutation(message.payload);
-                reply(id, replyTo);
-                message.meta.setProcessEnd();
-                Hists.writes.measure(message.meta);
+                reply(id, replyTo, message.meta);
             } else {
                 message.payload.applyFuture().thenAccept(o -> {
-                    reply(id, replyTo);
-                    message.meta.setProcessEnd();
-                    Hists.writes.measure(message.meta);
+                    reply(id, replyTo, message.meta);
                 }).exceptionally(wto -> {
                     failed();
                     return null;
@@ -96,7 +93,7 @@ public class MutationVerbHandler implements IVerbHandler<Mutation>
             int size = in.readInt();
 
             // tell the recipients who to send their ack to
-            MessageOut<Mutation> message = new MessageOut<>(verb, mutation, Mutation.serializer).withParameter(Mutation.FORWARD_FROM, from.getAddress());
+            MessageOut<Mutation> message = new MessageOut<>(verb, mutation, Mutation.serializer, Optional.empty()).withParameter(Mutation.FORWARD_FROM, from.getAddress(), Optional.empty());
             // Send a message to each of the addresses on our Forward List
             for (int i = 0; i < size; i++)
             {

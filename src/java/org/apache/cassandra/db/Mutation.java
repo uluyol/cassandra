@@ -35,8 +35,10 @@ import org.apache.cassandra.db.rows.SerializationHelper;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.transport.Message;
 import org.apache.cassandra.utils.ByteBufferUtil;
 
 // TODO convert this to a Builder pattern instead of encouraging M.add directly,
@@ -233,14 +235,9 @@ public class Mutation implements IMutation
         apply(false);
     }
 
-    public MessageOut<Mutation> createMessage()
+    public MessageOut<Mutation> createMessage(MessagingService.Verb verb, Optional<MessageIn.MessageMeta> inMeta)
     {
-        return createMessage(MessagingService.Verb.MUTATION);
-    }
-
-    public MessageOut<Mutation> createMessage(MessagingService.Verb verb)
-    {
-        return new MessageOut<>(verb, this, serializer);
+        return new MessageOut<>(verb, this, serializer, inMeta);
     }
 
     public long getTimeout()

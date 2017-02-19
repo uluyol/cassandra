@@ -18,10 +18,12 @@
 package org.apache.cassandra.db;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 
@@ -38,9 +40,9 @@ public final class WriteResponse
     {
     }
 
-    public static MessageOut<WriteResponse> createMessage()
+    public static MessageOut<WriteResponse> createMessage(Optional<MessageIn.MessageMeta> inMeta)
     {
-        return new MessageOut<>(MessagingService.Verb.REQUEST_RESPONSE, instance, serializer);
+        return new MessageOut<>(MessagingService.Verb.REQUEST_RESPONSE, instance, serializer, inMeta);
     }
 
     public static class Serializer implements IVersionedSerializer<WriteResponse>

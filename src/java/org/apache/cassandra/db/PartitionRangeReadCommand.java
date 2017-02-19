@@ -39,6 +39,7 @@ import org.apache.cassandra.io.sstable.format.SSTableReader;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.metrics.TableMetrics;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.schema.IndexMetadata;
@@ -254,14 +255,14 @@ public class PartitionRangeReadCommand extends ReadCommand
         return Transformation.apply(iter, new CacheFilter());
     }
 
-    public MessageOut<ReadCommand> createMessage(int version)
+    public MessageOut<ReadCommand> createMessage(int version, Optional<MessageIn.MessageMeta> inMeta)
     {
         if (version >= MessagingService.VERSION_30)
-            return new MessageOut<>(MessagingService.Verb.RANGE_SLICE, this, serializer);
+            return new MessageOut<>(MessagingService.Verb.RANGE_SLICE, this, serializer, inMeta);
 
         return dataRange().isPaging()
-             ? new MessageOut<>(MessagingService.Verb.PAGED_RANGE, this, legacyPagedRangeCommandSerializer)
-             : new MessageOut<>(MessagingService.Verb.RANGE_SLICE, this, legacyRangeSliceCommandSerializer);
+             ? new MessageOut<>(MessagingService.Verb.PAGED_RANGE, this, legacyPagedRangeCommandSerializer, inMeta)
+             : new MessageOut<>(MessagingService.Verb.RANGE_SLICE, this, legacyRangeSliceCommandSerializer, inMeta);
     }
 
     protected void appendCQLWhereClause(StringBuilder sb)

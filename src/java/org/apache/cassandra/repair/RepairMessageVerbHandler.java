@@ -75,7 +75,7 @@ public class RepairMessageVerbHandler implements IVerbHandler<RepairMessage>
                             prepareMessage.isIncremental,
                             prepareMessage.timestamp,
                             prepareMessage.isGlobal);
-                    MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE), id, message.from);
+                    MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty()), id, message.from);
                     break;
 
                 case SNAPSHOT:
@@ -98,14 +98,14 @@ public class RepairMessageVerbHandler implements IVerbHandler<RepairMessage>
                         // clear snapshot that we just created
                         cfs.clearSnapshot(desc.sessionId.toString());
                         logger.error("Cannot start multiple repair sessions over the same sstables");
-                        MessageOut reply = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE)
-                                               .withParameter(MessagingService.FAILURE_RESPONSE_PARAM, MessagingService.ONE_BYTE);
+                        MessageOut reply = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty())
+                                               .withParameter(MessagingService.FAILURE_RESPONSE_PARAM, MessagingService.ONE_BYTE, Optional.empty());
                         MessagingService.instance().sendReply(reply, id, message.from);
                         return;
                     }
                     ActiveRepairService.instance.getParentRepairSession(desc.parentSessionId).addSSTables(cfs.metadata.cfId, snapshottedSSSTables);
                     logger.debug("Enqueuing response to snapshot request {} to {}", desc.sessionId, message.from);
-                    MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE), id, message.from);
+                    MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty()), id, message.from);
                     break;
 
                 case VALIDATION_REQUEST:
@@ -139,7 +139,7 @@ public class RepairMessageVerbHandler implements IVerbHandler<RepairMessage>
                         @Override
                         public void run()
                         {
-                            MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE), id, message.from);
+                            MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty()), id, message.from);
                         }
                     }, MoreExecutors.sameThreadExecutor());
                     break;
@@ -148,7 +148,7 @@ public class RepairMessageVerbHandler implements IVerbHandler<RepairMessage>
                     logger.debug("cleaning up repair");
                     CleanupMessage cleanup = (CleanupMessage) message.payload;
                     ActiveRepairService.instance.removeParentRepairSession(cleanup.parentRepairSession);
-                    MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE), id, message.from);
+                    MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty()), id, message.from);
                     break;
 
                 default:

@@ -21,6 +21,8 @@ package org.apache.cassandra.service;
  */
 
 
+import java.util.Optional;
+
 import org.apache.cassandra.gms.EchoMessage;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
@@ -35,7 +37,7 @@ public class EchoVerbHandler implements IVerbHandler<EchoMessage>
 
     public void doVerb(MessageIn<EchoMessage> message, int id)
     {
-        MessageOut<EchoMessage> echoMessage = new MessageOut<EchoMessage>(MessagingService.Verb.REQUEST_RESPONSE, EchoMessage.instance, EchoMessage.serializer);
+        MessageOut<EchoMessage> echoMessage = new MessageOut<EchoMessage>(MessagingService.Verb.REQUEST_RESPONSE, EchoMessage.instance, EchoMessage.serializer, Optional.empty());
         logger.trace("Sending a EchoMessage reply {}", message.from);
         MessagingService.instance().sendReply(echoMessage, id, message.from);
     }

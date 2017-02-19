@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.streaming;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +35,7 @@ public class ReplicationFinishedVerbHandler implements IVerbHandler
     public void doVerb(MessageIn msg, int id)
     {
         StorageService.instance.confirmReplication(msg.from);
-        MessageOut response = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE);
+        MessageOut response = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty());
         if (logger.isDebugEnabled())
             logger.debug("Replying to {}@{}", id, msg.from);
         MessagingService.instance().sendReply(response, id, msg.from);

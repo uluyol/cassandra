@@ -18,6 +18,7 @@
 package org.apache.cassandra.db;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
@@ -44,7 +45,7 @@ public class SnapshotCommand
 
     public MessageOut createMessage()
     {
-        return new MessageOut<SnapshotCommand>(MessagingService.Verb.SNAPSHOT, this, serializer);
+        return new MessageOut<SnapshotCommand>(MessagingService.Verb.SNAPSHOT, this, serializer, Optional.empty());
     }
 
     @Override

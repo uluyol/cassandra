@@ -18,6 +18,8 @@
  */
 package org.apache.cassandra.hints;
 
+import java.util.Optional;
+
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
@@ -33,7 +35,7 @@ public final class HintResponse
 
     static final HintResponse instance = new HintResponse();
     static final MessageOut<HintResponse> message =
-        new MessageOut<>(MessagingService.Verb.REQUEST_RESPONSE, instance, serializer);
+        new MessageOut<>(MessagingService.Verb.REQUEST_RESPONSE, instance, serializer, Optional.empty());
 
     private HintResponse()
     {

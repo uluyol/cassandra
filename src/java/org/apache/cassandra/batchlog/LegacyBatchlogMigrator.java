@@ -130,7 +130,7 @@ public final class LegacyBatchlogMigrator
             logger.trace("Sending legacy batchlog store request {} to {} for {} mutations", batch.id, target, batch.size());
 
             int targetVersion = MessagingService.instance().getVersion(target);
-            MessagingService.instance().sendRR(getStoreMutation(batch, targetVersion).createMessage(MessagingService.Verb.MUTATION),
+            MessagingService.instance().sendRR(getStoreMutation(batch, targetVersion).createMessage(MessagingService.Verb.MUTATION, Optional.empty()),
                                                target,
                                                handler,
                                                false);
@@ -150,7 +150,7 @@ public final class LegacyBatchlogMigrator
         for (InetAddress target : endpoints)
         {
             logger.trace("Sending legacy batchlog remove request {} to {}", uuid, target);
-            MessagingService.instance().sendRR(mutation.createMessage(MessagingService.Verb.MUTATION), target, handler, false);
+            MessagingService.instance().sendRR(mutation.createMessage(MessagingService.Verb.MUTATION, Optional.empty()), target, handler, false);
         }
     }
 

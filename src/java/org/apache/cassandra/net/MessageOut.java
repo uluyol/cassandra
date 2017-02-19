@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +33,7 @@ import org.apache.cassandra.db.TypeSizes;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.tracing.Tracing;
+import org.apache.cassandra.transport.Message;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.UUIDGen;
 
@@ -46,16 +48,17 @@ public class MessageOut<T>
     public final T payload;
     public final IVersionedSerializer<T> serializer;
     public final Map<String, byte[]> parameters;
+    public final Optional<MessageIn.MessageMeta> inMeta;
     private long payloadSize = -1;
     private int payloadSizeVersion = -1;
 
     // we do support messages that just consist of a verb
-    public MessageOut(MessagingService.Verb verb)
+    public MessageOut(MessagingService.Verb verb, Optional<MessageIn.MessageMeta> inMeta)
     {
-        this(verb, null, null);
+        this(verb, null, null, inMeta);
     }
 
-    public MessageOut(MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer)
+    public MessageOut(MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Optional<MessageIn.MessageMeta> inMeta)
     {
         this(verb,
              payload,
@@ -63,29 +66,31 @@ public class MessageOut<T>
              isTracing()
                  ? ImmutableMap.of(TRACE_HEADER, UUIDGen.decompose(Tracing.instance.getSessionId()),
                                    TRACE_TYPE, new byte[] { Tracing.TraceType.serialize(Tracing.instance.getTraceType()) })
-                 : Collections.<String, byte[]>emptyMap());
+                 : Collections.<String, byte[]>emptyMap(),
+             inMeta);
     }
 
-    private MessageOut(MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
+    private MessageOut(MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters, Optional<MessageIn.MessageMeta> inMeta)
     {
-        this(FBUtilities.getBroadcastAddress(), verb, payload, serializer, parameters);
+        this(FBUtilities.getBroadcastAddress(), verb, payload, serializer, parameters, inMeta);
     }
 
     @VisibleForTesting
-    public MessageOut(InetAddress from, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters)
+    public MessageOut(InetAddress from, MessagingService.Verb verb, T payload, IVersionedSerializer<T> serializer, Map<String, byte[]> parameters, Optional<MessageIn.MessageMeta> inMeta)
     {
         this.from = from;
         this.verb = verb;
         this.payload = payload;
         this.serializer = serializer;
         this.parameters = parameters;
+        this.inMeta = inMeta;
     }
 
-    public MessageOut<T> withParameter(String key, byte[] value)
+    public MessageOut<T> withParameter(String key, byte[] value, Optional<MessageIn.MessageMeta> inMeta)
     {
         ImmutableMap.Builder<String, byte[]> builder = ImmutableMap.builder();
         builder.putAll(parameters).put(key, value);
-        return new MessageOut<T>(verb, payload, serializer, builder.build());
+        return new MessageOut<T>(verb, payload, serializer, builder.build(), inMeta);
     }
 
     public Stage getStage()

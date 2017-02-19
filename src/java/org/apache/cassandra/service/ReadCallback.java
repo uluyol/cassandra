@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
@@ -250,7 +251,7 @@ public class ReadCallback implements IAsyncCallbackWithFailure<ReadResponse>
 
                 for (InetAddress endpoint : endpoints)
                 {
-                    MessageOut<ReadCommand> message = command.createMessage(MessagingService.instance().getVersion(endpoint));
+                    MessageOut<ReadCommand> message = command.createMessage(MessagingService.instance().getVersion(endpoint), Optional.empty());
                     MessagingService.instance().sendRR(message, endpoint, repairHandler);
                 }
             }

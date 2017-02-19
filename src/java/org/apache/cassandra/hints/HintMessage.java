@@ -20,6 +20,7 @@ package org.apache.cassandra.hints;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -76,7 +77,7 @@ public final class HintMessage
 
     public MessageOut<HintMessage> createMessageOut()
     {
-        return new MessageOut<>(MessagingService.Verb.HINT, this, serializer);
+        return new MessageOut<>(MessagingService.Verb.HINT, this, serializer, Optional.empty());
     }
 
     public static class Serializer implements IVersionedSerializer<HintMessage>

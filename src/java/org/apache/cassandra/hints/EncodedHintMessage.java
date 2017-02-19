@@ -19,6 +19,7 @@ package org.apache.cassandra.hints;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.cassandra.db.TypeSizes;
@@ -55,7 +56,7 @@ final class EncodedHintMessage
 
     MessageOut<EncodedHintMessage> createMessageOut()
     {
-        return new MessageOut<>(MessagingService.Verb.HINT, this, serializer);
+        return new MessageOut<>(MessagingService.Verb.HINT, this, serializer, Optional.empty());
     }
 
     private static class Serializer implements IVersionedSerializer<EncodedHintMessage>

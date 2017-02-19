@@ -20,6 +20,7 @@ package org.apache.cassandra.service;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Iterables;
@@ -109,7 +110,7 @@ public abstract class AbstractReadExecutor
             if (traceState != null)
                 traceState.trace("reading {} from {}", readCommand.isDigestQuery() ? "digest" : "data", endpoint);
             logger.trace("reading {} from {}", readCommand.isDigestQuery() ? "digest" : "data", endpoint);
-            MessageOut<ReadCommand> message = readCommand.createMessage(MessagingService.instance().getVersion(endpoint));
+            MessageOut<ReadCommand> message = readCommand.createMessage(MessagingService.instance().getVersion(endpoint), Optional.empty());
             MessagingService.instance().sendRRWithFailure(message, endpoint, handler);
         }
 
@@ -292,7 +293,7 @@ public abstract class AbstractReadExecutor
                     traceState.trace("speculating read retry on {}", extraReplica);
                 logger.trace("speculating read retry on {}", extraReplica);
                 int version = MessagingService.instance().getVersion(extraReplica);
-                MessagingService.instance().sendRRWithFailure(retryCommand.createMessage(version), extraReplica, handler);
+                MessagingService.instance().sendRRWithFailure(retryCommand.createMessage(version, Optional.empty()), extraReplica, handler);
                 speculated = true;
 
                 cfs.metric.speculativeRetries.inc();

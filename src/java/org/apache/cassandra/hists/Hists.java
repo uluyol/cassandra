@@ -93,24 +93,18 @@ public final class Hists
 
     // Per-Hists histograms
     private final HistRecorder overall;
-    private final HistRecorder queueing;
-    private final HistRecorder processing;
     private final HistRecorder hasFlush;
     private final HistRecorder hasCompaction;
-    private final HistRecorder majorityQueuing;
 
     private Hists(Path destPath) throws IOException {
         Files.createDirectories(destPath);
         overall = HistRecorder.at(destPath.resolve("overall_hist.log"));
-        queueing = HistRecorder.at(destPath.resolve("queueing_hist.log"));
-        processing = HistRecorder.at(destPath.resolve("processing_hist.log"));
         hasFlush = HistRecorder.at(destPath.resolve("hasflush_hist.log"));
         hasCompaction = HistRecorder.at(destPath.resolve("hascompaction_hist.log"));
-        majorityQueuing = HistRecorder.at(destPath.resolve("majorityqueueing_hist.log"));
 
         // add our HistRecorders to a global list so that they
         // are periodically written to disk
-        addRecorders(ImmutableList.of(overall, queueing, processing, hasFlush, hasCompaction, majorityQueuing));
+        addRecorders(ImmutableList.of(overall, hasFlush, hasCompaction));
     }
 
     private synchronized static void addRecorders(Collection<HistRecorder> toAdd) {
@@ -144,20 +138,14 @@ public final class Hists
         }
     }
 
-    public void measure(MessageIn.MessageMeta meta) {
-        long tt = meta.totalTime().toNanos() / 1000;
-        long qt = meta.queuingTime().toNanos() / 1000;
+    public void measure(MessageIn.MessageMeta meta, Instant endTime) {
+        long tt = Duration.between(meta.getStart(), endTime).toNanos() / 1000;
         overall.recorder.recordValue(tt);
-        queueing.recorder.recordValue(qt);
-        processing.recorder.recordValue(meta.processingTime().toNanos() / 1000);
 
-        if (qt >= tt/2) {
-            majorityQueuing.recorder.recordValue(tt);
-        }
-        if (hasOverlap(meta.getStart(), meta.getEnd(), flushStart, flushEnd)) {
+        if (hasOverlap(meta.getStart(), endTime, flushStart, flushEnd)) {
             hasFlush.recorder.recordValue(tt);
         }
-        if (hasOverlap(meta.getStart(), meta.getEnd(), compactionStart, compactionEnd)) {
+        if (hasOverlap(meta.getStart(), endTime, compactionStart, compactionEnd)) {
             hasCompaction.recorder.recordValue(tt);
         }
     }

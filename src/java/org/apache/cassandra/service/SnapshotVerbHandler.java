@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.service;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,6 @@ public class SnapshotVerbHandler implements IVerbHandler<SnapshotCommand>
         else
             Keyspace.open(command.keyspace).getColumnFamilyStore(command.column_family).snapshot(command.snapshot_name);
         logger.debug("Enqueuing response to snapshot request {} to {}", command.snapshot_name, message.from);
-        MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE), id, message.from);
+        MessagingService.instance().sendReply(new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty()), id, message.from);
     }
 }

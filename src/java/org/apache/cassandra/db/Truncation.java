@@ -18,6 +18,7 @@
 package org.apache.cassandra.db;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
@@ -43,7 +44,7 @@ public class Truncation
 
     public MessageOut<Truncation> createMessage()
     {
-        return new MessageOut<Truncation>(MessagingService.Verb.TRUNCATE, this, serializer);
+        return new MessageOut<Truncation>(MessagingService.Verb.TRUNCATE, this, serializer, Optional.empty());
     }
 
     public String toString()

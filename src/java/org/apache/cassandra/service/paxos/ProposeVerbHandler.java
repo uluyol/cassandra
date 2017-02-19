@@ -21,6 +21,8 @@ package org.apache.cassandra.service.paxos;
  */
 
 
+import java.util.Optional;
+
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
@@ -32,7 +34,7 @@ public class ProposeVerbHandler implements IVerbHandler<Commit>
     public void doVerb(MessageIn<Commit> message, int id)
     {
         Boolean response = PaxosState.propose(message.payload);
-        MessageOut<Boolean> reply = new MessageOut<Boolean>(MessagingService.Verb.REQUEST_RESPONSE, response, BooleanSerializer.serializer);
+        MessageOut<Boolean> reply = new MessageOut<Boolean>(MessagingService.Verb.REQUEST_RESPONSE, response, BooleanSerializer.serializer, Optional.empty());
         MessagingService.instance().sendReply(reply, id, message.from);
     }
 }

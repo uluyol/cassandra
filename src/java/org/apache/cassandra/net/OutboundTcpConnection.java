@@ -26,6 +26,7 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -45,6 +46,7 @@ import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.xxhash.XXHashFactory;
 
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.io.util.DataOutputStreamPlus;
 import org.apache.cassandra.io.util.BufferedDataOutputStreamPlus;
 import org.apache.cassandra.io.util.WrappedDataOutputStreamPlus;
@@ -115,7 +117,7 @@ public class OutboundTcpConnection extends Thread
                     "Value provided for coalescing window must be greather than 0: " + coalescingWindow);
     }
 
-    private static final MessageOut CLOSE_SENTINEL = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE);
+    private static final MessageOut CLOSE_SENTINEL = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty());
     private volatile boolean isStopped = false;
 
     private static final int OPEN_RETRY_DELAY = 100; // ms between retries
@@ -264,6 +266,9 @@ public class OutboundTcpConnection extends Thread
     {
         try
         {
+            if (qm.message.inMeta.isPresent()) {
+                qm.message.inMeta.get().hist.measure(qm.message.inMeta.get(), Instant.now(NanoClock.instance));
+            }
             byte[] sessionBytes = qm.message.parameters.get(Tracing.TRACE_HEADER);
             if (sessionBytes != null)
             {

@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,8 @@ public class GossipDigestAckVerbHandler implements IVerbHandler<GossipDigestAck>
 
         MessageOut<GossipDigestAck2> gDigestAck2Message = new MessageOut<GossipDigestAck2>(MessagingService.Verb.GOSSIP_DIGEST_ACK2,
                                                                                            new GossipDigestAck2(deltaEpStateMap),
-                                                                                           GossipDigestAck2.serializer);
+                                                                                           GossipDigestAck2.serializer,
+                                                                                           Optional.empty());
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAck2Message to {}", from);
         MessagingService.instance().sendOneWay(gDigestAck2Message, from);

@@ -20,6 +20,8 @@
  */
 package org.apache.cassandra.service.paxos;
 
+import java.util.Optional;
+
 import org.apache.cassandra.db.WriteResponse;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
@@ -33,6 +35,6 @@ public class CommitVerbHandler implements IVerbHandler<Commit>
         PaxosState.commit(message.payload);
 
         Tracing.trace("Enqueuing acknowledge to {}", message.from);
-        MessagingService.instance().sendReply(WriteResponse.createMessage(), id, message.from);
+        MessagingService.instance().sendReply(WriteResponse.createMessage(Optional.empty()), id, message.from);
     }
 }

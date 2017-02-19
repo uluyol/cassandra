@@ -19,6 +19,7 @@ package org.apache.cassandra.net;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,8 +88,8 @@ public class MessageDeliveryTask implements Runnable
     {
         if (message.doCallbackOnFailure())
         {
-            MessageOut response = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE)
-                                                .withParameter(MessagingService.FAILURE_RESPONSE_PARAM, MessagingService.ONE_BYTE);
+            MessageOut response = new MessageOut(MessagingService.Verb.INTERNAL_RESPONSE, Optional.empty())
+                                                .withParameter(MessagingService.FAILURE_RESPONSE_PARAM, MessagingService.ONE_BYTE, Optional.empty());
             MessagingService.instance().sendReply(response, id, message.from);
         }
     }

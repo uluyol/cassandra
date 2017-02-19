@@ -41,6 +41,7 @@ import org.apache.cassandra.io.sstable.format.SSTableReader;
 import org.apache.cassandra.io.util.DataInputPlus;
 import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.metrics.TableMetrics;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.schema.IndexMetadata;
@@ -861,9 +862,9 @@ public class SinglePartitionReadCommand extends ReadCommand
                              nowInSec());
     }
 
-    public MessageOut<ReadCommand> createMessage(int version)
+    public MessageOut<ReadCommand> createMessage(int version, Optional<MessageIn.MessageMeta> inMeta)
     {
-        return new MessageOut<>(MessagingService.Verb.READ, this, version < MessagingService.VERSION_30 ? legacyReadCommandSerializer : serializer);
+        return new MessageOut<>(MessagingService.Verb.READ, this, version < MessagingService.VERSION_30 ? legacyReadCommandSerializer : serializer, inMeta);
     }
 
     protected void appendCQLWhereClause(StringBuilder sb)

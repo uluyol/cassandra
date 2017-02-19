@@ -79,7 +79,8 @@ public class GossipDigestSynVerbHandler implements IVerbHandler<GossipDigestSyn>
         logger.trace("sending {} digests and {} deltas", deltaGossipDigestList.size(), deltaEpStateMap.size());
         MessageOut<GossipDigestAck> gDigestAckMessage = new MessageOut<GossipDigestAck>(MessagingService.Verb.GOSSIP_DIGEST_ACK,
                                                                                         new GossipDigestAck(deltaGossipDigestList, deltaEpStateMap),
-                                                                                        GossipDigestAck.serializer);
+                                                                                        GossipDigestAck.serializer,
+                                                                                        Optional.empty());
         if (logger.isTraceEnabled())
             logger.trace("Sending a GossipDigestAckMessage to {}", from);
         MessagingService.instance().sendOneWay(gDigestAckMessage, from);

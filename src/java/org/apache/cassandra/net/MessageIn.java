@@ -30,6 +30,7 @@ import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.monitoring.ConstructionTime;
 import org.apache.cassandra.db.monitoring.MonitorableImpl;
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
@@ -172,20 +173,11 @@ public class MessageIn<T>
 
     public static class MessageMeta {
         private final Instant reqStart;
-        private Instant queueEnd;
-        private Instant processEnd;
+        public Hists hist;
 
         private MessageMeta(Instant start) { reqStart = start; }
         public static MessageMeta create(Instant start) { return new MessageMeta(start); }
 
-        public void setQueueEnd() { queueEnd = Instant.now(NanoClock.instance); }
-        public void setProcessEnd() { processEnd = Instant.now(NanoClock.instance); }
-
-        public Duration queuingTime() { return Duration.between(reqStart, queueEnd); }
-        public Duration processingTime() { return Duration.between(queueEnd, processEnd); }
-        public Duration totalTime() { return Duration.between(reqStart, processEnd); }
-
         public Instant getStart() { return reqStart; }
-        public Instant getEnd() { return processEnd; }
     }
 }

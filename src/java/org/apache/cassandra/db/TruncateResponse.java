@@ -18,6 +18,7 @@
 package org.apache.cassandra.db;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.cassandra.io.IVersionedSerializer;
 import org.apache.cassandra.io.util.DataInputPlus;
@@ -46,7 +47,7 @@ public class TruncateResponse
 
     public MessageOut<TruncateResponse> createMessage()
     {
-        return new MessageOut<TruncateResponse>(MessagingService.Verb.REQUEST_RESPONSE, this, serializer);
+        return new MessageOut<TruncateResponse>(MessagingService.Verb.REQUEST_RESPONSE, this, serializer, Optional.empty());
     }
 
     public static class TruncateResponseSerializer implements IVersionedSerializer<TruncateResponse>

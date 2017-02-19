@@ -277,7 +277,7 @@ public class DataResolver extends ResponseResolver
                     // use a separate verb here because we don't want these to be get the white glove hint-
                     // on-timeout behavior that a "real" mutation gets
                     Tracing.trace("Sending read-repair-mutation to {}", sources[i]);
-                    MessageOut<Mutation> msg = new Mutation(repairs[i]).createMessage(MessagingService.Verb.READ_REPAIR);
+                    MessageOut<Mutation> msg = new Mutation(repairs[i]).createMessage(MessagingService.Verb.READ_REPAIR, Optional.empty());
                     repairResults.add(MessagingService.instance().sendRR(msg, sources[i]));
                 }
             }
@@ -380,7 +380,7 @@ public class DataResolver extends ResponseResolver
                 if (StorageProxy.canDoLocalRequest(source))
                       StageManager.getStage(Stage.READ).maybeExecuteImmediately(new StorageProxy.LocalReadRunnable(retryCommand, handler));
                 else
-                    MessagingService.instance().sendRRWithFailure(retryCommand.createMessage(MessagingService.current_version), source, handler);
+                    MessagingService.instance().sendRRWithFailure(retryCommand.createMessage(MessagingService.current_version, Optional.empty()), source, handler);
 
                 // We don't call handler.get() because we want to preserve tombstones since we're still in the middle of merging node results.
                 handler.awaitResults();

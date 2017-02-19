@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.batchlog;
 
+import java.util.Optional;
+
 import org.apache.cassandra.db.WriteResponse;
 import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
@@ -27,6 +29,6 @@ public final class BatchStoreVerbHandler implements IVerbHandler<Batch>
     public void doVerb(MessageIn<Batch> message, int id)
     {
         BatchlogManager.store(message.payload);
-        MessagingService.instance().sendReply(WriteResponse.createMessage(), id, message.from);
+        MessagingService.instance().sendReply(WriteResponse.createMessage(Optional.empty()), id, message.from);
     }
 }

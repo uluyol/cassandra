@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.db;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,7 @@ public class CounterMutationVerbHandler implements IVerbHandler<CounterMutation>
         {
             public void run()
             {
-                MessagingService.instance().sendReply(WriteResponse.createMessage(), id, message.from);
+                MessagingService.instance().sendReply(WriteResponse.createMessage(Optional.empty()), id, message.from);
             }
         });
     }

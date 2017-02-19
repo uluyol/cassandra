@@ -39,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -2286,7 +2287,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     private void sendReplicationNotification(InetAddress remote)
     {
         // notify the remote token
-        MessageOut msg = new MessageOut(MessagingService.Verb.REPLICATION_FINISHED);
+        MessageOut msg = new MessageOut(MessagingService.Verb.REPLICATION_FINISHED, Optional.empty());
         IFailureDetector failureDetector = FailureDetector.instance;
         if (logger.isDebugEnabled())
             logger.debug("Notifying {} of replication completion\n", remote);

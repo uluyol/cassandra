@@ -459,7 +459,7 @@ public class StorageProxy implements StorageProxyMBean
      */
     private static void sendCommit(Commit commit, Iterable<InetAddress> replicas)
     {
-        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_COMMIT, commit, Commit.serializer);
+        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_COMMIT, commit, Commit.serializer, Optional.empty());
         for (InetAddress target : replicas)
             MessagingService.instance().sendOneWay(message, target);
     }
@@ -468,7 +468,7 @@ public class StorageProxy implements StorageProxyMBean
     throws WriteTimeoutException
     {
         PrepareCallback callback = new PrepareCallback(toPrepare.update.partitionKey(), toPrepare.update.metadata(), requiredParticipants, consistencyForPaxos);
-        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_PREPARE, toPrepare, Commit.serializer);
+        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_PREPARE, toPrepare, Commit.serializer, Optional.empty());
         for (InetAddress target : endpoints)
             MessagingService.instance().sendRR(message, target, callback);
         callback.await();
@@ -479,7 +479,7 @@ public class StorageProxy implements StorageProxyMBean
     throws WriteTimeoutException
     {
         ProposeCallback callback = new ProposeCallback(endpoints.size(), requiredParticipants, !timeoutIfPartial, consistencyLevel);
-        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_PROPOSE, proposal, Commit.serializer);
+        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_PROPOSE, proposal, Commit.serializer, Optional.empty());
         for (InetAddress target : endpoints)
             MessagingService.instance().sendRR(message, target, callback);
 
@@ -510,7 +510,7 @@ public class StorageProxy implements StorageProxyMBean
             responseHandler = rs.getWriteResponseHandler(naturalEndpoints, pendingEndpoints, consistencyLevel, null, WriteType.SIMPLE);
         }
 
-        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_COMMIT, proposal, Commit.serializer);
+        MessageOut<Commit> message = new MessageOut<Commit>(MessagingService.Verb.PAXOS_COMMIT, proposal, Commit.serializer, Optional.empty());
         for (InetAddress destination : Iterables.concat(naturalEndpoints, pendingEndpoints))
         {
             checkHintOverload(destination);
@@ -937,7 +937,7 @@ public class StorageProxy implements StorageProxyMBean
     private static void syncWriteToBatchlog(WriteResponseHandler<?> handler, Batch batch, Collection<InetAddress> endpoints)
     throws WriteTimeoutException, WriteFailureException
     {
-        MessageOut<Batch> message = new MessageOut<>(MessagingService.Verb.BATCH_STORE, batch, Batch.serializer);
+        MessageOut<Batch> message = new MessageOut<>(MessagingService.Verb.BATCH_STORE, batch, Batch.serializer, Optional.empty());
 
         for (InetAddress target : endpoints)
         {
@@ -961,7 +961,7 @@ public class StorageProxy implements StorageProxyMBean
 
     private static void asyncRemoveFromBatchlog(Collection<InetAddress> endpoints, UUID uuid)
     {
-        MessageOut<UUID> message = new MessageOut<>(MessagingService.Verb.BATCH_REMOVE, uuid, UUIDSerializer.serializer);
+        MessageOut<UUID> message = new MessageOut<>(MessagingService.Verb.BATCH_REMOVE, uuid, UUIDSerializer.serializer, Optional.empty());
         for (InetAddress target : endpoints)
         {
             if (logger.isTraceEnabled())
@@ -1196,7 +1196,7 @@ public class StorageProxy implements StorageProxyMBean
                 {
                     // belongs on a different server
                     if (message == null)
-                        message = mutation.createMessage();
+                        message = mutation.createMessage(Verb.MUTATION, Optional.empty());
                     String dc = DatabaseDescriptor.getEndpointSnitch().getDatacenter(destination);
                     // direct writes to local DC or old Cassandra versions
                     // (1.1 knows how to forward old-style String message IDs; updated to int in 2.0)
@@ -1239,7 +1239,7 @@ public class StorageProxy implements StorageProxyMBean
         {
             // for each datacenter, send the message to one node to relay the write to other replicas
             if (message == null)
-                message = mutation.createMessage();
+                message = mutation.createMessage(Verb.MUTATION, Optional.empty());
 
             for (Collection<InetAddress> dcTargets : dcGroups.values())
                 sendMessagesToNonlocalDC(message, dcTargets, responseHandler);
@@ -1286,7 +1286,7 @@ public class StorageProxy implements StorageProxyMBean
                 out.writeInt(id);
                 logger.trace("Adding FWD message to {}@{}", id, destination);
             }
-            message = message.withParameter(Mutation.FORWARD_TO, out.getData());
+            message = message.withParameter(Mutation.FORWARD_TO, out.getData(), Optional.empty());
             // send the combined message + forward headers
             int id = MessagingService.instance().sendRR(message, target, handler, true);
             logger.trace("Sending message to {}@{}", id, target);
@@ -1721,7 +1721,7 @@ public class StorageProxy implements StorageProxyMBean
 
                 for (InetAddress endpoint : executor.getContactedReplicas())
                 {
-                    MessageOut<ReadCommand> message = command.createMessage(MessagingService.instance().getVersion(endpoint));
+                    MessageOut<ReadCommand> message = command.createMessage(MessagingService.instance().getVersion(endpoint), Optional.empty());
                     Tracing.trace("Enqueuing full data read to {}", endpoint);
                     MessagingService.instance().sendRRWithFailure(message, endpoint, repairHandler);
                 }
@@ -2089,7 +2089,7 @@ public class StorageProxy implements StorageProxyMBean
             {
                 for (InetAddress endpoint : toQuery.filteredEndpoints)
                 {
-                    MessageOut<ReadCommand> message = rangeCommand.createMessage(MessagingService.instance().getVersion(endpoint));
+                    MessageOut<ReadCommand> message = rangeCommand.createMessage(MessagingService.instance().getVersion(endpoint), Optional.empty());
                     Tracing.trace("Enqueuing request to {}", endpoint);
                     MessagingService.instance().sendRRWithFailure(message, endpoint, handler);
                 }
@@ -2188,7 +2188,7 @@ public class StorageProxy implements StorageProxyMBean
             }
         };
         // an empty message acts as a request to the SchemaCheckVerbHandler.
-        MessageOut message = new MessageOut(MessagingService.Verb.SCHEMA_CHECK);
+        MessageOut message = new MessageOut(MessagingService.Verb.SCHEMA_CHECK, Optional.empty());
         for (InetAddress endpoint : liveHosts)
             MessagingService.instance().sendRR(message, endpoint, cb);
 
