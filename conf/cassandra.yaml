@@ -5,7 +5,7 @@ key_cache_fake_response: false
 use_hedged_requests: true
 
 # Hist/Logging options
-
+hist_write_period_s: 10
 hist_dir: /logs/hists
 oplog_dir: /cassandra_data
 dumpcache_dir: /cassandra_data

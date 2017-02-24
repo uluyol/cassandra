@@ -298,9 +298,9 @@ public class SinglePartitionReadCommand extends ReadCommand
                       lastReturned == null ? clusteringIndexFilter() : clusteringIndexFilter.forPaging(metadata().comparator, lastReturned, false));
     }
 
-    public PartitionIterator execute(ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
+    public PartitionIterator execute(Optional<MessageIn.MessageMeta> meta, ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
     {
-        return StorageProxy.read(Group.one(this), consistency, clientState);
+        return StorageProxy.read(meta, Group.one(this), consistency, clientState);
     }
 
     public SinglePartitionPager getPager(PagingState pagingState, int protocolVersion)
@@ -919,9 +919,9 @@ public class SinglePartitionReadCommand extends ReadCommand
             return new Group(Collections.<SinglePartitionReadCommand>singletonList(command), command.limits());
         }
 
-        public PartitionIterator execute(ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
+        public PartitionIterator execute(Optional<MessageIn.MessageMeta> meta, ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
         {
-            return StorageProxy.read(this, consistency, clientState);
+            return StorageProxy.read(meta, this, consistency, clientState);
         }
 
         public int nowInSec()

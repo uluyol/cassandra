@@ -159,7 +159,7 @@ public class PartitionRangeReadCommand extends ReadCommand
         return rowFilter().clusteringKeyRestrictionsAreSatisfiedBy(clustering);
     }
 
-    public PartitionIterator execute(ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
+    public PartitionIterator execute(Optional<MessageIn.MessageMeta> meta, ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
     {
         return StorageProxy.getRangeSlice(this, consistency);
     }

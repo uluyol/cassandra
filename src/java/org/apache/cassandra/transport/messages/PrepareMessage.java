@@ -17,11 +17,13 @@
  */
 package org.apache.cassandra.transport.messages;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableMap;
 import io.netty.buffer.ByteBuf;
 
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.tracing.Tracing;
@@ -58,7 +60,7 @@ public class PrepareMessage extends Message.Request
         this.query = query;
     }
 
-    public Message.Response execute(QueryState state)
+    public Message.Response execute(Optional<MessageIn.MessageMeta> meta, QueryState state)
     {
         try
         {

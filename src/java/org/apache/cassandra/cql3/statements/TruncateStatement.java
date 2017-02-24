@@ -18,6 +18,7 @@
 package org.apache.cassandra.cql3.statements;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.cassandra.auth.Permission;
@@ -27,6 +28,7 @@ import org.apache.cassandra.cql3.*;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.exceptions.*;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.transport.messages.ResultMessage;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
@@ -60,7 +62,7 @@ public class TruncateStatement extends CFStatement implements CQLStatement
         ThriftValidation.validateColumnFamily(keyspace(), columnFamily());
     }
 
-    public ResultMessage execute(QueryState state, QueryOptions options) throws InvalidRequestException, TruncateException
+    public ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState state, QueryOptions options) throws InvalidRequestException, TruncateException
     {
         try
         {

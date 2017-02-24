@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.service.pager;
 
+import java.util.Optional;
+
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.db.filter.*;
@@ -53,7 +55,7 @@ public class QueryPagers
         int count = 0;
         while (!pager.isExhausted())
         {
-            try (PartitionIterator iter = pager.fetchPage(pageSize, consistencyLevel, state))
+            try (PartitionIterator iter = pager.fetchPage(Optional.empty(), pageSize, consistencyLevel, state))
             {
                 DataLimits.Counter counter = limits.newCounter(nowInSec, true);
                 PartitionIterators.consume(counter.applyTo(iter));

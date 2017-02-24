@@ -21,10 +21,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.netty.buffer.ByteBuf;
 
 import org.apache.cassandra.cql3.QueryProcessor;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.FrameCompressor;
 import org.apache.cassandra.transport.Message;
@@ -56,7 +58,7 @@ public class OptionsMessage extends Message.Request
         super(Message.Type.OPTIONS);
     }
 
-    public Message.Response execute(QueryState state)
+    public Message.Response execute(Optional<MessageIn.MessageMeta> meta, QueryState state)
     {
         List<String> cqlVersions = new ArrayList<String>();
         cqlVersions.add(QueryProcessor.CQL_VERSION.toString());

@@ -47,6 +47,7 @@ import org.apache.cassandra.db.view.View;
 import org.apache.cassandra.dht.AbstractBounds;
 import org.apache.cassandra.exceptions.*;
 import org.apache.cassandra.index.SecondaryIndexManager;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.serializers.MarshalException;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.ClientWarn;
@@ -194,7 +195,7 @@ public class SelectStatement implements CQLStatement
         // Nothing to do, all validation has been done by RawStatement.prepare()
     }
 
-    public ResultMessage.Rows execute(QueryState state, QueryOptions options) throws RequestExecutionException, RequestValidationException
+    public ResultMessage.Rows execute(Optional<MessageIn.MessageMeta> meta, QueryState state, QueryOptions options) throws RequestExecutionException, RequestValidationException
     {
         ConsistencyLevel cl = options.getConsistency();
         checkNotNull(cl, "Invalid empty consistency level");
@@ -208,10 +209,10 @@ public class SelectStatement implements CQLStatement
         int pageSize = getPageSize(options);
 
         if (pageSize <= 0 || query.limits().count() <= pageSize)
-            return execute(query, options, state, nowInSec, userLimit);
+            return execute(meta, query, options, state, nowInSec, userLimit);
 
         QueryPager pager = query.getPager(options.getPagingState(), options.getProtocolVersion());
-        return execute(Pager.forDistributedQuery(pager, cl, state.getClientState()), options, pageSize, nowInSec, userLimit);
+        return execute(meta, Pager.forDistributedQuery(pager, cl, state.getClientState()), options, pageSize, nowInSec, userLimit);
     }
 
     private int getPageSize(QueryOptions options)
@@ -241,13 +242,14 @@ public class SelectStatement implements CQLStatement
         return getSliceCommands(options, limit, nowInSec);
     }
 
-    private ResultMessage.Rows execute(ReadQuery query,
+    private ResultMessage.Rows execute(Optional<MessageIn.MessageMeta> meta,
+                                       ReadQuery query,
                                        QueryOptions options,
                                        QueryState state,
                                        int nowInSec,
                                        int userLimit) throws RequestValidationException, RequestExecutionException
     {
-        try (PartitionIterator data = query.execute(options.getConsistency(), state.getClientState()))
+        try (PartitionIterator data = query.execute(meta, options.getConsistency(), state.getClientState()))
         {
             return processResults(data, options, nowInSec, userLimit);
         }
@@ -283,7 +285,7 @@ public class SelectStatement implements CQLStatement
             return pager.state();
         }
 
-        public abstract PartitionIterator fetchPage(int pageSize);
+        public abstract PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize);
 
         public static class NormalPager extends Pager
         {
@@ -297,9 +299,9 @@ public class SelectStatement implements CQLStatement
                 this.clientState = clientState;
             }
 
-            public PartitionIterator fetchPage(int pageSize)
+            public PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize)
             {
-                return pager.fetchPage(pageSize, consistency, clientState);
+                return pager.fetchPage(meta, pageSize, consistency, clientState);
             }
         }
 
@@ -313,21 +315,22 @@ public class SelectStatement implements CQLStatement
                 this.executionController = executionController;
             }
 
-            public PartitionIterator fetchPage(int pageSize)
+            public PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize)
             {
                 return pager.fetchPageInternal(pageSize, executionController);
             }
         }
     }
 
-    private ResultMessage.Rows execute(Pager pager,
+    private ResultMessage.Rows execute(Optional<MessageIn.MessageMeta> meta,
+                                       Pager pager,
                                        QueryOptions options,
                                        int pageSize,
                                        int nowInSec,
                                        int userLimit) throws RequestValidationException, RequestExecutionException
     {
         if (selection.isAggregate())
-            return pageAggregateQuery(pager, options, pageSize, nowInSec);
+            return pageAggregateQuery(meta, pager, options, pageSize, nowInSec);
 
         // We can't properly do post-query ordering if we page (see #6722)
         checkFalse(needsPostQueryOrdering(),
@@ -335,7 +338,7 @@ public class SelectStatement implements CQLStatement
                   + " you must either remove the ORDER BY or the IN and sort client side, or disable paging for this query");
 
         ResultMessage.Rows msg;
-        try (PartitionIterator page = pager.fetchPage(pageSize))
+        try (PartitionIterator page = pager.fetchPage(meta, pageSize))
         {
             msg = processResults(page, options, nowInSec, userLimit);
         }
@@ -348,7 +351,7 @@ public class SelectStatement implements CQLStatement
         return msg;
     }
 
-    private ResultMessage.Rows pageAggregateQuery(Pager pager, QueryOptions options, int pageSize, int nowInSec)
+    private ResultMessage.Rows pageAggregateQuery(Optional<MessageIn.MessageMeta> meta, Pager pager, QueryOptions options, int pageSize, int nowInSec)
     throws RequestValidationException, RequestExecutionException
     {
         if (!restrictions.hasPartitionKeyRestrictions())
@@ -365,7 +368,7 @@ public class SelectStatement implements CQLStatement
         Selection.ResultSetBuilder result = selection.resultSetBuilder(parameters.isJson);
         while (!pager.isExhausted())
         {
-            try (PartitionIterator iter = pager.fetchPage(pageSize))
+            try (PartitionIterator iter = pager.fetchPage(meta, pageSize))
             {
                 while (iter.hasNext())
                 {
@@ -407,7 +410,7 @@ public class SelectStatement implements CQLStatement
             else
             {
                 QueryPager pager = query.getPager(options.getPagingState(), options.getProtocolVersion());
-                return execute(Pager.forInternalQuery(pager, executionController), options, pageSize, nowInSec, userLimit);
+                return execute(Optional.empty(), Pager.forInternalQuery(pager, executionController), options, pageSize, nowInSec, userLimit);
             }
         }
     }

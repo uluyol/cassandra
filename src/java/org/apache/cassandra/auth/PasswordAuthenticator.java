@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -141,7 +142,8 @@ public class PasswordAuthenticator implements IAuthenticator
     private AuthenticatedUser doAuthenticate(String username, String password, SelectStatement authenticationStatement)
     throws RequestExecutionException, AuthenticationException
     {
-        ResultMessage.Rows rows = authenticationStatement.execute(QueryState.forInternalCalls(),
+        ResultMessage.Rows rows = authenticationStatement.execute(Optional.empty(),
+                                                                  QueryState.forInternalCalls(),
                                                                   QueryOptions.forInternalCalls(consistencyForRole(username),
                                                                                                 Lists.newArrayList(ByteBufferUtil.bytes(username))));
         UntypedResultSet result = UntypedResultSet.create(rows.result);

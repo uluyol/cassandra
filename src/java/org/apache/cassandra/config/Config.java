@@ -42,6 +42,7 @@ public class Config
     public Boolean use_hedged_requests;
 
     /* Logging params */
+    public long hist_write_period_s;
     public String hist_dir;
     public String oplog_dir;
     public String dumpcache_dir;

@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.transport;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,6 +25,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +44,8 @@ import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.hists.NanoClock;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientWarn;
 import org.apache.cassandra.transport.messages.*;
 import org.apache.cassandra.service.QueryState;
@@ -209,7 +213,7 @@ public abstract class Message
                 throw new IllegalArgumentException();
         }
 
-        public abstract Response execute(QueryState queryState);
+        public abstract Response execute(Optional<MessageIn.MessageMeta> msgMeta, QueryState queryState);
 
         public void setTracingRequested()
         {
@@ -496,6 +500,7 @@ public abstract class Message
 
             try
             {
+                MessageIn.MessageMeta msgMeta = MessageIn.MessageMeta.create(Instant.now(NanoClock.instance));
                 assert request.connection() instanceof ServerConnection;
                 connection = (ServerConnection)request.connection();
                 if (connection.getVersion() >= Server.VERSION_4)
@@ -504,7 +509,7 @@ public abstract class Message
                 QueryState qstate = connection.validateNewMessage(request.type, connection.getVersion(), request.getStreamId());
 
                 logger.trace("Received: {}, v={}", request, connection.getVersion());
-                response = request.execute(qstate);
+                response = request.execute(Optional.of(msgMeta), qstate);
                 response.setStreamId(request.getStreamId());
                 response.setWarnings(ClientWarn.instance.getWarnings());
                 response.attach(connection);

@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.service.pager;
 
+import java.util.Optional;
+
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.db.rows.*;
 import org.apache.cassandra.db.partitions.*;
@@ -24,6 +26,7 @@ import org.apache.cassandra.db.filter.DataLimits;
 import org.apache.cassandra.db.transform.Transformation;
 import org.apache.cassandra.exceptions.RequestExecutionException;
 import org.apache.cassandra.exceptions.RequestValidationException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 
 abstract class AbstractQueryPager implements QueryPager
@@ -57,14 +60,15 @@ abstract class AbstractQueryPager implements QueryPager
         return command.executionController();
     }
 
-    public PartitionIterator fetchPage(int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException
+    public PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException
     {
         if (isExhausted())
             return EmptyIterators.partition();
 
         pageSize = Math.min(pageSize, remaining);
         Pager pager = new Pager(limits.forPaging(pageSize), command.nowInSec());
-        return Transformation.apply(nextPageReadCommand(pageSize).execute(consistency, clientState), pager);
+        // TODO(uluyol): figure out if we need to record service times here too.
+        return Transformation.apply(nextPageReadCommand(pageSize).execute(meta, consistency, clientState), pager);
     }
 
     public PartitionIterator fetchPageInternal(int pageSize, ReadExecutionController executionController) throws RequestValidationException, RequestExecutionException

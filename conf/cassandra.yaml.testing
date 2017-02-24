@@ -5,7 +5,7 @@ key_cache_fake_response: true
 use_hedged_requests: true
 
 # Hist/Logging options
-
+hist_write_period_s: 10
 hist_dir: /tmp/hists
 oplog_dir: /tmp
 dumpcache_dir: /tmp

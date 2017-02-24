@@ -17,12 +17,15 @@
  */
 package org.apache.cassandra.service.pager;
 
+import java.util.Optional;
+
 import org.apache.cassandra.db.ConsistencyLevel;
 import org.apache.cassandra.db.ReadExecutionController;
 import org.apache.cassandra.db.EmptyIterators;
 import org.apache.cassandra.db.partitions.PartitionIterator;
 import org.apache.cassandra.exceptions.RequestExecutionException;
 import org.apache.cassandra.exceptions.RequestValidationException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 
 /**
@@ -53,7 +56,7 @@ public interface QueryPager
             return ReadExecutionController.empty();
         }
 
-        public PartitionIterator fetchPage(int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException
+        public PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException
         {
             return EmptyIterators.partition();
         }
@@ -88,7 +91,7 @@ public interface QueryPager
      * {@code consistency} is a serial consistency.
      * @return the page of result.
      */
-    public PartitionIterator fetchPage(int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException;
+    public PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException;
 
     /**
      * Starts a new read operation.

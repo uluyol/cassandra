@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -41,6 +42,7 @@ import org.apache.cassandra.cql3.CQLTester;
 import org.apache.cassandra.dht.ByteOrderedPartitioner;
 import org.apache.cassandra.exceptions.RequestExecutionException;
 import org.apache.cassandra.exceptions.RequestValidationException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.messages.BatchMessage;
@@ -315,7 +317,8 @@ public class MessagePayloadTest extends CQLTester
             return result;
         }
 
-        public ResultMessage process(String query,
+        public ResultMessage process(Optional<MessageIn.MessageMeta> meta,
+                                     String query,
                                      QueryState state,
                                      QueryOptions options,
                                      Map<String, ByteBuffer> customPayload)
@@ -323,7 +326,7 @@ public class MessagePayloadTest extends CQLTester
         {
             if (customPayload != null)
                 requestPayload = customPayload;
-            ResultMessage result = QueryProcessor.instance.process(query, state, options, customPayload);
+            ResultMessage result = QueryProcessor.instance.process(meta, query, state, options, customPayload);
             if (customPayload != null)
             {
                 result.setCustomPayload(responsePayload);
@@ -349,7 +352,8 @@ public class MessagePayloadTest extends CQLTester
             return result;
         }
 
-        public ResultMessage processPrepared(CQLStatement statement,
+        public ResultMessage processPrepared(Optional<MessageIn.MessageMeta> meta,
+                                             CQLStatement statement,
                                              QueryState state,
                                              QueryOptions options,
                                              Map<String, ByteBuffer> customPayload)
@@ -357,7 +361,7 @@ public class MessagePayloadTest extends CQLTester
         {
             if (customPayload != null)
                 requestPayload = customPayload;
-            ResultMessage result = QueryProcessor.instance.processPrepared(statement, state, options, customPayload);
+            ResultMessage result = QueryProcessor.instance.processPrepared(meta, statement, state, options, customPayload);
             if (customPayload != null)
             {
                 result.setCustomPayload(responsePayload);

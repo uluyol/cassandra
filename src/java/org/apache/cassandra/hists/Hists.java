@@ -37,6 +37,8 @@ import javax.xml.crypto.Data;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.log4j.Logger;
+
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogWriter;
 import org.HdrHistogram.Recorder;
@@ -50,18 +52,18 @@ Hists contain histograms used in our measurements to identify tail latency.
  */
 public final class Hists
 {
+    private static final Logger logger = Logger.getLogger(Hists.class);
+
     // keep these on top so that they initialize first
     // global list of HistRecorders that should be flushed periodically
     private static List<HistRecorder> recorders = Collections.synchronizedList(new ArrayList<HistRecorder>());
     private static Thread flusher = null; // thread to flush above
 
     // Hists for reads and writes
-    public static final Hists reads = must(Paths.get(DatabaseDescriptor.getHistDir(), "reads"));
-    public static final Hists writes = must(Paths.get(DatabaseDescriptor.getHistDir(), "writes"));
-    //public static final Hists reads = must("/logs/hists/reads");
-    //public static final Hists writes = must("/logs/hists/writes");
-    //public static final Hists reads = must("/tmp/reads");
-    //public static final Hists writes = must("/tmp/writes");
+    public static final Hists reads = must("reads", Paths.get(DatabaseDescriptor.getHistDir(), "reads"));
+    public static final Hists writes = must("writes", Paths.get(DatabaseDescriptor.getHistDir(), "writes"));
+
+    private static final long WRITE_PERIOD_SECONDS = DatabaseDescriptor.getHistWritePeriod();
 
     public static final Instant epoch = Instant.now(NanoClock.instance);
     public static final AtomicLong flushStart = new AtomicLong(-1);
@@ -89,18 +91,16 @@ public final class Hists
         setIfEqLock.set(false);
     }
 
-    private static final long WRITE_PERIOD_SECONDS = 10;
-
     // Per-Hists histograms
     private final HistRecorder overall;
     private final HistRecorder hasFlush;
     private final HistRecorder hasCompaction;
 
-    private Hists(Path destPath) throws IOException {
+    private Hists(String name, Path destPath) throws IOException {
         Files.createDirectories(destPath);
-        overall = HistRecorder.at(destPath.resolve("overall_hist.log"));
-        hasFlush = HistRecorder.at(destPath.resolve("hasflush_hist.log"));
-        hasCompaction = HistRecorder.at(destPath.resolve("hascompaction_hist.log"));
+        overall = HistRecorder.at(name + "/overall", destPath.resolve("overall_hist.log"));
+        hasFlush = HistRecorder.at(name + "/hasflush", destPath.resolve("hasflush_hist.log"));
+        hasCompaction = HistRecorder.at(name + "/hascompaction", destPath.resolve("hascompaction_hist.log"));
 
         // add our HistRecorders to a global list so that they
         // are periodically written to disk
@@ -126,13 +126,9 @@ public final class Hists
         recorders.addAll(toAdd);
     }
 
-    private static Hists must(String destPath) {
-        return must(Paths.get(destPath));
-    }
-
-    private static Hists must(Path destPath) {
+    private static Hists must(String name, Path destPath) {
         try {
-            return new Hists(destPath);
+            return new Hists(name, destPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -164,10 +160,14 @@ public final class Hists
         final HistogramLogWriter writer;
         final OutputStream fw;
         final PrintStream ps;
+        final String name;
+
+        private Instant lastLog = Instant.now(NanoClock.instance);
 
         private Histogram recycleHist = null;
 
-        private HistRecorder(Path destPath) throws IOException {
+        private HistRecorder(String name, Path destPath) throws IOException {
+            this.name = name;
             recorder = new Recorder(3);
             fw = Files.newOutputStream(destPath);
             ps = new PrintStream(fw);
@@ -181,12 +181,20 @@ public final class Hists
             fw.flush();
         }
 
-        public static HistRecorder at(Path destPath) throws IOException { return new HistRecorder(destPath); }
+        public static HistRecorder at(String name, Path destPath) throws IOException { return new HistRecorder(name, destPath); }
 
         // log writes an interval histogram to disk. It is the caller's responsibility
         // to make sure that log is not called concurrently.
         public void log() {
             Histogram hist = recorder.getIntervalHistogram(recycleHist);
+            Instant now = Instant.now(NanoClock.instance);
+            Duration diff = Duration.between(lastLog, now);
+            lastLog = now;
+            logger.info(String.format(
+                "%s: last %d seconds: %d recorded p50: %d p95: %d p99: %d us", name, diff.getSeconds(), hist.getTotalCount(),
+                hist.getValueAtPercentile(50),
+                hist.getValueAtPercentile(95),
+                hist.getValueAtPercentile(99)));
             writer.outputIntervalHistogram(hist);
             try {
                 ps.flush();

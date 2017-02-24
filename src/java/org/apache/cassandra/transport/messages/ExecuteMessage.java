@@ -17,6 +17,7 @@
  */
 package org.apache.cassandra.transport.messages;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +28,7 @@ import org.apache.cassandra.cql3.QueryHandler;
 import org.apache.cassandra.cql3.QueryOptions;
 import org.apache.cassandra.cql3.statements.ParsedStatement;
 import org.apache.cassandra.exceptions.PreparedQueryNotFoundException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.tracing.Tracing;
@@ -86,7 +88,7 @@ public class ExecuteMessage extends Message.Request
         this.options = options;
     }
 
-    public Message.Response execute(QueryState state)
+    public Message.Response execute(Optional<MessageIn.MessageMeta> meta, QueryState state)
     {
         try
         {
@@ -127,7 +129,7 @@ public class ExecuteMessage extends Message.Request
             // Some custom QueryHandlers are interested by the bound names. We provide them this information
             // by wrapping the QueryOptions.
             QueryOptions queryOptions = QueryOptions.addColumnSpecifications(options, prepared.boundNames);
-            Message.Response response = handler.processPrepared(statement, state, queryOptions, getCustomPayload());
+            Message.Response response = handler.processPrepared(meta, statement, state, queryOptions, getCustomPayload());
             if (options.skipMetadata() && response instanceof ResultMessage.Rows)
                 ((ResultMessage.Rows)response).result.metadata.setSkipMetadata();
 

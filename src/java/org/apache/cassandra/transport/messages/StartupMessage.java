@@ -19,10 +19,12 @@ package org.apache.cassandra.transport.messages;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import io.netty.buffer.ByteBuf;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.*;
 import org.apache.cassandra.utils.CassandraVersion;
@@ -62,7 +64,7 @@ public class StartupMessage extends Message.Request
         this.options = options;
     }
 
-    public Message.Response execute(QueryState state)
+    public Message.Response execute(Optional<MessageIn.MessageMeta> meta, QueryState state)
     {
         String cqlVersion = options.get(CQL_VERSION);
         if (cqlVersion == null)

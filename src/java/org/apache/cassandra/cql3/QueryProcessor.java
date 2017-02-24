@@ -48,6 +48,7 @@ import org.apache.cassandra.db.partitions.PartitionIterators;
 import org.apache.cassandra.db.marshal.AbstractType;
 import org.apache.cassandra.exceptions.*;
 import org.apache.cassandra.metrics.CQLMetrics;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.*;
 import org.apache.cassandra.service.pager.QueryPager;
 import org.apache.cassandra.thrift.ThriftClientState;
@@ -195,7 +196,7 @@ public class QueryProcessor implements QueryHandler
         }
     }
 
-    public ResultMessage processStatement(CQLStatement statement, QueryState queryState, QueryOptions options)
+    public ResultMessage processStatement(Optional<MessageIn.MessageMeta> meta, CQLStatement statement, QueryState queryState, QueryOptions options)
     throws RequestExecutionException, RequestValidationException
     {
         logger.trace("Process {} @CL.{}", statement, options.getConsistency());
@@ -203,26 +204,27 @@ public class QueryProcessor implements QueryHandler
         statement.checkAccess(clientState);
         statement.validate(clientState);
 
-        ResultMessage result = statement.execute(queryState, options);
+        ResultMessage result = statement.execute(meta, queryState, options);
         return result == null ? new ResultMessage.Void() : result;
     }
 
-    public static ResultMessage process(String queryString, ConsistencyLevel cl, QueryState queryState)
+    public static ResultMessage process(Optional<MessageIn.MessageMeta> meta, String queryString, ConsistencyLevel cl, QueryState queryState)
     throws RequestExecutionException, RequestValidationException
     {
-        return instance.process(queryString, queryState, QueryOptions.forInternalCalls(cl, Collections.<ByteBuffer>emptyList()));
+        return instance.process(meta, queryString, queryState, QueryOptions.forInternalCalls(cl, Collections.<ByteBuffer>emptyList()));
     }
 
-    public ResultMessage process(String query,
+    public ResultMessage process(Optional<MessageIn.MessageMeta> meta,
+                                 String query,
                                  QueryState state,
                                  QueryOptions options,
                                  Map<String, ByteBuffer> customPayload)
                                          throws RequestExecutionException, RequestValidationException
     {
-        return process(query, state, options);
+        return process(meta, query, state, options);
     }
 
-    public ResultMessage process(String queryString, QueryState queryState, QueryOptions options)
+    public ResultMessage process(Optional<MessageIn.MessageMeta> meta, String queryString, QueryState queryState, QueryOptions options)
     throws RequestExecutionException, RequestValidationException
     {
         ParsedStatement.Prepared p = getStatement(queryString, queryState.getClientState());
@@ -234,7 +236,7 @@ public class QueryProcessor implements QueryHandler
         if (!queryState.getClientState().isInternal)
             metrics.regularStatementsExecuted.inc();
 
-        return processStatement(prepared, queryState, options);
+        return processStatement(meta, prepared, queryState, options);
     }
 
     public static ParsedStatement.Prepared parseStatement(String queryStr, QueryState queryState) throws RequestValidationException
@@ -242,14 +244,14 @@ public class QueryProcessor implements QueryHandler
         return getStatement(queryStr, queryState.getClientState());
     }
 
-    public static UntypedResultSet process(String query, ConsistencyLevel cl) throws RequestExecutionException
+    public static UntypedResultSet process(Optional<MessageIn.MessageMeta> meta, String query, ConsistencyLevel cl) throws RequestExecutionException
     {
-        return process(query, cl, Collections.<ByteBuffer>emptyList());
+        return process(meta, query, cl, Collections.<ByteBuffer>emptyList());
     }
 
-    public static UntypedResultSet process(String query, ConsistencyLevel cl, List<ByteBuffer> values) throws RequestExecutionException
+    public static UntypedResultSet process(Optional<MessageIn.MessageMeta> meta, String query, ConsistencyLevel cl, List<ByteBuffer> values) throws RequestExecutionException
     {
-        ResultMessage result = instance.process(query, QueryState.forInternalCalls(), QueryOptions.forInternalCalls(cl, values));
+        ResultMessage result = instance.process(meta, query, QueryState.forInternalCalls(), QueryOptions.forInternalCalls(cl, values));
         if (result instanceof ResultMessage.Rows)
             return UntypedResultSet.create(((ResultMessage.Rows)result).result);
         else
@@ -305,7 +307,7 @@ public class QueryProcessor implements QueryHandler
         try
         {
             ParsedStatement.Prepared prepared = prepareInternal(query);
-            ResultMessage result = prepared.statement.execute(state, makeInternalOptions(prepared, values));
+            ResultMessage result = prepared.statement.execute(Optional.empty(), state, makeInternalOptions(prepared, values));
             if (result instanceof ResultMessage.Rows)
                 return UntypedResultSet.create(((ResultMessage.Rows)result).result);
             else
@@ -440,16 +442,17 @@ public class QueryProcessor implements QueryHandler
         }
     }
 
-    public ResultMessage processPrepared(CQLStatement statement,
+    public ResultMessage processPrepared(Optional<MessageIn.MessageMeta> meta,
+                                         CQLStatement statement,
                                          QueryState state,
                                          QueryOptions options,
                                          Map<String, ByteBuffer> customPayload)
                                                  throws RequestExecutionException, RequestValidationException
     {
-        return processPrepared(statement, state, options);
+        return processPrepared(meta, statement, state, options);
     }
 
-    public ResultMessage processPrepared(CQLStatement statement, QueryState queryState, QueryOptions options)
+    public ResultMessage processPrepared(Optional<MessageIn.MessageMeta> meta, CQLStatement statement, QueryState queryState, QueryOptions options)
     throws RequestExecutionException, RequestValidationException
     {
         List<ByteBuffer> variables = options.getValues();
@@ -469,7 +472,7 @@ public class QueryProcessor implements QueryHandler
         }
 
         metrics.preparedStatementsExecuted.inc();
-        return processStatement(statement, queryState, options);
+        return processStatement(meta, statement, queryState, options);
     }
 
     public ResultMessage processBatch(BatchStatement statement,
@@ -488,7 +491,7 @@ public class QueryProcessor implements QueryHandler
         batch.checkAccess(clientState);
         batch.validate();
         batch.validate(clientState);
-        return batch.execute(queryState, options);
+        return batch.execute(Optional.empty(), queryState, options);
     }
 
     public static ParsedStatement.Prepared getStatement(String queryStr, ClientState clientState)

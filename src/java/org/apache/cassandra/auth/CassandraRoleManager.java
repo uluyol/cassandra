@@ -18,6 +18,7 @@
 package org.apache.cassandra.auth;
 
 import java.util.*;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -329,7 +330,8 @@ public class CassandraRoleManager implements IRoleManager
         {
             if (!hasExistingRoles())
             {
-                QueryProcessor.process(String.format("INSERT INTO %s.%s (role, is_superuser, can_login, salted_hash) " +
+                QueryProcessor.process(Optional.empty(),
+                                       String.format("INSERT INTO %s.%s (role, is_superuser, can_login, salted_hash) " +
                                                      "VALUES ('%s', true, true, '%s')",
                                                      AuthKeyspace.NAME,
                                                      AuthKeyspace.ROLES,
@@ -351,9 +353,9 @@ public class CassandraRoleManager implements IRoleManager
         // Try looking up the 'cassandra' default role first, to avoid the range query if possible.
         String defaultSUQuery = String.format("SELECT * FROM %s.%s WHERE role = '%s'", AuthKeyspace.NAME, AuthKeyspace.ROLES, DEFAULT_SUPERUSER_NAME);
         String allUsersQuery = String.format("SELECT * FROM %s.%s LIMIT 1", AuthKeyspace.NAME, AuthKeyspace.ROLES);
-        return !QueryProcessor.process(defaultSUQuery, ConsistencyLevel.ONE).isEmpty()
-               || !QueryProcessor.process(defaultSUQuery, ConsistencyLevel.QUORUM).isEmpty()
-               || !QueryProcessor.process(allUsersQuery, ConsistencyLevel.QUORUM).isEmpty();
+        return !QueryProcessor.process(Optional.empty(), defaultSUQuery, ConsistencyLevel.ONE).isEmpty()
+               || !QueryProcessor.process(Optional.empty(), defaultSUQuery, ConsistencyLevel.QUORUM).isEmpty()
+               || !QueryProcessor.process(Optional.empty(), allUsersQuery, ConsistencyLevel.QUORUM).isEmpty();
     }
 
     private void scheduleSetupTask(final Callable<Void> setupTask)
@@ -400,7 +402,8 @@ public class CassandraRoleManager implements IRoleManager
             if (Schema.instance.getCFMetaData("system_auth", "users") != null)
             {
                 logger.info("Converting legacy users");
-                UntypedResultSet users = QueryProcessor.process("SELECT * FROM system_auth.users",
+                UntypedResultSet users = QueryProcessor.process(Optional.empty(),
+                                                                "SELECT * FROM system_auth.users",
                                                                 ConsistencyLevel.QUORUM);
                 for (UntypedResultSet.Row row : users)
                 {
@@ -415,12 +418,14 @@ public class CassandraRoleManager implements IRoleManager
             if (Schema.instance.getCFMetaData("system_auth", "credentials") != null)
             {
                 logger.info("Migrating legacy credentials data to new system table");
-                UntypedResultSet credentials = QueryProcessor.process("SELECT * FROM system_auth.credentials",
+                UntypedResultSet credentials = QueryProcessor.process(Optional.empty(),
+                                                                      "SELECT * FROM system_auth.credentials",
                                                                       ConsistencyLevel.QUORUM);
                 for (UntypedResultSet.Row row : credentials)
                 {
                     // Write the password directly into the table to avoid doubly encrypting it
-                    QueryProcessor.process(String.format("UPDATE %s.%s SET salted_hash = '%s' WHERE role = '%s'",
+                    QueryProcessor.process(Optional.empty(),
+                                           String.format("UPDATE %s.%s SET salted_hash = '%s' WHERE role = '%s'",
                                                          AuthKeyspace.NAME,
                                                          AuthKeyspace.ROLES,
                                                          row.getString("salted_hash"),
@@ -494,7 +499,8 @@ public class CassandraRoleManager implements IRoleManager
     throws RequestExecutionException, RequestValidationException
     {
         ResultMessage.Rows rows =
-            statement.execute(QueryState.forInternalCalls(),
+            statement.execute(Optional.empty(),
+                              QueryState.forInternalCalls(),
                               QueryOptions.forInternalCalls(consistencyForRole(name),
                                                             Collections.singletonList(ByteBufferUtil.bytes(name))));
         if (rows.result.isEmpty())
@@ -602,7 +608,7 @@ public class CassandraRoleManager implements IRoleManager
                                             + "This is likely because some of nodes in the cluster are on version 2.1 or earlier. "
                                             + "You need to upgrade all nodes to Cassandra 2.2 or more to use roles.");
 
-        return QueryProcessor.process(query, consistencyLevel);
+        return QueryProcessor.process(Optional.empty(), query, consistencyLevel);
     }
 
     private static final class Role

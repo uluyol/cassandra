@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,6 +58,8 @@ import org.apache.cassandra.gms.FailureDetector;
 import org.apache.cassandra.gms.Gossiper;
 import org.apache.cassandra.hints.Hint;
 import org.apache.cassandra.hints.HintsService;
+import org.apache.cassandra.hists.Hists;
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.index.Index;
 import org.apache.cassandra.io.util.DataOutputBuffer;
 import org.apache.cassandra.locator.*;
@@ -1484,22 +1487,22 @@ public class StorageProxy implements StorageProxyMBean
     public static RowIterator readOne(SinglePartitionReadCommand command, ConsistencyLevel consistencyLevel, ClientState state)
     throws UnavailableException, IsBootstrappingException, ReadFailureException, ReadTimeoutException, InvalidRequestException
     {
-        return PartitionIterators.getOnlyElement(read(SinglePartitionReadCommand.Group.one(command), consistencyLevel, state), command);
+        return PartitionIterators.getOnlyElement(read(Optional.empty(), SinglePartitionReadCommand.Group.one(command), consistencyLevel, state), command);
     }
 
-    public static PartitionIterator read(SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel)
+    public static PartitionIterator read(Optional<MessageIn.MessageMeta> meta, SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel)
     throws UnavailableException, IsBootstrappingException, ReadFailureException, ReadTimeoutException, InvalidRequestException
     {
         // When using serial CL, the ClientState should be provided
         assert !consistencyLevel.isSerialConsistency();
-        return read(group, consistencyLevel, null);
+        return read(meta, group, consistencyLevel, null);
     }
 
     /**
      * Performs the actual reading of a row out of the StorageService, fetching
      * a specific set of column names from a given column family.
      */
-    public static PartitionIterator read(SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel, ClientState state)
+    public static PartitionIterator read(Optional<MessageIn.MessageMeta> meta, SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel, ClientState state)
     throws UnavailableException, IsBootstrappingException, ReadFailureException, ReadTimeoutException, InvalidRequestException
     {
         if (StorageService.instance.isBootstrapMode() && !systemKeyspaceQuery(group.commands))
@@ -1510,7 +1513,7 @@ public class StorageProxy implements StorageProxyMBean
 
         return consistencyLevel.isSerialConsistency()
              ? readWithPaxos(group, consistencyLevel, state)
-             : readRegular(group, consistencyLevel);
+             : readRegular(meta, group, consistencyLevel);
     }
 
     private static PartitionIterator readWithPaxos(SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel, ClientState state)
@@ -1553,7 +1556,7 @@ public class StorageProxy implements StorageProxyMBean
                 throw new ReadFailureException(consistencyLevel, e.received, e.failures, e.blockFor, false);
             }
 
-            result = fetchRows(group.commands, consistencyForCommitOrFetch);
+            result = fetchRows(Optional.empty(), group.commands, consistencyForCommitOrFetch);
         }
         catch (UnavailableException e)
         {
@@ -1585,13 +1588,13 @@ public class StorageProxy implements StorageProxyMBean
     }
 
     @SuppressWarnings("resource")
-    private static PartitionIterator readRegular(SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel)
+    private static PartitionIterator readRegular(Optional<MessageIn.MessageMeta> meta, SinglePartitionReadCommand.Group group, ConsistencyLevel consistencyLevel)
     throws UnavailableException, ReadFailureException, ReadTimeoutException
     {
         long start = System.nanoTime();
         try
         {
-            PartitionIterator result = fetchRows(group.commands, consistencyLevel);
+            PartitionIterator result = fetchRows(meta, group.commands, consistencyLevel);
             // If we have more than one command, then despite each read command honoring the limit, the total result
             // might not honor it and so we should enforce it
             if (group.commands.size() > 1)
@@ -1634,14 +1637,14 @@ public class StorageProxy implements StorageProxyMBean
      * 4. If the digests (if any) match the data return the data
      * 5. else carry out read repair by getting data from all the nodes.
      */
-    private static PartitionIterator fetchRows(List<SinglePartitionReadCommand> commands, ConsistencyLevel consistencyLevel)
+    private static PartitionIterator fetchRows(Optional<MessageIn.MessageMeta> meta, List<SinglePartitionReadCommand> commands, ConsistencyLevel consistencyLevel)
     throws UnavailableException, ReadFailureException, ReadTimeoutException
     {
         int cmdCount = commands.size();
 
         SinglePartitionReadLifecycle[] reads = new SinglePartitionReadLifecycle[cmdCount];
         for (int i = 0; i < cmdCount; i++)
-            reads[i] = new SinglePartitionReadLifecycle(commands.get(i), consistencyLevel);
+            reads[i] = new SinglePartitionReadLifecycle(meta, commands.get(i), consistencyLevel);
 
         for (int i = 0; i < cmdCount; i++)
             reads[i].doInitialQueries();
@@ -1675,10 +1678,10 @@ public class StorageProxy implements StorageProxyMBean
         private PartitionIterator result;
         private ReadCallback repairHandler;
 
-        SinglePartitionReadLifecycle(SinglePartitionReadCommand command, ConsistencyLevel consistency)
+        SinglePartitionReadLifecycle(Optional<MessageIn.MessageMeta> meta, SinglePartitionReadCommand command, ConsistencyLevel consistency)
         {
             this.command = command;
-            this.executor = AbstractReadExecutor.getReadExecutor(command, consistency);
+            this.executor = AbstractReadExecutor.getReadExecutor(meta, command, consistency);
             this.consistency = consistency;
         }
 
@@ -1768,12 +1771,14 @@ public class StorageProxy implements StorageProxyMBean
         private final ReadCommand command;
         private final ReadCallback handler;
         private final long start = System.nanoTime();
+        private final Optional<MessageIn.MessageMeta> meta;
 
-        LocalReadRunnable(ReadCommand command, ReadCallback handler)
+        LocalReadRunnable(Optional<MessageIn.MessageMeta> meta, ReadCommand command, ReadCallback handler)
         {
             super(MessagingService.Verb.READ);
             this.command = command;
             this.handler = handler;
+            this.meta = meta;
         }
 
         protected void runMayThrow()
@@ -1800,6 +1805,9 @@ public class StorageProxy implements StorageProxyMBean
                 }
 
                 MessagingService.instance().addLatency(FBUtilities.getBroadcastAddress(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+                if (meta.isPresent()) {
+                    Hists.reads.measure(meta.get(), Instant.now(NanoClock.instance));
+                }
             }
             catch (Throwable t)
             {
@@ -2083,7 +2091,7 @@ public class StorageProxy implements StorageProxyMBean
 
             if (toQuery.filteredEndpoints.size() == 1 && canDoLocalRequest(toQuery.filteredEndpoints.get(0)))
             {
-                StageManager.getStage(Stage.READ).execute(new LocalReadRunnable(rangeCommand, handler));
+                StageManager.getStage(Stage.READ).execute(new LocalReadRunnable(Optional.empty(), rangeCommand, handler));
             }
             else
             {

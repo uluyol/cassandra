@@ -17,6 +17,9 @@
  */
 package org.apache.cassandra.service.pager;
 
+import java.util.Optional;
+
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.utils.AbstractIterator;
 
 import org.apache.cassandra.db.*;
@@ -119,7 +122,7 @@ public class MultiPartitionPager implements QueryPager
     }
 
     @SuppressWarnings("resource") // iter closed via countingIter
-    public PartitionIterator fetchPage(int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException
+    public PartitionIterator fetchPage(Optional<MessageIn.MessageMeta> meta, int pageSize, ConsistencyLevel consistency, ClientState clientState) throws RequestValidationException, RequestExecutionException
     {
         int toQuery = Math.min(remaining, pageSize);
         PagersIterator iter = new PagersIterator(toQuery, consistency, clientState, null);
@@ -178,7 +181,7 @@ public class MultiPartitionPager implements QueryPager
                 int toQuery = pageSize - counter.counted();
                 result = consistency == null
                        ? pagers[current].fetchPageInternal(toQuery, executionController)
-                       : pagers[current].fetchPage(toQuery, consistency, clientState);
+                       : pagers[current].fetchPage(Optional.empty(), toQuery, consistency, clientState);
             }
             return result.next();
         }

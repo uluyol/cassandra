@@ -378,7 +378,7 @@ public class DataResolver extends ResponseResolver
                 DataResolver resolver = new DataResolver(keyspace, retryCommand, ConsistencyLevel.ONE, 1);
                 ReadCallback handler = new ReadCallback(resolver, ConsistencyLevel.ONE, retryCommand, Collections.singletonList(source));
                 if (StorageProxy.canDoLocalRequest(source))
-                      StageManager.getStage(Stage.READ).maybeExecuteImmediately(new StorageProxy.LocalReadRunnable(retryCommand, handler));
+                      StageManager.getStage(Stage.READ).maybeExecuteImmediately(new StorageProxy.LocalReadRunnable(Optional.empty(), retryCommand, handler));
                 else
                     MessagingService.instance().sendRRWithFailure(retryCommand.createMessage(MessagingService.current_version, Optional.empty()), source, handler);
 

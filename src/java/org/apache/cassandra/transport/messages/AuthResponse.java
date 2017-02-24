@@ -18,11 +18,13 @@
 package org.apache.cassandra.transport.messages;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import io.netty.buffer.ByteBuf;
 import org.apache.cassandra.auth.AuthenticatedUser;
 import org.apache.cassandra.auth.IAuthenticator;
 import org.apache.cassandra.exceptions.AuthenticationException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.*;
 
@@ -67,7 +69,7 @@ public class AuthResponse extends Message.Request
     }
 
     @Override
-    public Response execute(QueryState queryState)
+    public Response execute(Optional<MessageIn.MessageMeta> meta, QueryState queryState)
     {
         try
         {

@@ -17,9 +17,12 @@
  */
 package org.apache.cassandra.db;
 
+import java.util.Optional;
+
 import org.apache.cassandra.db.filter.DataLimits;
 import org.apache.cassandra.db.partitions.*;
 import org.apache.cassandra.exceptions.RequestExecutionException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.pager.QueryPager;
 import org.apache.cassandra.service.pager.PagingState;
@@ -40,7 +43,7 @@ public interface ReadQuery
             return ReadExecutionController.empty();
         }
 
-        public PartitionIterator execute(ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
+        public PartitionIterator execute(Optional<MessageIn.MessageMeta> meta, ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException
         {
             return EmptyIterators.partition();
         }
@@ -99,7 +102,7 @@ public interface ReadQuery
      *
      * @return the result of the query.
      */
-    public PartitionIterator execute(ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException;
+    public PartitionIterator execute(Optional<MessageIn.MessageMeta> meta, ConsistencyLevel consistency, ClientState clientState) throws RequestExecutionException;
 
     /**
      * Execute the query for internal queries (that is, it basically executes the query locally).

@@ -17,12 +17,15 @@
  */
 package org.apache.cassandra.cql3.statements;
 
+import java.util.Optional;
+
 import org.apache.cassandra.auth.AuthenticatedUser;
 import org.apache.cassandra.cql3.CFName;
 import org.apache.cassandra.cql3.CQLStatement;
 import org.apache.cassandra.cql3.QueryOptions;
 import org.apache.cassandra.exceptions.InvalidRequestException;
 import org.apache.cassandra.exceptions.RequestValidationException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.Event;
@@ -86,7 +89,7 @@ public abstract class SchemaAlteringStatement extends CFStatement implements CQL
      */
     public abstract Event.SchemaChange announceMigration(boolean isLocalOnly) throws RequestValidationException;
 
-    public ResultMessage execute(QueryState state, QueryOptions options) throws RequestValidationException
+    public ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState state, QueryOptions options) throws RequestValidationException
     {
         // If an IF [NOT] EXISTS clause was used, this may not result in an actual schema change.  To avoid doing
         // extra work in the drivers to handle schema changes, we return an empty message in this case. (CASSANDRA-7600)

@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.cql3.statements;
 
+import java.util.Optional;
+
 import org.apache.cassandra.auth.Permission;
 import org.apache.cassandra.auth.RoleResource;
 import org.apache.cassandra.cql3.CQLStatement;
@@ -24,6 +26,7 @@ import org.apache.cassandra.cql3.QueryOptions;
 import org.apache.cassandra.exceptions.RequestExecutionException;
 import org.apache.cassandra.exceptions.RequestValidationException;
 import org.apache.cassandra.exceptions.UnauthorizedException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.messages.ResultMessage;
@@ -41,7 +44,7 @@ public abstract class AuthenticationStatement extends ParsedStatement implements
         return 0;
     }
 
-    public ResultMessage execute(QueryState state, QueryOptions options)
+    public ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState state, QueryOptions options)
     throws RequestExecutionException, RequestValidationException
     {
         return execute(state.getClientState());

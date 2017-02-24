@@ -19,11 +19,13 @@ package org.apache.cassandra.transport.messages;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import io.netty.buffer.ByteBuf;
 import org.apache.cassandra.auth.AuthenticatedUser;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.exceptions.AuthenticationException;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.CBUtil;
 import org.apache.cassandra.transport.Message;
@@ -70,7 +72,7 @@ public class CredentialsMessage extends Message.Request
         this.credentials = credentials;
     }
 
-    public Message.Response execute(QueryState state)
+    public Message.Response execute(Optional<MessageIn.MessageMeta> meta, QueryState state)
     {
         try
         {

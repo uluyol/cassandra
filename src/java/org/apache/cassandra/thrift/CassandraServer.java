@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
@@ -48,9 +49,11 @@ import org.apache.cassandra.db.view.View;
 import org.apache.cassandra.dht.*;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.exceptions.*;
+import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.io.util.DataOutputBuffer;
 import org.apache.cassandra.locator.DynamicEndpointSnitch;
 import org.apache.cassandra.metrics.ClientMetrics;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.scheduler.IRequestScheduler;
 import org.apache.cassandra.schema.KeyspaceMetadata;
 import org.apache.cassandra.serializers.MarshalException;
@@ -85,7 +88,7 @@ public class CassandraServer implements Cassandra.Iface
         return ThriftSessionManager.instance.currentSession();
     }
 
-    protected PartitionIterator read(List<SinglePartitionReadCommand> commands, org.apache.cassandra.db.ConsistencyLevel consistency_level, ClientState cState)
+    protected PartitionIterator read(Optional<MessageIn.MessageMeta> meta, List<SinglePartitionReadCommand> commands, org.apache.cassandra.db.ConsistencyLevel consistency_level, ClientState cState)
     throws org.apache.cassandra.exceptions.InvalidRequestException, UnavailableException, TimedOutException
     {
         try
@@ -93,7 +96,7 @@ public class CassandraServer implements Cassandra.Iface
             schedule(DatabaseDescriptor.getReadRpcTimeout());
             try
             {
-                return StorageProxy.read(new SinglePartitionReadCommand.Group(commands, DataLimits.NONE), consistency_level, cState);
+                return StorageProxy.read(meta, new SinglePartitionReadCommand.Group(commands, DataLimits.NONE), consistency_level, cState);
             }
             finally
             {
@@ -257,10 +260,10 @@ public class CassandraServer implements Cassandra.Iface
              : result;
     }
 
-    private Map<ByteBuffer, List<ColumnOrSuperColumn>> getSlice(List<SinglePartitionReadCommand> commands, boolean subColumnsOnly, int cellLimit, org.apache.cassandra.db.ConsistencyLevel consistency_level, ClientState cState)
+    private Map<ByteBuffer, List<ColumnOrSuperColumn>> getSlice(Optional<MessageIn.MessageMeta> meta, List<SinglePartitionReadCommand> commands, boolean subColumnsOnly, int cellLimit, org.apache.cassandra.db.ConsistencyLevel consistency_level, ClientState cState)
     throws org.apache.cassandra.exceptions.InvalidRequestException, UnavailableException, TimedOutException
     {
-        try (PartitionIterator results = read(commands, consistency_level, cState))
+        try (PartitionIterator results = read(meta, commands, consistency_level, cState))
         {
             Map<ByteBuffer, List<ColumnOrSuperColumn>> columnFamiliesMap = new HashMap<>();
             while (results.hasNext())
@@ -563,12 +566,13 @@ public class CassandraServer implements Cassandra.Iface
             commands.add(SinglePartitionReadCommand.create(true, metadata, nowInSec, columnFilter, RowFilter.NONE, limits, dk, filter));
         }
 
-        return getSlice(commands, column_parent.isSetSuper_column(), limits.perPartitionCount(), consistencyLevel, cState);
+        return getSlice(Optional.empty(), commands, column_parent.isSetSuper_column(), limits.perPartitionCount(), consistencyLevel, cState);
     }
 
     public ColumnOrSuperColumn get(ByteBuffer key, ColumnPath column_path, ConsistencyLevel consistency_level)
     throws InvalidRequestException, NotFoundException, UnavailableException, TimedOutException
     {
+        MessageIn.MessageMeta reqMeta = MessageIn.MessageMeta.create(Instant.now(NanoClock.instance));
         if (startSessionIfRequested())
         {
             Map<String, String> traceParameters = ImmutableMap.of("key", ByteBufferUtil.bytesToHex(key),
@@ -643,7 +647,7 @@ public class CassandraServer implements Cassandra.Iface
             DecoratedKey dk = metadata.decorateKey(key);
             SinglePartitionReadCommand command = SinglePartitionReadCommand.create(true, metadata, FBUtilities.nowInSeconds(), columns, RowFilter.NONE, DataLimits.NONE, dk, filter);
 
-            try (RowIterator result = PartitionIterators.getOnlyElement(read(Arrays.asList(command), consistencyLevel, cState), command))
+            try (RowIterator result = PartitionIterators.getOnlyElement(read(Optional.of(reqMeta), Arrays.asList(command), consistencyLevel, cState), command))
             {
                 if (!result.hasNext())
                     throw new NotFoundException();
@@ -2281,6 +2285,7 @@ public class CassandraServer implements Cassandra.Iface
     {
         try
         {
+            MessageIn.MessageMeta meta = MessageIn.MessageMeta.create(Instant.now(NanoClock.instance));
             String queryString = uncompress(query, compression);
             if (startSessionIfRequested())
             {
@@ -2294,7 +2299,8 @@ public class CassandraServer implements Cassandra.Iface
             }
 
             ThriftClientState cState = state();
-            return ClientState.getCQLQueryHandler().process(queryString,
+            return ClientState.getCQLQueryHandler().process(Optional.of(meta),
+                                                            queryString,
                                                             cState.getQueryState(),
                                                             QueryOptions.fromThrift(ThriftConversion.fromThrift(cLevel),
                                                             Collections.<ByteBuffer>emptyList()),
@@ -2356,6 +2362,7 @@ public class CassandraServer implements Cassandra.Iface
 
         try
         {
+            MessageIn.MessageMeta meta = MessageIn.MessageMeta.create(Instant.now(NanoClock.instance));
             ThriftClientState cState = state();
             ParsedStatement.Prepared prepared = ClientState.getCQLQueryHandler().getPreparedForThrift(itemId);
 
@@ -2366,7 +2373,8 @@ public class CassandraServer implements Cassandra.Iface
                                                                 itemId));
             logger.trace("Retrieved prepared statement #{} with {} bind markers", itemId, prepared.statement.getBoundTerms());
 
-            return ClientState.getCQLQueryHandler().processPrepared(prepared.statement,
+            return ClientState.getCQLQueryHandler().processPrepared(Optional.of(meta),
+                                                                    prepared.statement,
                                                                     cState.getQueryState(),
                                                                     QueryOptions.fromThrift(ThriftConversion.fromThrift(cLevel), bindVariables),
                                                                     null).toThriftResult();
@@ -2438,7 +2446,8 @@ public class CassandraServer implements Cassandra.Iface
             ThriftValidation.validateKey(metadata, request.key);
             DecoratedKey dk = metadata.decorateKey(request.key);
             SinglePartitionReadCommand cmd = SinglePartitionReadCommand.create(true, metadata, FBUtilities.nowInSeconds(), columns, RowFilter.NONE, limits, dk, filter);
-            return getSlice(Collections.<SinglePartitionReadCommand>singletonList(cmd),
+            return getSlice(Optional.empty(),
+                            Collections.<SinglePartitionReadCommand>singletonList(cmd),
                             false,
                             limits.perPartitionCount(),
                             consistencyLevel,

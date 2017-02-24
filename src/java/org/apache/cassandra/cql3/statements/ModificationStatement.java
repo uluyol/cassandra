@@ -40,6 +40,7 @@ import org.apache.cassandra.db.partitions.*;
 import org.apache.cassandra.db.rows.RowIterator;
 import org.apache.cassandra.db.view.View;
 import org.apache.cassandra.exceptions.*;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.service.StorageProxy;
@@ -367,7 +368,7 @@ public abstract class ModificationStatement implements CQLStatement
             }
         }
 
-        try (PartitionIterator iter = group.execute(cl, null))
+        try (PartitionIterator iter = group.execute(Optional.empty(), cl, null))
         {
             return asMaterializedMap(iter);
         }
@@ -391,7 +392,7 @@ public abstract class ModificationStatement implements CQLStatement
         return !conditions.isEmpty();
     }
 
-    public ResultMessage execute(QueryState queryState, QueryOptions options)
+    public ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState queryState, QueryOptions options)
     throws RequestExecutionException, RequestValidationException
     {
         if (options.getConsistency() == null)

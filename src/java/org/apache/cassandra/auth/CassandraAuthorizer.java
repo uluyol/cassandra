@@ -214,7 +214,7 @@ public class CassandraAuthorizer implements IAuthorizer
         SelectStatement statement = Schema.instance.getCFMetaData(AuthKeyspace.NAME, USER_PERMISSIONS) == null
                                     ? authorizeRoleStatement
                                     : legacyAuthorizeRoleStatement;
-        ResultMessage.Rows rows = statement.execute(QueryState.forInternalCalls(), options) ;
+        ResultMessage.Rows rows = statement.execute(Optional.empty(), QueryState.forInternalCalls(), options) ;
         UntypedResultSet result = UntypedResultSet.create(rows.result);
 
         if (!result.isEmpty() && result.one().has(PERMISSIONS))
@@ -420,13 +420,15 @@ public class CassandraAuthorizer implements IAuthorizer
                     SetSerializer<String> serializer = SetSerializer.getInstance(UTF8Serializer.instance, UTF8Type.instance);
                     Set<String> originalPerms = serializer.deserialize(row.getBytes("permissions"));
                     Set<String> filteredPerms = ImmutableSet.copyOf(Iterables.filter(originalPerms, isApplicable));
-                    insertStatement.execute(QueryState.forInternalCalls(),
+                    insertStatement.execute(Optional.empty(),
+                                            QueryState.forInternalCalls(),
                                             QueryOptions.forInternalCalls(ConsistencyLevel.ONE,
                                                                           Lists.newArrayList(row.getBytes("username"),
                                                                                              row.getBytes("resource"),
                                                                                              serializer.serialize(filteredPerms))));
 
-                    indexStatement.execute(QueryState.forInternalCalls(),
+                    indexStatement.execute(Optional.empty(),
+                                           QueryState.forInternalCalls(),
                                            QueryOptions.forInternalCalls(ConsistencyLevel.ONE,
                                                                          Lists.newArrayList(row.getBytes("resource"),
                                                                                             row.getBytes("username"))));
@@ -451,6 +453,6 @@ public class CassandraAuthorizer implements IAuthorizer
 
     private UntypedResultSet process(String query) throws RequestExecutionException
     {
-        return QueryProcessor.process(query, ConsistencyLevel.LOCAL_ONE);
+        return QueryProcessor.process(Optional.empty(), query, ConsistencyLevel.LOCAL_ONE);
     }
 }

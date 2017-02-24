@@ -37,6 +37,7 @@ import org.apache.cassandra.db.rows.RowIterator;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.exceptions.*;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.*;
 import org.apache.cassandra.tracing.Tracing;
 import org.apache.cassandra.transport.messages.ResultMessage;
@@ -336,17 +337,17 @@ public class BatchStatement implements CQLStatement
         return Range.isInRanges(update.partitionKey().getToken(), localRanges);
     }
 
-    public ResultMessage execute(QueryState queryState, QueryOptions options) throws RequestExecutionException, RequestValidationException
+    public ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState queryState, QueryOptions options) throws RequestExecutionException, RequestValidationException
     {
-        return execute(queryState, BatchQueryOptions.withoutPerStatementVariables(options));
+        return execute(meta, queryState, BatchQueryOptions.withoutPerStatementVariables(options));
     }
 
-    public ResultMessage execute(QueryState queryState, BatchQueryOptions options) throws RequestExecutionException, RequestValidationException
+    public ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState queryState, BatchQueryOptions options) throws RequestExecutionException, RequestValidationException
     {
-        return execute(queryState, options, false, options.getTimestamp(queryState));
+        return execute(meta, queryState, options, false, options.getTimestamp(queryState));
     }
 
-    private ResultMessage execute(QueryState queryState, BatchQueryOptions options, boolean local, long now)
+    private ResultMessage execute(Optional<MessageIn.MessageMeta> meta, QueryState queryState, BatchQueryOptions options, boolean local, long now)
     throws RequestExecutionException, RequestValidationException
     {
         if (options.getConsistency() == null)

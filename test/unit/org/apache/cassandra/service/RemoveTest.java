@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -139,7 +140,7 @@ public class RemoveTest
 
         for (InetAddress host : hosts)
         {
-            MessageOut msg = new MessageOut(host, MessagingService.Verb.REPLICATION_FINISHED, null, null, Collections.<String, byte[]>emptyMap());
+            MessageOut msg = new MessageOut(host, MessagingService.Verb.REPLICATION_FINISHED, null, null, Collections.<String, byte[]>emptyMap(), Optional.empty());
             MessagingService.instance().sendRR(msg, FBUtilities.getBroadcastAddress());
         }
 

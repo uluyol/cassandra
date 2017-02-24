@@ -41,6 +41,7 @@ import org.apache.cassandra.exceptions.ReadFailureException;
 import org.apache.cassandra.exceptions.ReadTimeoutException;
 import org.apache.cassandra.exceptions.UnavailableException;
 import org.apache.cassandra.metrics.ReadRepairMetrics;
+import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.schema.SpeculativeRetryParam;
@@ -64,13 +65,15 @@ public abstract class AbstractReadExecutor
     protected final List<InetAddress> targetReplicas;
     protected final ReadCallback handler;
     protected final TraceState traceState;
+    protected final Optional<MessageIn.MessageMeta> meta;
 
-    AbstractReadExecutor(Keyspace keyspace, ReadCommand command, ConsistencyLevel consistencyLevel, List<InetAddress> targetReplicas)
+    AbstractReadExecutor(Optional<MessageIn.MessageMeta> meta, Keyspace keyspace, ReadCommand command, ConsistencyLevel consistencyLevel, List<InetAddress> targetReplicas)
     {
         this.command = command;
         this.targetReplicas = targetReplicas;
         this.handler = new ReadCallback(new DigestResolver(keyspace, command, consistencyLevel, targetReplicas.size()), consistencyLevel, command, targetReplicas);
         this.traceState = Tracing.instance.get();
+        this.meta = meta;
 
         // Set the digest version (if we request some digests). This is the smallest version amongst all our target replicas since new nodes
         // knows how to produce older digest but the reverse is not true.
@@ -118,7 +121,7 @@ public abstract class AbstractReadExecutor
         if (hasLocalEndpoint)
         {
             logger.trace("reading {} locally", readCommand.isDigestQuery() ? "digest" : "data");
-            StageManager.getStage(Stage.READ).maybeExecuteImmediately(new LocalReadRunnable(command, handler));
+            StageManager.getStage(Stage.READ).maybeExecuteImmediately(new LocalReadRunnable(meta, command, handler));
         }
     }
 
@@ -152,7 +155,7 @@ public abstract class AbstractReadExecutor
     /**
      * @return an executor appropriate for the configured speculative read policy
      */
-    public static AbstractReadExecutor getReadExecutor(SinglePartitionReadCommand command, ConsistencyLevel consistencyLevel) throws UnavailableException
+    public static AbstractReadExecutor getReadExecutor(Optional<MessageIn.MessageMeta> meta, SinglePartitionReadCommand command, ConsistencyLevel consistencyLevel) throws UnavailableException
     {
         Keyspace keyspace = Keyspace.open(command.metadata().ksName);
         List<InetAddress> allReplicas = StorageProxy.getLiveSortedEndpoints(keyspace, command.partitionKey());
@@ -172,19 +175,19 @@ public abstract class AbstractReadExecutor
         SpeculativeRetryParam retry = cfs.metadata.params.speculativeRetry;
 
         if (DatabaseDescriptor.useHedgedRequests()) {
-            return new HedgedReadExecutor(keyspace, command, consistencyLevel, allReplicas);
+            return new HedgedReadExecutor(meta, keyspace, command, consistencyLevel, allReplicas);
         }
 
         // Speculative retry is disabled *OR* there are simply no extra replicas to speculate.
         if (retry.equals(SpeculativeRetryParam.NONE) || consistencyLevel.blockFor(keyspace) == allReplicas.size())
-            return new NeverSpeculatingReadExecutor(keyspace, command, consistencyLevel, targetReplicas);
+            return new NeverSpeculatingReadExecutor(meta, keyspace, command, consistencyLevel, targetReplicas);
 
         if (targetReplicas.size() == allReplicas.size())
         {
             // CL.ALL, RRD.GLOBAL or RRD.DC_LOCAL and a single-DC.
             // We are going to contact every node anyway, so ask for 2 full data requests instead of 1, for redundancy
             // (same amount of requests in total, but we turn 1 digest request into a full blown data request).
-            return new AlwaysSpeculatingReadExecutor(keyspace, cfs, command, consistencyLevel, targetReplicas);
+            return new AlwaysSpeculatingReadExecutor(meta, keyspace, cfs, command, consistencyLevel, targetReplicas);
         }
 
         // RRD.NONE or RRD.DC_LOCAL w/ multiple DCs.
@@ -205,16 +208,16 @@ public abstract class AbstractReadExecutor
         targetReplicas.add(extraReplica);
 
         if (retry.equals(SpeculativeRetryParam.ALWAYS))
-            return new AlwaysSpeculatingReadExecutor(keyspace, cfs, command, consistencyLevel, targetReplicas);
+            return new AlwaysSpeculatingReadExecutor(meta, keyspace, cfs, command, consistencyLevel, targetReplicas);
         else // PERCENTILE or CUSTOM.
-            return new SpeculatingReadExecutor(keyspace, cfs, command, consistencyLevel, targetReplicas);
+            return new SpeculatingReadExecutor(meta, keyspace, cfs, command, consistencyLevel, targetReplicas);
     }
 
     public static class NeverSpeculatingReadExecutor extends AbstractReadExecutor
     {
-        public NeverSpeculatingReadExecutor(Keyspace keyspace, ReadCommand command, ConsistencyLevel consistencyLevel, List<InetAddress> targetReplicas)
+        public NeverSpeculatingReadExecutor(Optional<MessageIn.MessageMeta> meta, Keyspace keyspace, ReadCommand command, ConsistencyLevel consistencyLevel, List<InetAddress> targetReplicas)
         {
-            super(keyspace, command, consistencyLevel, targetReplicas);
+            super(meta, keyspace, command, consistencyLevel, targetReplicas);
         }
 
         public void executeAsync()
@@ -240,13 +243,14 @@ public abstract class AbstractReadExecutor
         private final ColumnFamilyStore cfs;
         private volatile boolean speculated = false;
 
-        public SpeculatingReadExecutor(Keyspace keyspace,
+        public SpeculatingReadExecutor(Optional<MessageIn.MessageMeta> meta,
+                                       Keyspace keyspace,
                                        ColumnFamilyStore cfs,
                                        ReadCommand command,
                                        ConsistencyLevel consistencyLevel,
                                        List<InetAddress> targetReplicas)
         {
-            super(keyspace, command, consistencyLevel, targetReplicas);
+            super(meta, keyspace, command, consistencyLevel, targetReplicas);
             this.cfs = cfs;
         }
 
@@ -309,8 +313,8 @@ public abstract class AbstractReadExecutor
     }
 
     private static class HedgedReadExecutor extends AbstractReadExecutor {
-        HedgedReadExecutor(Keyspace ks, ReadCommand cmd, ConsistencyLevel level, List<InetAddress> replicas) {
-            super(ks, cmd, level, replicas);
+        HedgedReadExecutor(Optional<MessageIn.MessageMeta> meta, Keyspace ks, ReadCommand cmd, ConsistencyLevel level, List<InetAddress> replicas) {
+            super(meta, ks, cmd, level, replicas);
         }
 
         @Override
@@ -329,13 +333,14 @@ public abstract class AbstractReadExecutor
     {
         private final ColumnFamilyStore cfs;
 
-        public AlwaysSpeculatingReadExecutor(Keyspace keyspace,
+        public AlwaysSpeculatingReadExecutor(Optional<MessageIn.MessageMeta> meta,
+                                             Keyspace keyspace,
                                              ColumnFamilyStore cfs,
                                              ReadCommand command,
                                              ConsistencyLevel consistencyLevel,
                                              List<InetAddress> targetReplicas)
         {
-            super(keyspace, command, consistencyLevel, targetReplicas);
+            super(meta, keyspace, command, consistencyLevel, targetReplicas);
             this.cfs = cfs;
         }
 

@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -201,7 +202,7 @@ public final class SystemDistributedKeyspace
             {
                 valueList.add(ByteBufferUtil.bytes(v));
             }
-            QueryProcessor.process(fmtQry, ConsistencyLevel.ONE, valueList);
+            QueryProcessor.process(Optional.empty(), fmtQry, ConsistencyLevel.ONE, valueList);
         }
         catch (Throwable t)
         {
