@@ -46,6 +46,7 @@ import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.xxhash.XXHashFactory;
 
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.io.util.DataOutputStreamPlus;
 import org.apache.cassandra.io.util.BufferedDataOutputStreamPlus;
@@ -267,7 +268,10 @@ public class OutboundTcpConnection extends Thread
         try
         {
             if (qm.message.inMeta.isPresent()) {
-                qm.message.inMeta.get().hist.measure(qm.message.inMeta.get(), Instant.now(NanoClock.instance));
+                Hists h = qm.message.inMeta.get().getHist();
+                if (h != null) {
+                    h.measure(qm.message.inMeta.get(), Instant.now(NanoClock.instance));
+                }
             }
             byte[] sessionBytes = qm.message.parameters.get(Tracing.TRACE_HEADER);
             if (sessionBytes != null)

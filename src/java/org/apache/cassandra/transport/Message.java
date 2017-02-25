@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.service.ClientWarn;
@@ -410,11 +411,13 @@ public abstract class Message
             final ChannelHandlerContext ctx;
             final Object response;
             final Frame sourceFrame;
-            private FlushItem(ChannelHandlerContext ctx, Object response, Frame sourceFrame)
+            final MessageIn.MessageMeta msgMeta;
+            private FlushItem(ChannelHandlerContext ctx, Object response, Frame sourceFrame, MessageIn.MessageMeta msgMeta)
             {
                 this.ctx = ctx;
                 this.sourceFrame = sourceFrame;
                 this.response = response;
+                this.msgMeta = msgMeta;
             }
         }
 
@@ -445,6 +448,11 @@ public abstract class Message
                 FlushItem flush;
                 while ( null != (flush = queued.poll()) )
                 {
+                    Hists h = flush.msgMeta.getHist();
+                    if (h != null) {
+                        h.measure(flush.msgMeta, Instant.now(NanoClock.instance));
+                        flush.msgMeta.setHist(null);
+                    }
                     channels.add(flush.ctx);
                     flush.ctx.write(flush.response, flush.ctx.voidPromise());
                     flushed.add(flush);
@@ -498,9 +506,9 @@ public abstract class Message
             final Response response;
             final ServerConnection connection;
 
+            final MessageIn.MessageMeta msgMeta = MessageIn.MessageMeta.create(Instant.now(NanoClock.instance));
             try
             {
-                MessageIn.MessageMeta msgMeta = MessageIn.MessageMeta.create(Instant.now(NanoClock.instance));
                 assert request.connection() instanceof ServerConnection;
                 connection = (ServerConnection)request.connection();
                 if (connection.getVersion() >= Server.VERSION_4)
@@ -519,7 +527,7 @@ public abstract class Message
             {
                 JVMStabilityInspector.inspectThrowable(t);
                 UnexpectedChannelExceptionHandler handler = new UnexpectedChannelExceptionHandler(ctx.channel(), true);
-                flush(new FlushItem(ctx, ErrorMessage.fromException(t, handler).setStreamId(request.getStreamId()), request.getSourceFrame()));
+                flush(new FlushItem(ctx, ErrorMessage.fromException(t, handler).setStreamId(request.getStreamId()), request.getSourceFrame(), msgMeta));
                 return;
             }
             finally
@@ -528,7 +536,7 @@ public abstract class Message
             }
 
             logger.trace("Responding: {}, v={}", response, connection.getVersion());
-            flush(new FlushItem(ctx, response, request.getSourceFrame()));
+            flush(new FlushItem(ctx, response, request.getSourceFrame(), msgMeta));
         }
 
         private void flush(FlushItem item)

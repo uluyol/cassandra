@@ -47,7 +47,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         command.setMonitoringTime(message.constructionTime, message.getTimeout());
 
         ReadResponse response;
-        message.meta.hist = Hists.reads;
+        message.meta.setHist(Hists.reads);
         try (ReadExecutionController executionController = command.executionController();
              UnfilteredPartitionIterator iterator = command.executeLocally(executionController))
         {

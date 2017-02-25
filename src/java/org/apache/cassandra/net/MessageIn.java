@@ -173,11 +173,21 @@ public class MessageIn<T>
 
     public static class MessageMeta {
         private final Instant reqStart;
-        public Hists hist;
+
+        private final Object histLock = new Object();
+        private Hists hist;
 
         private MessageMeta(Instant start) { reqStart = start; }
         public static MessageMeta create(Instant start) { return new MessageMeta(start); }
 
         public Instant getStart() { return reqStart; }
+
+        public Hists getHist() {
+            synchronized (histLock) { return hist; }
+        }
+
+        public void setHist(Hists hist) {
+            synchronized (histLock) { this.hist = hist; }
+        }
     }
 }
