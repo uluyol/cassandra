@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import javax.xml.crypto.Data;
 
@@ -134,6 +135,20 @@ public final class Hists
         }
     }
 
+    @FunctionalInterface
+    public static interface MeasureHook {
+        public void measure(MessageIn.MessageMeta meta, Instant endTime);
+    }
+
+    private final Object hooksWriteLock = new Object();
+    private volatile ImmutableList<MeasureHook> hooks = ImmutableList.of();
+
+    public void registerHook(MeasureHook h) {
+        synchronized (hooksWriteLock) {
+            hooks = ImmutableList.<MeasureHook>builder().addAll(hooks).add(h).build();
+        }
+    }
+
     public void measure(MessageIn.MessageMeta meta, Instant endTime) {
         long tt = Duration.between(meta.getStart(), endTime).toNanos() / 1000;
         overall.recorder.recordValue(tt);
@@ -143,6 +158,11 @@ public final class Hists
         }
         if (hasOverlap(meta.getStart(), endTime, compactionStart, compactionEnd)) {
             hasCompaction.recorder.recordValue(tt);
+        }
+
+        ImmutableList<MeasureHook> hooks = this.hooks;
+        for (MeasureHook h : hooks) {
+            h.measure(meta, endTime);
         }
     }
 
