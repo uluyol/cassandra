@@ -35,7 +35,7 @@ public class StartStopTest {
             StartEndDuration.of(Instant.ofEpochSecond(352), Instant.ofEpochSecond(358), 6000_000L),
         };
         for (int i = 0; i < tests.length; i++) {
-            long got = new OpLogger.StartStop(tests[i].start, tests[i].stop).durationMicros();
+            long got = new OpLogger.RecVal(tests[i].start, tests[i].stop).val;
             Assert.assertEquals(String.format("case %d: want %d got %d", i, tests[i].duration, got), tests[i].duration, got);
         }
     }

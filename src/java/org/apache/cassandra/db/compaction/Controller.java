@@ -24,6 +24,7 @@ package org.apache.cassandra.db.compaction;
 public interface Controller
 {
     public void setReference(double refOut);
+    public double getReference();
     public void record(double input, double output);
     public double getInput();
 }

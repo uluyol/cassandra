@@ -1198,6 +1198,14 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static double compactionControllerStepSizeMBPS() { return conf.compaction_controller_step_size_mbps; }
+    public static double compactionControllerRemainFrac() { return conf.compaction_controller_remain_frac; }
+    public static double compactionControllerSLOMillis() { return conf.compaction_controller_slo_ms; }
+    public static double compactionControllerMaxRateMBPS() { return conf.compaction_controller_max_rate_mbps; }
+    public static double compactionControllerSLOPercentile() { return conf.compaction_controller_slo_percentile; }
+    public static int compactionControllerPercentileWindow() { return conf.compaction_controller_percentile_win; }
+    public static double compactionControllerPercentileHighFudgeFactor() { return conf.compaction_controller_percentile_high_fudge_factor; }
+
     public static boolean shouldCompact() { return conf.compactions_enable; }
     public static boolean shouldKeyCacheSendFakeResponse() { return conf.key_cache_fake_response; }
     public static boolean useHedgedRequests() { return conf.use_hedged_requests; }

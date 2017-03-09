@@ -1,5 +1,13 @@
 # Cassandra storage config YAML 
 
+compaction_controller_step_size_mbps: 1
+compaction_controller_remain_frac: 0.7
+compaction_controller_slo_ms: 0
+compaction_controller_slo_percentile: 99
+compaction_controller_max_rate_mbps: 16
+compaction_controller_percentile_win: 5000
+compaction_controller_percentile_high_fudge_factor: 1.5
+
 compactions_enable: true
 key_cache_fake_response: false
 use_hedged_requests: true

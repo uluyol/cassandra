@@ -42,19 +42,17 @@ public final class OpLogger
         new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "flush_time_log.csv"));
     private static final OpLogger _compactions =
         new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_time_log.csv"));
-    //private static final OpLogger _flushes = new OpLogger("/cassandra_data/flush_time_log.csv");
-    //private static final OpLogger _compactions = new OpLogger("/cassandra_data/compaction_time_log.csv");
-    //private static final OpLogger _flushes = new OpLogger("/tmp/flush_time_log.csv");
-    //private static final OpLogger _compactions = new OpLogger("/tmp/compaction_time_log.csv");
+    private static final OpLogger _compactionRates =
+        new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_rate_log.csv"));
 
     private static final int LOG_CAPACITY = 1024;
     private static final int WRITE_PERIOD_SECONDS = 15;
 
-    private List<StartStop> log = null;
+    private List<RecVal> log = null;
     private OutputStream w = null;
 
     public OpLogger(Path path) {
-        ArrayList<StartStop> l = new ArrayList<>();
+        ArrayList<RecVal> l = new ArrayList<>();
         l.ensureCapacity(LOG_CAPACITY);
         log = l;
         try {
@@ -90,24 +88,32 @@ public final class OpLogger
 
     public static OpLogger flushes() { return _flushes; }
     public static OpLogger compactions() { return _compactions; }
+    public static OpLogger compactionRates() { return _compactionRates; }
 
     public void record(Instant start, Instant stop) {
-        StartStop ss = new StartStop(start, stop);
+        recordRaw(new RecVal(start, stop));
+    }
+
+    void recordRaw(RecVal v) {
         synchronized (this) {
             if (log.size() == LOG_CAPACITY) {
                 flush();
             }
-            log.add(ss);
+            log.add(v);
         }
+    }
+
+    public void recordValue(Instant now, long val) {
+        recordRaw(new RecVal(now, val));
     }
 
     public void flush() {
         try {
             synchronized (this)
             {
-                for (StartStop ss : log)
+                for (RecVal v : log)
                 {
-                    String out = ss.startMicros() + "," + ss.durationMicros() + "\n";
+                    String out = v.startMicros + "," + v.val + "\n";
                     w.write(out.getBytes());
                 }
                 w.flush();
@@ -119,22 +125,19 @@ public final class OpLogger
         }
     }
 
-    static final class StartStop {
-        public final Instant start;
-        public final Instant stop;
+    static final class RecVal {
+        public final long startMicros;
+        public final long val;
 
-        public StartStop(Instant start, Instant stop) {
-            this.start = start;
-            this.stop = stop;
-        }
-
-        public long startMicros() {
-             return start.getEpochSecond() * 1_000_000 + start.getNano() / 1000;
-        }
-
-        public long durationMicros() {
+        public RecVal(Instant start, Instant stop) {
+            startMicros = start.getEpochSecond() * 1_000_000L + start.getNano() / 1000L;
             Duration d = Duration.between(start, stop);
-            return d.getSeconds() * 1000_000L + d.getNano() / 1000;
+            val = d.getSeconds() * 1_000_000L + d.getNano() / 1000L;
+        }
+
+        public RecVal(Instant time, long v) {
+            startMicros = time.getEpochSecond() * 1_000_000L + time.getNano() / 1000L;
+            val = v;
         }
     }
 }

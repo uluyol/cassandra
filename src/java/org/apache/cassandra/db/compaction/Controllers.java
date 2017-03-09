@@ -20,10 +20,12 @@ package org.apache.cassandra.db.compaction;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 public final class Controllers
 {
-    public static Percentile newPercentile(Controller c, double pct, int winSize) {
-        return new Percentile(c, pct, winSize);
+    public static Percentile newPercentile(Controller c, double pct, int winSize, double highFudgeFactor) {
+        return new Percentile(c, pct, winSize, highFudgeFactor);
     }
 
     public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double maxInput, double initInput) {
@@ -39,20 +41,26 @@ public final class Controllers
     percentile accurately.
     */
     public static final class Percentile implements Controller {
+        private static final Logger logger = Logger.getLogger(Percentile.class);
+
         private final Controller actual;
         private double percentile;
         private final int windowSize;
+        private final double highFudge;
 
         private double[] winBuf;
         private int winLen;
         private int winPos;
 
         private double[] scratch;
+        private int numHigh;
 
-        Percentile(Controller c, double pct, int winSize) {
+        Percentile(Controller c, double pct, int winSize, double highFudgeFactor) {
             actual = c;
             percentile = pct;
             windowSize = winSize;
+            highFudge = highFudgeFactor;
+            numHigh = 0;
 
             winInit();
         }
@@ -60,7 +68,12 @@ public final class Controllers
         @Override
         public double getInput() { return actual.getInput(); }
         @Override
-        public void setReference(double refOut) { actual.setReference(refOut); }
+        public void setReference(double refOut) {
+            numHigh = 0;
+            actual.setReference(refOut);
+        }
+        @Override
+        public double getReference() { return actual.getReference(); }
 
         public void setPercentile(double pct) { percentile = pct; }
 
@@ -96,6 +109,17 @@ public final class Controllers
         public void record(double input, double output) {
             winInit();
             winPush(output);
+            if (output > actual.getReference()) {
+                numHigh++;
+                if (((double)numHigh)/windowSize >= highFudge*(1-percentile)) {
+                    logger.info(String.format("got %d/%d >= %f: ref: %f out: %f",
+                                              numHigh, windowSize, 1-percentile,
+                                              actual.getReference(), output));
+                    actual.record(input, output);
+                    winClear();
+                    numHigh = 0;
+                }
+            }
             if (!winIsFull()) {
                 return;
             }
@@ -104,7 +128,7 @@ public final class Controllers
                 scratch = new double[winBuf.length];
             }
 
-            double [] vals = scratch;
+            double[] vals = scratch;
             for (int i = 0; i < winBuf.length; i++) {
                 vals[i] = winBuf[i];
             }
@@ -124,6 +148,7 @@ public final class Controllers
             double d1 = vals[(int)r] * (k - l);
             actual.record(input, d0+d1);
             winClear();
+            numHigh = 0;
         }
     }
 
@@ -153,6 +178,8 @@ public final class Controllers
 
         @Override
         public void setReference(double v) { refOut = v; }
+        @Override
+        public double getReference() { return refOut; }
         @Override
         public void record(double input, double output) { curOut = output; curInput = input; }
 
