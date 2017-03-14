@@ -112,7 +112,7 @@ public final class Controllers
             if (output > actual.getReference()) {
                 numHigh++;
                 if (((double)numHigh)/windowSize >= highFudge*(1-percentile)) {
-                    logger.info(String.format("got %d/%d >= %f: ref: %f out: %f",
+                    logger.debug(String.format("got %d/%d >= %f: ref: %f out: %f",
                                               numHigh, windowSize, 1-percentile,
                                               actual.getReference(), output));
                     actual.record(input, output);
@@ -160,6 +160,8 @@ public final class Controllers
     Otherwise it is left constant.
     */
     public static final class AIMD implements Controller {
+        private static final Logger logger = Logger.getLogger(AIMD.class);
+
         private final double stepSize; // Additive increase factor 0 < StepSize
         private final double remainFrac; // Multiplicative factor 0 < RemainFrac < 1
 

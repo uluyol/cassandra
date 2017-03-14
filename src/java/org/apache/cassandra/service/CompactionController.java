@@ -23,19 +23,23 @@ import java.time.Instant;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.log4j.Logger;
+
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.cassandra.db.compaction.Controllers;
 import org.apache.cassandra.hists.Hists;
+import org.apache.cassandra.hists.NanoClock;
+import org.apache.cassandra.hists.OpLogger;
 import org.apache.cassandra.net.MessageIn;
 
-public final class CompactionController {
+public class CompactionController {
+    public static final Logger logger = Logger.getLogger(CompactionController.class);
+
     public static CompactionController instance;
 
-    private final Controllers.Percentile ctlr;
+    protected final Controllers.Percentile ctlr;
     private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue(512);
-
-    public final AtomicLong compactionRate = new AtomicLong();
 
     public static void init() {
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
@@ -48,37 +52,63 @@ public final class CompactionController {
         double highFudgeFactor = DatabaseDescriptor.compactionControllerPercentileHighFudgeFactor();
 
         if (refOut == 0) {
+            instance = new DummyCompactionController();
             return;
         }
 
         instance = new CompactionController(stepSize, remainFrac, refOut, maxInput, initInput, pct, winSize, highFudgeFactor);
     }
 
+    CompactionController() { ctlr = null; }
+
     public CompactionController(double stepSize, double remainFrac, double refOut, double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
         ctlr = Controllers.newPercentile(Controllers.newAIMD(stepSize, remainFrac, refOut, maxInput, initInput),
                                          pct, winSize, highFudgeFactor);
 
-        Hists.reads.registerHook((meta, end) -> record(meta, end));
+        Hists.reads.registerHook(this::record);
 
         new Thread(() -> {
-            while (true)
-            {
-                double v = 0;
+            Instant prevStart = null;
+            double prevInput = 0;
+            long prevCount = 0;
+            while (true) {
                 try {
-                    v = recQ.take();
-                } catch (InterruptedException e) { continue; }
-                double input;
-                synchronized (ctlr) {
-                    ctlr.record(CompactionManager.instance.getRateLimiter().getRate() / (1024*1024), v);
-                    input = ctlr.getInput();
+                    double v = 0;
+                    try {
+                        v = recQ.take();
+                    } catch (InterruptedException e) {
+                        continue;
+                    }
+                    double input;
+                    synchronized (ctlr) {
+                        ctlr.record(CompactionManager.instance.getRateLimiter().getRate() / (1024 * 1024), v);
+                        input = ctlr.getInput();
+                    }
+                    if (input != prevInput) {
+                        CompactionManager.instance.getRateLimiter().setRate(input * 1024 * 1024);
+                        if (prevStart != null) {
+                            OpLogger.compactionRates().recordValue(prevStart,
+                                                                   (long) (prevInput * 1024 * 1024),
+                                                                   Long.toString(prevCount));
+                        }
+                        prevStart = Instant.now(NanoClock.instance);
+                        prevInput = input;
+                        prevCount = 0;
+                    }
+                    prevCount++;
+                } catch (Throwable t) {
+                    logger.error("error occurred while consuming compaction latencies", t);
                 }
-                CompactionManager.instance.getRateLimiter().setRate(input * 1024 * 1024);
-                compactionRate.set((long)(input * 1024 * 1024));
             }
         }).start();
     }
 
     private void record(MessageIn.MessageMeta meta, Instant end) {
+        // Controller should only take action when a compaction is running.
+        // Latencies taken at other times are meaningless.
+        if (!Hists.overlapCompaction(meta.getStart(), end)) {
+            return;
+        }
         Double v = new Double(Duration.between(meta.getStart(), end).toNanos() / 1e6);
         while (true) {
             try {
@@ -98,5 +128,12 @@ public final class CompactionController {
         synchronized (ctlr) {
             ctlr.setReference(ref);
         }
+    }
+
+    private static final class DummyCompactionController extends CompactionController {
+        @Override
+        public void setPercentile(double pct) {}
+        @Override
+        public void setReference(double ref) {}
     }
 }

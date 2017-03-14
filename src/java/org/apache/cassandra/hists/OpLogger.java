@@ -57,7 +57,7 @@ public final class OpLogger
         log = l;
         try {
             w = Files.newOutputStream(path);
-            w.write("# log file format is below\n# start,duration\n".getBytes());
+            w.write("# log file format is below\n# start,duration[,aux]\n".getBytes());
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(23);
@@ -103,9 +103,8 @@ public final class OpLogger
         }
     }
 
-    public void recordValue(Instant now, long val) {
-        recordRaw(new RecVal(now, val));
-    }
+    public void recordValue(Instant now, long val) { recordRaw(new RecVal(now, val, null)); }
+    public void recordValue(Instant now, long val, String aux) { recordRaw(new RecVal(now, val, aux)); }
 
     public void flush() {
         try {
@@ -113,7 +112,12 @@ public final class OpLogger
             {
                 for (RecVal v : log)
                 {
-                    String out = v.startMicros + "," + v.val + "\n";
+                    String out = v.startMicros + "," + v.val;
+                    if (v.aux == null) {
+                        out += "\n";
+                    } else {
+                        out += "," + v.aux + "\n";
+                    }
                     w.write(out.getBytes());
                 }
                 w.flush();
@@ -128,16 +132,19 @@ public final class OpLogger
     static final class RecVal {
         public final long startMicros;
         public final long val;
+        public final String aux;
 
         public RecVal(Instant start, Instant stop) {
             startMicros = start.getEpochSecond() * 1_000_000L + start.getNano() / 1000L;
             Duration d = Duration.between(start, stop);
             val = d.getSeconds() * 1_000_000L + d.getNano() / 1000L;
+            aux = null;
         }
 
-        public RecVal(Instant time, long v) {
+        public RecVal(Instant time, long v, String aux) {
             startMicros = time.getEpochSecond() * 1_000_000L + time.getNano() / 1000L;
             val = v;
+            this.aux = aux;
         }
     }
 }

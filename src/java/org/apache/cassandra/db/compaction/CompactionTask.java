@@ -153,7 +153,6 @@ public class CompactionTask extends AbstractCompactionTask
         long start = System.nanoTime();
         long startForHist = Hists.nowMicros();
         Hists.compactionStart.set(startForHist);
-        OpLogger.compactionRates().recordValue(startInstant, org.apache.cassandra.service.CompactionController.instance.compactionRate.get());
         long totalKeysWritten = 0;
         long estimatedKeys = 0;
         try (CompactionController controller = getCompactionController(transaction.originals()))
