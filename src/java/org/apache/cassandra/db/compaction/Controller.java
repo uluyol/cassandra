@@ -27,4 +27,5 @@ public interface Controller
     public double getReference();
     public void record(double input, double output);
     public double getInput();
+    public String getAux();
 }

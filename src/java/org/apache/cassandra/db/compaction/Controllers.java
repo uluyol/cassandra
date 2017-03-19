@@ -150,6 +150,16 @@ public final class Controllers
             winClear();
             numHigh = 0;
         }
+
+        @Override
+        public String getAux() {
+            String aux = "ctrlWinSize=" + winLen + ",ctrlWinHigh=" + numHigh + '/' + winBuf.length;
+            String actualAux = actual.getAux();
+            if (actualAux != null && !actualAux.isEmpty()) {
+                aux += ',' + actualAux;
+            }
+            return aux;
+        }
     }
 
     /*
@@ -200,5 +210,8 @@ public final class Controllers
             }
             return input;
         }
+
+        @Override
+        public String getAux() { return "ctrlAIMDOut=" + curOut + ",ctrlAIMDRef=" + refOut; }
     }
 }

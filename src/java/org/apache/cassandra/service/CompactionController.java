@@ -22,7 +22,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -37,7 +36,6 @@ import org.apache.cassandra.db.compaction.Controllers;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.hists.OpLogger;
-import org.apache.cassandra.metrics.CompactionMetrics;
 import org.apache.cassandra.net.MessageIn;
 
 public class CompactionController {
@@ -45,8 +43,8 @@ public class CompactionController {
 
     public static CompactionController instance;
 
-    protected final Controllers.Percentile ctlr;
-    private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue(512);
+    private final Controllers.Percentile ctlr;
+    private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(512);
 
     public static void init() {
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
@@ -99,11 +97,11 @@ public class CompactionController {
                     // - A maximum number of affected requests has been reached
                     // - A maximum duration since the last log message
                     Instant now = Instant.now(NanoClock.instance);
-                    if (input != prevInput || prevCount >= 1000 || (prevStart != null && Duration.between(prevStart, now).getSeconds() > 10)) {
+                    if (input != prevInput || (prevStart != null && Duration.between(prevStart, now).getSeconds() > 10)) {
                         if (prevStart != null) {
                             OpLogger.compactionRates().recordValue(prevStart,
                                                                    (long) (prevInput * 1024 * 1024),
-                                                                   getAux(prevCount));
+                                                                   getAux(prevCount, ctlr.getAux()));
                         }
                         prevCount = 0;
                         prevStart = now;
@@ -156,19 +154,23 @@ public class CompactionController {
         50,
         TimeUnit.MILLISECONDS);
 
-    private static String getAux(long count) {
+    private static String getAux(long count, String ctlrAux) {
         int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
         String tplMap = tablesPerLevelSupplier.get();
-        return "count=" + count + ",levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
+        String aux = "count=" + count + ",levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
+        if (ctlrAux != null && !ctlrAux.isEmpty()) {
+            aux += ',' + ctlrAux;
+        }
+        return aux;
     }
 
     private void record(MessageIn.MessageMeta meta, Instant end) {
-        // Controller should only take action when a compaction is running.
-        // Latencies taken at other times are meaningless.
-        if (!Hists.overlapCompaction(meta.getStart(), end)) {
-            return;
-        }
-        Double v = new Double(Duration.between(meta.getStart(), end).toNanos() / 1e6);
+        //// Controller should only take action when a compaction is running.
+        //// Latencies taken at other times are meaningless.
+        //if (!Hists.overlapCompaction(meta.getStart(), end)) {
+        //    return;
+        //}
+        Double v = Duration.between(meta.getStart(), end).toNanos() / 1e6;
         while (true) {
             try {
                 recQ.put(v);
