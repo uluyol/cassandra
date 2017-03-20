@@ -28,8 +28,8 @@ public final class Controllers
         return new Percentile(c, pct, winSize, highFudgeFactor);
     }
 
-    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double maxInput, double initInput) {
-        return new AIMD(stepSize, remainFrac, refOut, maxInput, initInput);
+    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double minInput, double maxInput, double initInput) {
+        return new AIMD(stepSize, remainFrac, refOut, minInput, maxInput, initInput);
     }
 
     /*
@@ -176,14 +176,15 @@ public final class Controllers
         private final double remainFrac; // Multiplicative factor 0 < RemainFrac < 1
 
         private double refOut, curOut;
-        private final double maxInput;
+        private final double minInput, maxInput;
         private double curInput;
 
-        AIMD(double stepSize, double remainFrac, double refOut, double maxInput, double initInput) {
+        AIMD(double stepSize, double remainFrac, double refOut, double minInput, double maxInput, double initInput) {
             this.stepSize = stepSize;
             this.remainFrac = remainFrac;
             this.curOut = refOut; // ensures correct value for first getInput()
             this.refOut = refOut;
+            this.minInput = minInput;
             this.maxInput = maxInput;
             this.curInput = initInput;
         }
@@ -207,6 +208,9 @@ public final class Controllers
 
             if (input > maxInput) {
                 return maxInput;
+            }
+            if (input < minInput) {
+                return minInput;
             }
             return input;
         }

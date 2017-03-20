@@ -67,7 +67,7 @@ public class CompactionController {
     CompactionController() { ctlr = null; }
 
     public CompactionController(double stepSize, double remainFrac, double refOut, double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
-        ctlr = Controllers.newPercentile(Controllers.newAIMD(stepSize, remainFrac, refOut, maxInput, initInput),
+        ctlr = Controllers.newPercentile(Controllers.newAIMD(stepSize, remainFrac, refOut, 1, maxInput, initInput),
                                          pct, winSize, highFudgeFactor);
 
         Hists.reads.registerHook(this::record);
