@@ -37,7 +37,7 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
-    public double compaction_controller_step_size_mbps = 1;
+    public int compaction_controller_step_size_mbps = 1;
     public double compaction_controller_remain_frac = 0.7;
     public double compaction_controller_slo_ms = 0;
     public double compaction_controller_slo_percentile = 99;

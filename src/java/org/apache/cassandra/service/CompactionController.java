@@ -74,7 +74,7 @@ public class CompactionController {
 
         new Thread(() -> {
             Instant prevStart = null;
-            double prevInput = 0;
+            int prevInput = 0;
             long prevCount = 0;
             while (true) {
                 try {
@@ -84,10 +84,10 @@ public class CompactionController {
                     } catch (InterruptedException e) {
                         continue;
                     }
-                    double input;
+                    int input;
                     synchronized (ctlr) {
-                        ctlr.record(CompactionManager.instance.getRateLimiter().getRate() / (1024 * 1024), v);
-                        input = ctlr.getInput();
+                        ctlr.record(DatabaseDescriptor.getCompactionThroughputMbPerSec(), v);
+                        input = (int)ctlr.getInput();
                     }
 
                     // Logging
@@ -99,15 +99,14 @@ public class CompactionController {
                     Instant now = Instant.now(NanoClock.instance);
                     if (input != prevInput || (prevStart != null && Duration.between(prevStart, now).getSeconds() > 10)) {
                         if (prevStart != null) {
-                            OpLogger.compactionRates().recordValue(prevStart,
-                                                                   (long) (prevInput * 1024 * 1024),
+                            OpLogger.compactionRates().recordValue(prevStart, prevInput,
                                                                    getAux(prevCount, ctlr.getAux()));
                         }
                         prevCount = 0;
                         prevStart = now;
                     }
                     if (input != prevInput) {
-                        CompactionManager.instance.getRateLimiter().setRate(input * 1024 * 1024);
+                        StorageService.instance.setCompactionThroughputMbPerSec(input);
                         prevStart = now;
                         prevInput = input;
                         prevCount = 0;
