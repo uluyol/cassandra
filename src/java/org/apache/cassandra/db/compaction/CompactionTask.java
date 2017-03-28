@@ -98,10 +98,10 @@ public class CompactionTask extends AbstractCompactionTask
         return false;
     }
 
-    private static String loggingAux() {
+    private static String loggingAux(OperationType op) {
         int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
         String tplMap = org.apache.cassandra.service.CompactionController.tablesPerLevelSupplier.get();
-        return "levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
+        return "opType=" + op.toString() + ",levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
     }
 
     /**
@@ -156,7 +156,7 @@ public class CompactionTask extends AbstractCompactionTask
         logger.debug("Compacting ({}) {}", taskId, ssTableLoggerMsg);
 
         Instant startInstant = Instant.now(NanoClock.instance);
-        String logAux = loggingAux();
+        String logAux = loggingAux(transaction.opType());
         long start = System.nanoTime();
         long startForHist = Hists.nowMicros();
         Hists.compactionStart.set(startForHist);
