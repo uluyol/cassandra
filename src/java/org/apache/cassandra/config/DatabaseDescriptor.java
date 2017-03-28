@@ -1198,7 +1198,7 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
-    public static double compactionControllerStepSizeMBPS() { return conf.compaction_controller_step_size_mbps; }
+    public static double compactionControllerStepSizeMBPS() { return (double)conf.compaction_controller_step_size_mbps; }
     public static double compactionControllerRemainFrac() { return conf.compaction_controller_remain_frac; }
     public static double compactionControllerSLOMillis() { return conf.compaction_controller_slo_ms; }
     public static double compactionControllerMaxRateMBPS() { return conf.compaction_controller_max_rate_mbps; }

@@ -90,9 +90,8 @@ public final class OpLogger
     public static OpLogger compactions() { return _compactions; }
     public static OpLogger compactionRates() { return _compactionRates; }
 
-    public void record(Instant start, Instant stop) {
-        recordRaw(new RecVal(start, stop));
-    }
+    public void record(Instant start, Instant stop) { recordRaw(new RecVal(start, stop, null)); }
+    public void record(Instant start, Instant stop, String aux) { recordRaw(new RecVal(start, stop, aux)); }
 
     void recordRaw(RecVal v) {
         synchronized (this) {
@@ -134,11 +133,11 @@ public final class OpLogger
         public final long val;
         public final String aux;
 
-        public RecVal(Instant start, Instant stop) {
+        public RecVal(Instant start, Instant stop, String aux) {
             startMicros = start.getEpochSecond() * 1_000_000L + start.getNano() / 1000L;
             Duration d = Duration.between(start, stop);
             val = d.getSeconds() * 1_000_000L + d.getNano() / 1000L;
-            aux = null;
+            this.aux = aux;
         }
 
         public RecVal(Instant time, long v, String aux) {

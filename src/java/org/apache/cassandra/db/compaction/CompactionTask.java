@@ -98,6 +98,12 @@ public class CompactionTask extends AbstractCompactionTask
         return false;
     }
 
+    private static String loggingAux() {
+        int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
+        String tplMap = org.apache.cassandra.service.CompactionController.tablesPerLevelSupplier.get();
+        return "levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
+    }
+
     /**
      * For internal use and testing only.  The rest of the system should go through the submit* methods,
      * which are properly serialized.
@@ -150,6 +156,7 @@ public class CompactionTask extends AbstractCompactionTask
         logger.debug("Compacting ({}) {}", taskId, ssTableLoggerMsg);
 
         Instant startInstant = Instant.now(NanoClock.instance);
+        String logAux = loggingAux();
         long start = System.nanoTime();
         long startForHist = Hists.nowMicros();
         Hists.compactionStart.set(startForHist);
@@ -221,7 +228,7 @@ public class CompactionTask extends AbstractCompactionTask
             double mbps = dTime > 0 ? (double) endsize / (1024 * 1024) / ((double) dTime / 1000) : 0;
             long totalSourceRows = 0;
             String mergeSummary = updateCompactionHistory(cfs.keyspace.getName(), cfs.getColumnFamilyName(), mergedRowCounts, startsize, endsize);
-            OpLogger.compactions().record(startInstant, Instant.now(NanoClock.instance));
+            OpLogger.compactions().record(startInstant, Instant.now(NanoClock.instance), logAux);
             Hists.setIfEq(Hists.compactionEnd, Hists.nowMicros(), Hists.compactionStart, startForHist);
             logger.debug(String.format("Compacted (%s) %d sstables to [%s] to level=%d.  %,d bytes to %,d (~%d%% of original) in %,dms = %fMB/s.  %,d total partitions merged to %,d.  Partition merge counts were {%s}",
                                       taskId, transaction.originals().size(), newSSTableNames.toString(), getLevel(), startsize, endsize, (int) (ratio * 100), dTime, mbps, totalSourceRows, totalKeysWritten, mergeSummary));

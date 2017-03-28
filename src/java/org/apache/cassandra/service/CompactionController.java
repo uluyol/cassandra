@@ -119,7 +119,7 @@ public class CompactionController {
         }).start();
     }
 
-    private static final Supplier<String> tablesPerLevelSupplier = Suppliers.memoizeWithExpiration(
+    public static final Supplier<String> tablesPerLevelSupplier = Suppliers.memoizeWithExpiration(
         () -> {
             StringBuilder sb = new StringBuilder();
             for (String ks : Schema.instance.getKeyspaces()) {
