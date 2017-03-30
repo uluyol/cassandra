@@ -129,20 +129,20 @@ public class CompactionManager implements CompactionManagerMBean
      */
     public RateLimiter getRateLimiter()
     {
-        setRate(DatabaseDescriptor.getCompactionThroughputMbPerSec());
+        setRate(org.apache.cassandra.service.CompactionController.instance.curRate.get());
         return compactionRateLimiter;
     }
 
     /**
-     * Sets the rate for the rate limiter. When compaction_throughput_mb_per_sec is 0 or node is bootstrapping,
+     * Sets the rate for the rate limiter. When compaction_throughput_mb_per_sec is < 0 or node is bootstrapping,
      * this sets the rate to Double.MAX_VALUE bytes per second.
      * @param throughPutMbPerSec throughput to set in mb per second
      */
     public void setRate(final double throughPutMbPerSec)
     {
         double throughput = throughPutMbPerSec * 1024.0 * 1024.0;
-        // if throughput is set to 0, throttling is disabled
-        if (throughput == 0 || StorageService.instance.isBootstrapMode())
+        // if throughput is set < 0, throttling is disabled
+        if (throughput < 0 || StorageService.instance.isBootstrapMode())
             throughput = Double.MAX_VALUE;
         if (compactionRateLimiter.getRate() != throughput)
             compactionRateLimiter.setRate(throughput);

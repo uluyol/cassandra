@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.log4j.Logger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -45,6 +46,16 @@ public class CompactionController {
 
     private final Controllers.Percentile ctlr;
     private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(512);
+
+    public final AtomicDouble curRate = new AtomicDouble(getRateFromConfig());
+
+    private static double getRateFromConfig() {
+        int tput = DatabaseDescriptor.getCompactionThroughputMbPerSec();
+        if (tput == 0) {
+            return -1;
+        }
+        return tput;
+    }
 
     public static void init() {
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
@@ -74,7 +85,7 @@ public class CompactionController {
 
         new Thread(() -> {
             Instant prevStart = null;
-            int prevInput = 0;
+            double prevInput = 0;
             long prevCount = 0;
             while (true) {
                 try {
@@ -84,10 +95,10 @@ public class CompactionController {
                     } catch (InterruptedException e) {
                         continue;
                     }
-                    int input;
+                    double input;
                     synchronized (ctlr) {
-                        ctlr.record(DatabaseDescriptor.getCompactionThroughputMbPerSec(), v);
-                        input = (int)ctlr.getInput();
+                        ctlr.record(curRate.get(), v);
+                        input = ctlr.getInput();
                     }
 
                     // Logging
@@ -99,14 +110,14 @@ public class CompactionController {
                     Instant now = Instant.now(NanoClock.instance);
                     if (input != prevInput || (prevStart != null && Duration.between(prevStart, now).getSeconds() > 10)) {
                         if (prevStart != null) {
-                            OpLogger.compactionRates().recordValue(prevStart, prevInput,
+                            OpLogger.compactionRates().recordValue(prevStart, (long)(prevInput * 1024 * 1024),
                                                                    getAux(prevCount, ctlr.getAux()));
                         }
                         prevCount = 0;
                         prevStart = now;
                     }
                     if (input != prevInput) {
-                        StorageService.instance.setCompactionThroughputMbPerSec(input);
+                        curRate.set(input);
                         prevStart = now;
                         prevInput = input;
                         prevCount = 0;
@@ -164,11 +175,11 @@ public class CompactionController {
     }
 
     private void record(MessageIn.MessageMeta meta, Instant end) {
-        //// Controller should only take action when a compaction is running.
-        //// Latencies taken at other times are meaningless.
-        //if (!Hists.overlapCompaction(meta.getStart(), end)) {
-        //    return;
-        //}
+        // Controller should only take action when a compaction is running.
+        // Latencies taken at other times are meaningless.
+        if (!Hists.overlapCompaction(meta.getStart(), end)) {
+            return;
+        }
         Double v = Duration.between(meta.getStart(), end).toNanos() / 1e6;
         while (true) {
             try {
