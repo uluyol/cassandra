@@ -24,8 +24,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
@@ -98,10 +100,38 @@ public class CompactionTask extends AbstractCompactionTask
         return false;
     }
 
-    private static String loggingAux(OperationType op) {
-        int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
+    private static <T, R> void mapWriteDelimited(StringBuilder sb, ImmutableList<T> vals, Function<T, R> fn, char delim) {
+        if (vals == null || vals.size() == 0) {
+            return;
+        }
+        sb.append(fn.apply(vals.get(0)));
+        for (int i = 1; i < vals.size(); i++) {
+            sb.append(delim);
+            sb.append(fn.apply(vals.get(i)));
+        }
+    }
+
+    private static String loggingAux(ColumnFamilyStore cfs, ImmutableList<SSTableReader> readers, int destLevel) {
+        int npending = CompactionManager.instance.getPendingTasks();
         String tplMap = org.apache.cassandra.service.CompactionController.tablesPerLevelSupplier.get();
-        return "opType=" + op.toString() + ",levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
+        StringBuilder sb = new StringBuilder();
+        sb.append("ks=");
+        sb.append(cfs.keyspace.getName());
+        sb.append(",tbl=");
+        sb.append(cfs.getTableName());
+        sb.append(",destLevel=");
+        sb.append(destLevel);
+        sb.append(",levelCount=");
+        sb.append(tplMap);
+        sb.append(",pending=");
+        sb.append(npending);
+        sb.append(",zSizes=");
+        mapWriteDelimited(sb, readers, (r) -> r.onDiskLength(), ';');
+        sb.append(",uSizes=");
+        mapWriteDelimited(sb, readers, (r) -> r.uncompressedLength(), ';');
+        sb.append(",levels=");
+        mapWriteDelimited(sb, readers, (r) -> r.getSSTableLevel(), ';');
+        return sb.toString();
     }
 
     /**
@@ -156,7 +186,7 @@ public class CompactionTask extends AbstractCompactionTask
         logger.debug("Compacting ({}) {}", taskId, ssTableLoggerMsg);
 
         Instant startInstant = Instant.now(NanoClock.instance);
-        String logAux = loggingAux(transaction.opType());
+        String logAux = loggingAux(cfs, ImmutableList.copyOf(transaction.originals()), getLevel());
         long start = System.nanoTime();
         long startForHist = Hists.nowMicros();
         Hists.compactionStart.set(startForHist);
