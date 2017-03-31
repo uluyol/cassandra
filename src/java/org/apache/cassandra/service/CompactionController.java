@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -41,20 +42,30 @@ import org.apache.cassandra.net.MessageIn;
 
 public class CompactionController {
     public static final Logger logger = Logger.getLogger(CompactionController.class);
+    private static final double BAD_MODE_RATE_THRESH_MBPS = 0.25;
 
     public static CompactionController instance;
 
     private final Controllers.Percentile ctlr;
     private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(512);
 
-    public final AtomicDouble curRate = new AtomicDouble(getRateFromConfig());
+    private final LoggingState loggingState = new LoggingState(getRateFromConfig());
 
     private static double getRateFromConfig() {
         int tput = DatabaseDescriptor.getCompactionThroughputMbPerSec();
         if (tput == 0) {
-            return -1;
+            return Double.MAX_VALUE;
         }
         return tput;
+    }
+
+    public double getCurRate() {
+        synchronized (loggingState) {
+            if (loggingState.canMeetSLO.get()) {
+                return loggingState.rate;
+            }
+            return Double.MAX_VALUE;
+        }
     }
 
     public static void init() {
@@ -78,7 +89,7 @@ public class CompactionController {
     CompactionController() { ctlr = null; }
 
     public CompactionController(double stepSize, double remainFrac, double refOut, double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
-        ctlr = Controllers.newPercentile(Controllers.newAIMD(stepSize, remainFrac, refOut, 1, maxInput, initInput),
+        ctlr = Controllers.newPercentile(Controllers.newAIMD(stepSize, remainFrac, refOut, 0, maxInput, initInput),
                                          pct, winSize, highFudgeFactor);
 
         Hists.reads.registerHook(this::record);
@@ -96,35 +107,57 @@ public class CompactionController {
                         continue;
                     }
                     double input;
+                    double curRate;
+                    String ctlrAux;
+                    synchronized (loggingState) {
+                        curRate = loggingState.rate;
+                    }
                     synchronized (ctlr) {
-                        ctlr.record(curRate.get(), v);
+                        ctlr.record(curRate, v);
                         input = ctlr.getInput();
+                        ctlrAux = ctlr.getAux();
                     }
-
-                    // Logging
-                    //
-                    // Log the current rate under any of these conditions:
-                    // - The compaction rate has changed
-                    // - A maximum number of affected requests has been reached
-                    // - A maximum duration since the last log message
-                    Instant now = Instant.now(NanoClock.instance);
-                    if (input != prevInput || (prevStart != null && Duration.between(prevStart, now).getSeconds() > 10)) {
-                        if (prevStart != null) {
-                            OpLogger.compactionRates().recordValue(prevStart, (long)(prevInput * 1024 * 1024),
-                                                                   getAux(prevCount, ctlr.getAux()));
+                    if (input <= BAD_MODE_RATE_THRESH_MBPS) {
+                        synchronized (loggingState) {
+                            loggingState.log();
+                            loggingState.start = Instant.now(NanoClock.instance);
+                            loggingState.count = 0;
+                            loggingState.canMeetSLO.set(false);
+                            loggingState.ctlrAux = ctlrAux;
                         }
-                        prevCount = 0;
-                        prevStart = now;
+                    } else {
+                        synchronized (loggingState) {
+                            if (loggingState.rate != input && loggingState.canMeetSLO.get()) {
+                                loggingState.log();
+                                loggingState.start = Instant.now(NanoClock.instance);
+                                loggingState.count = 0;
+                                loggingState.rate = input;
+                                loggingState.ctlrAux = ctlrAux;
+                            } else if (loggingState.rate == input) {
+                                loggingState.count++;
+                            }
+                        }
                     }
-                    if (input != prevInput) {
-                        curRate.set(input);
-                        prevStart = now;
-                        prevInput = input;
-                        prevCount = 0;
-                    }
-                    prevCount++;
                 } catch (Throwable t) {
                     logger.error("error occurred while consuming compaction latencies", t);
+                }
+            }
+        }).start();
+
+        // Status thread
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(10_000);
+                    synchronized (loggingState) {
+                        loggingState.log();
+                        if (loggingState.start != null) {
+                            loggingState.count = 0;
+                            loggingState.start = Instant.now(NanoClock.instance);
+                        }
+                    }
+                } catch (Throwable t) {
+                    logger.error("error occured while print compaction rate status", t);
                 }
             }
         }).start();
@@ -164,20 +197,38 @@ public class CompactionController {
         50,
         TimeUnit.MILLISECONDS);
 
-    private static String getAux(long count, String ctlrAux) {
+    private static String getAux(boolean canMeetSLO, long count, String ctlrAux) {
         int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
         String tplMap = tablesPerLevelSupplier.get();
-        String aux = "count=" + count + ",levelCount=" + tplMap + ",pending=" + wipAndPendingCompactions;
+        StringBuilder aux = new StringBuilder();
+        aux.append("count=");
+        aux.append(count);
+        aux.append(",levelCount=");
+        aux.append(tplMap);
+        aux.append(",pending=");
+        aux.append(wipAndPendingCompactions);
         if (ctlrAux != null && !ctlrAux.isEmpty()) {
-            aux += ',' + ctlrAux;
+            aux.append(',');
+            aux.append(ctlrAux);
         }
-        return aux;
+        if (!canMeetSLO) {
+            aux.append(",recoveryMode");
+        }
+        return aux.toString();
     }
 
     private void record(MessageIn.MessageMeta meta, Instant end) {
         // Controller should only take action when a compaction is running.
         // Latencies taken at other times are meaningless.
         if (!Hists.overlapCompaction(meta.getStart(), end)) {
+            if (!loggingState.canMeetSLO.get()) {
+                synchronized (loggingState) {
+                    loggingState.canMeetSLO.set(true);
+                }
+            }
+            return;
+        }
+        if (!loggingState.canMeetSLO.get()) {
             return;
         }
         Double v = Duration.between(meta.getStart(), end).toNanos() / 1e6;
@@ -206,5 +257,32 @@ public class CompactionController {
         public void setPercentile(double pct) {}
         @Override
         public void setReference(double ref) {}
+    }
+
+    // Synchronize before accessing *any* fields.
+    // Exception: canMeetSLO can be read but not written to.
+    private static final class LoggingState {
+        Instant start = null;
+        double rate;
+        long count = 0;
+        AtomicBoolean canMeetSLO = new AtomicBoolean(true);
+        String ctlrAux = "";
+
+        LoggingState(double rate) {
+            this.rate = rate;
+        }
+
+        // log does not modify anything.
+        // Calling function should reset count.
+        public final void log() {
+            if (start != null) {
+                long inputToReport = (long) (rate * 1024 * 1024);
+                if (!canMeetSLO.get()) {
+                    inputToReport = -1;
+                }
+                OpLogger.compactionRates().recordValue(start, inputToReport,
+                                                       getAux(canMeetSLO.get(), count, ctlrAux));
+            }
+        }
     }
 }

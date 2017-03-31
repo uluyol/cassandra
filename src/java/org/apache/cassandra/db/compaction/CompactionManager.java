@@ -129,7 +129,7 @@ public class CompactionManager implements CompactionManagerMBean
      */
     public RateLimiter getRateLimiter()
     {
-        setRate(org.apache.cassandra.service.CompactionController.instance.curRate.get());
+        setRate(org.apache.cassandra.service.CompactionController.instance.getCurRate());
         return compactionRateLimiter;
     }
 
@@ -142,7 +142,7 @@ public class CompactionManager implements CompactionManagerMBean
     {
         double throughput = throughPutMbPerSec * 1024.0 * 1024.0;
         // if throughput is set < 0, throttling is disabled
-        if (throughput < 0 || StorageService.instance.isBootstrapMode())
+        if (Double.isInfinite(throughput) || throughput < 0 || StorageService.instance.isBootstrapMode())
             throughput = Double.MAX_VALUE;
         if (compactionRateLimiter.getRate() != throughput)
             compactionRateLimiter.setRate(throughput);

@@ -54,6 +54,7 @@ public final class Controllers
 
         private double[] scratch;
         private int numHigh;
+        private boolean prevEarlyBadFire;
 
         Percentile(Controller c, double pct, int winSize, double highFudgeFactor) {
             actual = c;
@@ -61,6 +62,7 @@ public final class Controllers
             windowSize = winSize;
             highFudge = highFudgeFactor;
             numHigh = 0;
+            prevEarlyBadFire = false;
 
             winInit();
         }
@@ -115,6 +117,7 @@ public final class Controllers
                     logger.debug(String.format("got %d/%d >= %f: ref: %f out: %f",
                                               numHigh, windowSize, 1-percentile,
                                               actual.getReference(), output));
+                    prevEarlyBadFire = true;
                     actual.record(input, output);
                     winClear();
                     numHigh = 0;
@@ -133,6 +136,7 @@ public final class Controllers
                 vals[i] = winBuf[i];
             }
 
+            prevEarlyBadFire = false;
             Arrays.sort(vals);
 
             // Following percentile calculation was adapted from
@@ -153,7 +157,7 @@ public final class Controllers
 
         @Override
         public String getAux() {
-            String aux = "ctrlWinSize=" + winLen + ",ctrlWinHigh=" + numHigh + '/' + winBuf.length;
+            String aux = "ctrlWinSize=" + winLen + ",prevEarlyBadFire=" + prevEarlyBadFire;
             String actualAux = actual.getAux();
             if (actualAux != null && !actualAux.isEmpty()) {
                 aux += ',' + actualAux;
