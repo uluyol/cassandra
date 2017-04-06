@@ -19,7 +19,9 @@
 package org.apache.cassandra.db.compaction;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.log4j.Logger;
 
 public final class Controllers
@@ -222,4 +224,99 @@ public final class Controllers
         @Override
         public String getAux() { return "ctrlAIMDOut=" + curOut + ",ctrlAIMDRef=" + refOut; }
     }
+
+    /*
+    UpdatingRegression estimates the output based on a linear model of previous observations,
+    and sets the input to maximize the output without exceeding the reference.
+     */
+    /*
+    public static final class UpdatingRegression implements Controller {
+        private double refOut;
+        private double curInput;
+
+        private final double minInput, maxInput;
+        private final ObservationRing obs;
+        private final ImmutableList<Supplier<Double>> xSupp;
+        private final Supplier<Double> ySupp;
+
+        UpdatingRegression(double minInput, double maxInput, double refOut, double initInput, int winSize, ImmutableList<Supplier<Double>> xSuppliers, Supplier<Double> ySupplier) {
+            this.minInput = minInput;
+            this.maxInput = maxInput;
+            this.curInput = initInput;
+            this.refOut = refOut;
+
+            obs = new ObservationRing(xSuppliers.size(), winSize);
+            xSupp = xSuppliers;
+            ySupp = ySupplier;
+        }
+
+        public void observeAndComputeInput() {
+            obs.observe(xSupp, ySupp);
+
+            placeHolderSoThisIsEventuallycompleted()
+        }
+
+        @Override
+        public void setReference(double val) {
+            refOut = val;
+            observeAndComputeInput();
+        }
+
+        @Override
+        public double getReference() { return refOut; }
+
+        @Override
+        public void record(double input, double output) {
+            // think about triggering an update based on ouput
+            // input is useless
+        }
+
+        @Override
+        public double getInput() { return curInput; }
+
+        @Override
+        public String getAux() { return ""; }
+
+        @FunctionalInterface
+        private static interface ObservationConsumer {
+            public void consume(double[][] x, double[] y);
+        }
+
+        private static final class ObservationRing {
+            private final double[][] x;
+            private final double[] y;
+            private int pos;
+            private int len;
+
+            ObservationRing(int nobs, int winSize) {
+                assert winSize > 0;
+                x = new double[winSize][];
+                for (int i = 0; i < winSize; i++) {
+                    x[i] = new double[nobs];
+                }
+                y = new double[winSize];
+                pos = 0;
+                len = 0;
+            }
+
+            public void observe(ImmutableList<Supplier<Double>> xSupp, Supplier<Double> ySupp) {
+                assert xSupp.size() == x[0].length;
+                y[pos] = ySupp.get();
+                for (int i = 0; i < x[0].length; i++) {
+                    x[pos][i] = xSupp.get(i).get();
+                }
+                pos++;
+                if (len < x.length) {
+                    len++;
+                } else {
+                    pos %= x.length;
+                }
+            }
+
+            public void consume(ObservationConsumer c) { c.consume(x, y); }
+
+            public boolean isFull() { return len == x.length; }
+        }
+    }
+    */
 }
