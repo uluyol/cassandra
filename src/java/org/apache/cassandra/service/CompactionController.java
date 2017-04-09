@@ -92,8 +92,8 @@ public abstract class CompactionController {
 
         private final double initInput;
         private final Controllers.Percentile ctlr;
-        private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(512);
-        private final ArrayBlockingQueue<LoggingState> stateQ = new ArrayBlockingQueue<>(100);
+        private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(2048);
+        private final ArrayBlockingQueue<LoggingState> stateQ = new ArrayBlockingQueue<>(512);
 
         private CurState state = new CurState(getRateFromConfig());
 
@@ -134,6 +134,13 @@ public abstract class CompactionController {
                         try {
                             v = recQ.take();
                         } catch (InterruptedException e) {
+                            continue;
+                        }
+                        // There is a window where we have messages being added to recQ
+                        // but haven't decided to go into recovery mode yet.
+                        // Not skipping these leads to excessive log messages being generated.
+                        // Check again if we need to skip.
+                        if (!state.nowCanMeetSLO()) {
                             continue;
                         }
                         LoggingState logState;
