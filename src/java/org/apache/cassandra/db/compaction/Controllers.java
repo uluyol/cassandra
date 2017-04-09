@@ -30,8 +30,8 @@ public final class Controllers
         return new Percentile(c, pct, winSize, highFudgeFactor);
     }
 
-    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double minInput, double maxInput, double initInput) {
-        return new AIMD(stepSize, remainFrac, refOut, minInput, maxInput, initInput);
+    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
+        return new AIMD(stepSize, remainFrac, refOut, fuzzyRefMatch, minInput, maxInput, initInput);
     }
 
     /*
@@ -71,6 +71,11 @@ public final class Controllers
 
         @Override
         public double getInput() { return actual.getInput(); }
+        @Override
+        public void resetInput(double input) {
+            winClear();
+            actual.resetInput(input);
+        }
         @Override
         public void setReference(double refOut) {
             numHigh = 0;
@@ -181,15 +186,17 @@ public final class Controllers
         private final double stepSize; // Additive increase factor 0 < StepSize
         private final double remainFrac; // Multiplicative factor 0 < RemainFrac < 1
 
+        private double fuzzyRefMatch;
         private double refOut, curOut;
         private final double minInput, maxInput;
         private double curInput;
 
-        AIMD(double stepSize, double remainFrac, double refOut, double minInput, double maxInput, double initInput) {
+        AIMD(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
             this.stepSize = stepSize;
             this.remainFrac = remainFrac;
             this.curOut = refOut; // ensures correct value for first getInput()
             this.refOut = refOut;
+            this.fuzzyRefMatch = fuzzyRefMatch;
             this.minInput = minInput;
             this.maxInput = maxInput;
             this.curInput = initInput;
@@ -203,11 +210,21 @@ public final class Controllers
         public void record(double input, double output) { curOut = output; curInput = input; }
 
         @Override
+        public void resetInput(double input) {
+            curInput = input;
+            curOut = refOut;
+        }
+
+        @Override
         public double getInput() {
             double input = curInput;
 
             if (curOut < refOut) {
-                input = curInput + stepSize;
+                if (refOut * fuzzyRefMatch < curOut) {
+                    input = curInput;
+                } else {
+                    input = curInput + stepSize;
+                }
             } else if (curOut > refOut) {
                 input = curInput * remainFrac;
             }

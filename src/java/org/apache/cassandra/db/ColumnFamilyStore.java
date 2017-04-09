@@ -59,7 +59,7 @@ import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
-import org.apache.cassandra.hists.OpLogger;
+import org.apache.cassandra.hists.OpLoggers;
 import org.apache.cassandra.index.SecondaryIndexManager;
 import org.apache.cassandra.index.internal.CassandraIndex;
 import org.apache.cassandra.index.transactions.UpdateTransaction;
@@ -1133,7 +1133,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             }
             // signal the post-flush we've done our work
             postFlush.latch.countDown();
-            OpLogger.flushes().record(flushStart, Instant.now(NanoClock.instance));
+            OpLoggers.flushes().record(flushStart, Instant.now(NanoClock.instance));
         }
 
         private void reclaim(final Memtable memtable)

@@ -37,36 +37,17 @@ import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.cassandra.db.compaction.Controllers;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
-import org.apache.cassandra.hists.OpLogger;
+import org.apache.cassandra.hists.OpLoggers;
 import org.apache.cassandra.net.MessageIn;
 
-public class CompactionController {
+public abstract class CompactionController {
     public static final Logger logger = Logger.getLogger(CompactionController.class);
-    private static final double BAD_MODE_RATE_THRESH_MBPS = 0.25;
 
     public static CompactionController instance;
 
-    private final Controllers.Percentile ctlr;
-    private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(512);
-
-    private final LoggingState loggingState = new LoggingState(getRateFromConfig());
-
-    private static double getRateFromConfig() {
-        int tput = DatabaseDescriptor.getCompactionThroughputMbPerSec();
-        if (tput == 0) {
-            return Double.MAX_VALUE;
-        }
-        return tput;
-    }
-
-    public double getCurRate() {
-        synchronized (loggingState) {
-            if (loggingState.canMeetSLO.get()) {
-                return loggingState.rate;
-            }
-            return Double.MAX_VALUE;
-        }
-    }
+    public abstract double getCurRate();
+    public abstract void setPercentile(double pct);
+    public abstract void setReference(double pct);
 
     public static void init() {
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
@@ -83,84 +64,243 @@ public class CompactionController {
             return;
         }
 
-        instance = new CompactionController(stepSize, remainFrac, refOut, maxInput, initInput, pct, winSize, highFudgeFactor);
+        CompactionControllerImpl ctrlr = new CompactionControllerImpl(stepSize, remainFrac, refOut, 0.9,
+                                                                      maxInput, initInput, pct, winSize,
+                                                                      highFudgeFactor);
+        ctrlr.startControlThread();
+        ctrlr.startStatusThread();
+        instance = ctrlr;
     }
 
-    CompactionController() { ctlr = null; }
+    private static final class DummyCompactionController extends CompactionController {
+        @Override
+        public double getCurRate() {
+            int tput = DatabaseDescriptor.getCompactionThroughputMbPerSec();
+            if (tput == 0) {
+                return Double.MAX_VALUE;
+            }
+            return tput;
+        }
+        @Override
+        public void setPercentile(double pct) {}
+        @Override
+        public void setReference(double ref) {}
+    }
 
-    public CompactionController(double stepSize, double remainFrac, double refOut, double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
-        ctlr = Controllers.newPercentile(Controllers.newAIMD(stepSize, remainFrac, refOut, 0, maxInput, initInput),
-                                         pct, winSize, highFudgeFactor);
+    private static final class CompactionControllerImpl extends CompactionController {
+        private static final double BAD_MODE_RATE_THRESH_MBPS = 0.25;
 
-        Hists.reads.registerHook(this::record);
+        private final double initInput;
+        private final Controllers.Percentile ctlr;
+        private final ArrayBlockingQueue<Double> recQ = new ArrayBlockingQueue<>(512);
+        private final ArrayBlockingQueue<LoggingState> stateQ = new ArrayBlockingQueue<>(100);
 
-        new Thread(() -> {
-            Instant prevStart = null;
-            double prevInput = 0;
-            long prevCount = 0;
-            while (true) {
-                try {
-                    double v = 0;
+        private CurState state = new CurState(getRateFromConfig());
+
+        private static double getRateFromConfig() {
+            int tput = DatabaseDescriptor.getCompactionThroughputMbPerSec();
+            if (tput == 0) {
+                return Double.MAX_VALUE;
+            }
+            return tput;
+        }
+
+        @Override
+        public double getCurRate() {
+            synchronized (state) {
+                if (state.canMeetSLO.get()) {
+                    return state.rateMBPS;
+                }
+                return Double.MAX_VALUE;
+            }
+        }
+
+        CompactionControllerImpl(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch,
+                                 double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
+            ctlr = Controllers.newPercentile(
+                    Controllers.newAIMD(stepSize, remainFrac, refOut, fuzzyRefMatch, 0, maxInput, initInput),
+                    pct, winSize, highFudgeFactor);
+            this.initInput = initInput;
+
+            Hists.reads.registerHook(this::record);
+            OpLoggers.compactions().registerHook(this::compactionDone);
+        }
+
+        final void startControlThread() {
+            new Thread(() -> {
+                while (true) {
                     try {
-                        v = recQ.take();
-                    } catch (InterruptedException e) {
-                        continue;
-                    }
-                    double input;
-                    double curRate;
-                    String ctlrAux;
-                    synchronized (loggingState) {
-                        curRate = loggingState.rate;
-                    }
-                    synchronized (ctlr) {
-                        ctlr.record(curRate, v);
-                        input = ctlr.getInput();
-                        ctlrAux = ctlr.getAux();
-                    }
-                    if (input <= BAD_MODE_RATE_THRESH_MBPS) {
-                        synchronized (loggingState) {
-                            loggingState.log();
-                            loggingState.start = Instant.now(NanoClock.instance);
-                            loggingState.count = 0;
-                            loggingState.canMeetSLO.set(false);
-                            loggingState.ctlrAux = ctlrAux;
+                        double v;
+                        try {
+                            v = recQ.take();
+                        } catch (InterruptedException e) {
+                            continue;
                         }
-                    } else {
-                        synchronized (loggingState) {
-                            if (loggingState.rate != input && loggingState.canMeetSLO.get()) {
-                                loggingState.log();
-                                loggingState.start = Instant.now(NanoClock.instance);
-                                loggingState.count = 0;
-                                loggingState.rate = input;
-                                loggingState.ctlrAux = ctlrAux;
-                            } else if (loggingState.rate == input) {
-                                loggingState.count++;
+                        LoggingState logState;
+                        boolean newLogState = true;
+                        synchronized (state) {
+                            double curRate = state.rateMBPS;
+                            double input;
+                            String ctlrAux;
+                            synchronized (ctlr) {
+                                ctlr.record(curRate, v);
+                                input = ctlr.getInput();
+                                ctlrAux = ctlr.getAux();
+                            }
+                            if (input <= BAD_MODE_RATE_THRESH_MBPS) {
+                                state.canMeetSLO.set(false);
+                                newLogState = true;
+                            } else {
+                                if (state.rateMBPS == input) {
+                                    newLogState = false;
+                                }
+                                state.rateMBPS = input;
+                            }
+                            if (newLogState) {
+                                logState = new LoggingState();
+                                logState.start = Instant.now(NanoClock.instance);
+                                logState.canMeetSLO = state.canMeetSLO.get();
+                                logState.rateMBPS = state.rateMBPS;
+                                logState.ctlrAux = ctlrAux;
+                            } else {
+                                logState = null;
                             }
                         }
+                        if (newLogState) {
+                            if (!stateQ.offer(logState)) {
+                                logger.error("too many logging states, status thread is unable to consume states quickly enough");
+                            }
+                        }
+                    } catch (Throwable t) {
+                        logger.error("error occurred while consuming compaction latencies", t);
                     }
-                } catch (Throwable t) {
-                    logger.error("error occurred while consuming compaction latencies", t);
+                }
+            }).start();
+        }
+
+        final void startStatusThread() {
+            // Status thread
+            new Thread(() -> {
+                LoggingState prevState = null;
+                while (true) {
+                    try {
+                        LoggingState state = stateQ.poll(10, TimeUnit.SECONDS);
+                        if (state == null) {
+                            state = prevState;
+                        }
+                        if (state != null) {
+                            state.log();
+                            state.start = Instant.now(NanoClock.instance);
+                        }
+                        prevState = state;
+                    } catch (Throwable t) {
+                        logger.error("error occured while print compaction rate status", t);
+                    }
+                }
+            }).start();
+        }
+
+        public void setPercentile(double pct) {
+            synchronized (ctlr) {
+                ctlr.setPercentile(pct);
+            }
+        }
+
+        public void setReference(double ref)
+        {
+            synchronized (ctlr)
+            {
+                ctlr.setReference(ref);
+            }
+        }
+
+        private static String getAux(boolean canMeetSLO, String ctlrAux) {
+            int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
+            String tplMap = tablesPerLevelSupplier.get();
+            StringBuilder aux = new StringBuilder();
+            aux.append("levelCount=");
+            aux.append(tplMap);
+            aux.append(",pending=");
+            aux.append(wipAndPendingCompactions);
+            if (ctlrAux != null && !ctlrAux.isEmpty()) {
+                aux.append(',');
+                aux.append(ctlrAux);
+            }
+            if (!canMeetSLO) {
+                aux.append(",recoveryMode");
+            }
+            return aux.toString();
+        }
+
+        private final void resetCanMeetSLOAndController() {
+            // No data race here, but there is a semantic one.
+            // The semantic race may fail to cause this to trigger,
+            // or may cause it to opt-out of recovery mode too soon.
+            // This is unlikely and should be corrected quickly anyway.
+            if (!state.nowCanMeetSLO()) {
+                synchronized (state) {
+                    state.canMeetSLO.set(true);
+                    synchronized (ctlr) {
+                        ctlr.resetInput(initInput);
+                    }
                 }
             }
-        }).start();
+        }
 
-        // Status thread
-        new Thread(() -> {
+        private final void record(MessageIn.MessageMeta meta, Instant end) {
+            // Controller should only take action when a compaction is running.
+            // Latencies taken at other times are meaningless.
+            if (!Hists.overlapCompaction(meta.getStart(), end)) {
+                resetCanMeetSLOAndController();
+                return;
+            }
+            if (!state.canMeetSLO.get()) {
+                return;
+            }
+            Double v = Duration.between(meta.getStart(), end).toNanos() / 1e6;
             while (true) {
                 try {
-                    Thread.sleep(10_000);
-                    synchronized (loggingState) {
-                        loggingState.log();
-                        if (loggingState.start != null) {
-                            loggingState.count = 0;
-                            loggingState.start = Instant.now(NanoClock.instance);
-                        }
+                    recQ.put(v);
+                    break;
+                } catch (InterruptedException e) {}
+            }
+        }
+
+        private final void compactionDone(OpLoggers.RecVal v) {
+            resetCanMeetSLOAndController();
+        }
+
+        static final class LoggingState {
+            Instant start = null;
+            double rateMBPS = 0;
+            boolean canMeetSLO = true;
+            String ctlrAux = "";
+
+            // log does not modify anything.
+            public final void log() {
+                if (start != null) {
+                    long inputToReport = (long) (rateMBPS * 1024 * 1024);
+                    if (!canMeetSLO) {
+                        inputToReport = -1;
                     }
-                } catch (Throwable t) {
-                    logger.error("error occured while print compaction rate status", t);
+                    OpLoggers.compactionRates().recordValue(start, inputToReport,
+                                                            getAux(canMeetSLO, ctlrAux));
                 }
             }
-        }).start();
+        }
+
+        static final class CurState {
+            double rateMBPS;
+            AtomicBoolean canMeetSLO = new AtomicBoolean(true);
+
+            CurState(double rateMBPS) {
+                this.rateMBPS = rateMBPS;
+            }
+
+            boolean nowCanMeetSLO() {
+                return canMeetSLO.get();
+            }
+        }
     }
 
     public static final Supplier<String> tablesPerLevelSupplier = Suppliers.memoizeWithExpiration(
@@ -196,93 +336,4 @@ public class CompactionController {
         },
         50,
         TimeUnit.MILLISECONDS);
-
-    private static String getAux(boolean canMeetSLO, long count, String ctlrAux) {
-        int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
-        String tplMap = tablesPerLevelSupplier.get();
-        StringBuilder aux = new StringBuilder();
-        aux.append("count=");
-        aux.append(count);
-        aux.append(",levelCount=");
-        aux.append(tplMap);
-        aux.append(",pending=");
-        aux.append(wipAndPendingCompactions);
-        if (ctlrAux != null && !ctlrAux.isEmpty()) {
-            aux.append(',');
-            aux.append(ctlrAux);
-        }
-        if (!canMeetSLO) {
-            aux.append(",recoveryMode");
-        }
-        return aux.toString();
-    }
-
-    private void record(MessageIn.MessageMeta meta, Instant end) {
-        // Controller should only take action when a compaction is running.
-        // Latencies taken at other times are meaningless.
-        if (!Hists.overlapCompaction(meta.getStart(), end)) {
-            if (!loggingState.canMeetSLO.get()) {
-                synchronized (loggingState) {
-                    loggingState.canMeetSLO.set(true);
-                }
-            }
-            return;
-        }
-        if (!loggingState.canMeetSLO.get()) {
-            return;
-        }
-        Double v = Duration.between(meta.getStart(), end).toNanos() / 1e6;
-        while (true) {
-            try {
-                recQ.put(v);
-                break;
-            } catch (InterruptedException e) {}
-        }
-    }
-
-    public void setPercentile(double pct) {
-        synchronized (ctlr) {
-            ctlr.setPercentile(pct);
-        }
-    }
-
-    public void setReference(double ref) {
-        synchronized (ctlr) {
-            ctlr.setReference(ref);
-        }
-    }
-
-    private static final class DummyCompactionController extends CompactionController {
-        @Override
-        public void setPercentile(double pct) {}
-        @Override
-        public void setReference(double ref) {}
-    }
-
-    // Synchronize before accessing *any* fields.
-    // Exception: canMeetSLO can be read but not written to.
-    private static final class LoggingState {
-        Instant start = null;
-        double rate;
-        long count = 0;
-        AtomicBoolean canMeetSLO = new AtomicBoolean(true);
-        String ctlrAux = "";
-
-        LoggingState(double rate) {
-            this.rate = rate;
-        }
-
-        // log does not modify anything.
-        // Calling function should reset count.
-        public final void log() {
-            if (start != null) {
-                long inputToReport = (long) (rate * 1024 * 1024);
-                if (!canMeetSLO.get()) {
-                    inputToReport = -1;
-                }
-                OpLogger.compactionRates().recordValue(start, inputToReport,
-                                                       getAux(canMeetSLO.get(), count, ctlrAux));
-            }
-        }
-    }
 }
