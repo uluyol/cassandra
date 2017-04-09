@@ -53,6 +53,7 @@ public abstract class CompactionController {
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
         double remainFrac = DatabaseDescriptor.compactionControllerRemainFrac();
         double refOut = DatabaseDescriptor.compactionControllerSLOMillis();
+        double fuzzyRefMatch = DatabaseDescriptor.compactionControllerSLOFuzzyFactor();
         double maxInput = DatabaseDescriptor.compactionControllerMaxRateMBPS();
         double initInput = DatabaseDescriptor.compactionControllerMaxRateMBPS();
         double pct = DatabaseDescriptor.compactionControllerSLOPercentile() / 100.0;
@@ -64,7 +65,7 @@ public abstract class CompactionController {
             return;
         }
 
-        CompactionControllerImpl ctrlr = new CompactionControllerImpl(stepSize, remainFrac, refOut, 0.9,
+        CompactionControllerImpl ctrlr = new CompactionControllerImpl(stepSize, remainFrac, refOut, fuzzyRefMatch,
                                                                       maxInput, initInput, pct, winSize,
                                                                       highFudgeFactor);
         ctrlr.startControlThread();
@@ -119,7 +120,7 @@ public abstract class CompactionController {
                                  double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
             ctlr = Controllers.newPercentile(
                     Controllers.newAIMD(stepSize, remainFrac, refOut, fuzzyRefMatch, 0, maxInput, initInput),
-                    pct, winSize, highFudgeFactor);
+                    pct, winSize, fuzzyRefMatch, highFudgeFactor);
             this.initInput = initInput;
 
             Hists.reads.registerHook(this::record);

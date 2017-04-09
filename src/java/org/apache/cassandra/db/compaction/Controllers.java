@@ -26,8 +26,8 @@ import org.apache.log4j.Logger;
 
 public final class Controllers
 {
-    public static Percentile newPercentile(Controller c, double pct, int winSize, double highFudgeFactor) {
-        return new Percentile(c, pct, winSize, highFudgeFactor);
+    public static Percentile newPercentile(Controller c, double pct, int winSize, double fuzzyRefMatch, double highFudgeFactor) {
+        return new Percentile(c, pct, winSize, fuzzyRefMatch, highFudgeFactor);
     }
 
     public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
@@ -48,6 +48,7 @@ public final class Controllers
         private final Controller actual;
         private double percentile;
         private final int windowSize;
+        private final double fuzzyRefMatch;
         private final double highFudge;
 
         private double[] winBuf;
@@ -58,10 +59,11 @@ public final class Controllers
         private int numHigh;
         private boolean prevEarlyBadFire;
 
-        Percentile(Controller c, double pct, int winSize, double highFudgeFactor) {
+        Percentile(Controller c, double pct, int winSize, double fuzzyRefMatch, double highFudgeFactor) {
             actual = c;
             percentile = pct;
             windowSize = winSize;
+            this.fuzzyRefMatch = fuzzyRefMatch;
             highFudge = highFudgeFactor;
             numHigh = 0;
             prevEarlyBadFire = false;
@@ -118,7 +120,7 @@ public final class Controllers
         public void record(double input, double output) {
             winInit();
             winPush(output);
-            if (output > actual.getReference()) {
+            if (output > actual.getReference()*(1+fuzzyRefMatch)) {
                 numHigh++;
                 if (((double)numHigh)/windowSize >= highFudge*(1-percentile)) {
                     logger.debug(String.format("got %d/%d >= %f: ref: %f out: %f",
@@ -219,12 +221,10 @@ public final class Controllers
         public double getInput() {
             double input = curInput;
 
-            if (curOut < refOut) {
-                if (refOut * fuzzyRefMatch < curOut) {
-                    input = curInput;
-                } else {
-                    input = curInput + stepSize;
-                }
+            if (Math.abs(refOut-curOut) < fuzzyRefMatch*refOut) {
+                input = curInput;
+            } else if (curOut < refOut) {
+                input = curInput + stepSize;
             } else if (curOut > refOut) {
                 input = curInput * remainFrac;
             }

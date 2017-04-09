@@ -1201,6 +1201,7 @@ public class DatabaseDescriptor
     public static double compactionControllerStepSizeMBPS() { return (double)conf.compaction_controller_step_size_mbps; }
     public static double compactionControllerRemainFrac() { return conf.compaction_controller_remain_frac; }
     public static double compactionControllerSLOMillis() { return conf.compaction_controller_slo_ms; }
+    public static double compactionControllerSLOFuzzyFactor() { return conf.compaction_controller_slo_fuzzy_factor; }
     public static double compactionControllerMaxRateMBPS() { return conf.compaction_controller_max_rate_mbps; }
     public static double compactionControllerSLOPercentile() { return conf.compaction_controller_slo_percentile; }
     public static int compactionControllerPercentileWindow() { return conf.compaction_controller_percentile_win; }
