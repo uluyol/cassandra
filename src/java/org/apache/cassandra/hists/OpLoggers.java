@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.log4j.Logger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.db.compaction.CompactionManager;
 
 public final class OpLoggers {
     private static Logger logger = Logger.getLogger(OpLoggers.class);
@@ -46,6 +47,7 @@ public final class OpLoggers {
     private final OpLogger _flushes;
     private final OpLogger _compactions;
     private final OpLogger _compactionRates;
+    private final OpLogger _periodicStats;
 
     private static final int WRITE_PERIOD_SECONDS = 15;
 
@@ -55,12 +57,13 @@ public final class OpLoggers {
         _flushes = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "flush_time_log.csv"));
         _compactions = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_time_log.csv"));
         _compactionRates = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_rate_log.csv"));
+        _periodicStats = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "periodic_stats.csv"));
 
-        loggers = ImmutableList.of(_flushes, _compactions, _compactionRates);
+        loggers = ImmutableList.of(_flushes, _compactions, _compactionRates, _periodicStats);
         flusher = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(WRITE_PERIOD_SECONDS);
+                    Thread.sleep(WRITE_PERIOD_SECONDS * 1000);
                 } catch (InterruptedException e) {}
                 for (OpLogger l : loggers) {
                     try {
@@ -77,6 +80,7 @@ public final class OpLoggers {
     public static OpLogger flushes() { return instance._flushes; }
     public static OpLogger compactions() { return instance._compactions; }
     public static OpLogger compactionRates() { return instance._compactionRates; }
+    static OpLogger periodicStats() { return instance._periodicStats; }
 
     public static final class RecVal {
         public final long startMicros;
@@ -173,6 +177,38 @@ public final class OpLoggers {
             synchronized (hooksWriteLock) {
                 hooks = ImmutableList.<RecordHook>builder().addAll(hooks).add(h).build();
             }
+        }
+    }
+
+    private static PeriodicStatsCollector _periodicCollector = new PeriodicStatsCollector();
+
+    private static final class PeriodicStatsCollector {
+        final Thread t;
+
+        public PeriodicStatsCollector() {
+            t = new Thread(() -> {
+                while (true) {
+                    try {
+                        String aux = getAux();
+                        OpLoggers.periodicStats().recordValue(Instant.now(NanoClock.instance), 0, aux);
+                        Thread.sleep(5000);
+                    } catch (Exception e) {}
+                }
+            });
+            t.start();
+        }
+
+        private static String getAux() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("pending=");
+            sb.append(CompactionManager.instance.getPendingTasks());
+            sb.append(",completedTasks=");
+            sb.append(CompactionManager.instance.getCompletedTasks());
+            sb.append(",totalCompleted=");
+            sb.append(CompactionManager.instance.getTotalCompactionsCompleted());
+            sb.append(",totalBytes=");
+            sb.append(CompactionManager.instance.getTotalBytesCompacted());
+            return sb.toString();
         }
     }
 }

@@ -30,8 +30,8 @@ public final class Controllers
         return new Percentile(c, pct, winSize, fuzzyRefMatch, highFudgeFactor);
     }
 
-    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
-        return new AIMD(stepSize, remainFrac, refOut, fuzzyRefMatch, minInput, maxInput, initInput);
+    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
+        return new AIMD(stepSize, remainFrac, refOut, incFailsThresh, fuzzyRefMatch, minInput, maxInput, initInput);
     }
 
     /*
@@ -192,12 +192,16 @@ public final class Controllers
         private double refOut, curOut;
         private final double minInput, maxInput;
         private double curInput;
+        private int incFailsThresh;
+        private int curFails;
 
-        AIMD(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
+        AIMD(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
             this.stepSize = stepSize;
             this.remainFrac = remainFrac;
             this.curOut = refOut; // ensures correct value for first getInput()
             this.refOut = refOut;
+            this.incFailsThresh = incFailsThresh;
+            this.curFails = incFailsThresh;
             this.fuzzyRefMatch = fuzzyRefMatch;
             this.minInput = minInput;
             this.maxInput = maxInput;
@@ -209,7 +213,36 @@ public final class Controllers
         @Override
         public double getReference() { return refOut; }
         @Override
-        public void record(double input, double output) { curOut = output; curInput = input; }
+        public void record(double input, double output) {
+            curOut = output;
+
+            double nextInput = input;
+            if (Math.abs(refOut-curOut) <= fuzzyRefMatch*refOut) {
+                curFails = Integer.max(curFails-1, 0);
+                nextInput = input;
+            } else if (curOut < refOut) {
+                curFails = 0;
+                nextInput = curInput + stepSize;
+            } else if (curOut > refOut) {
+                curFails++;
+                if (curFails >= incFailsThresh) {
+                    nextInput = curInput * remainFrac;
+                } else {
+                    nextInput = curInput - stepSize;
+                }
+            } else {
+                throw new IllegalStateException();
+            }
+
+            if (nextInput > maxInput) {
+                nextInput = maxInput;
+            }
+            if (nextInput < minInput) {
+                nextInput =  minInput;
+            }
+
+            curInput = nextInput;
+        }
 
         @Override
         public void resetInput(double input) {
@@ -218,28 +251,23 @@ public final class Controllers
         }
 
         @Override
-        public double getInput() {
-            double input = curInput;
+        public double getInput() { return curInput; }
 
-            if (Math.abs(refOut-curOut) < fuzzyRefMatch*refOut) {
-                input = curInput;
-            } else if (curOut < refOut) {
-                input = curInput + stepSize;
-            } else if (curOut > refOut) {
-                input = curInput * remainFrac;
-            }
-
-            if (input > maxInput) {
-                return maxInput;
-            }
-            if (input < minInput) {
-                return minInput;
-            }
-            return input;
-        }
+        int getFails() { return curFails; }
 
         @Override
-        public String getAux() { return "ctrlAIMDOut=" + curOut + ",ctrlAIMDRef=" + refOut; }
+        public String getAux() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("AIMDOut=");
+            sb.append(curOut);
+            sb.append(",AIMDRef=");
+            sb.append(refOut);
+            sb.append(",AIMDIncFailsThresh=");
+            sb.append(incFailsThresh);
+            sb.append(",AIMDCurFails=");
+            sb.append(curFails);
+            return sb.toString();
+        }
     }
 
     /*

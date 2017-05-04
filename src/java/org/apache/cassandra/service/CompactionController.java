@@ -53,6 +53,7 @@ public abstract class CompactionController {
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
         double remainFrac = DatabaseDescriptor.compactionControllerRemainFrac();
         double refOut = DatabaseDescriptor.compactionControllerSLOMillis();
+        int incFailsThresh = DatabaseDescriptor.compactionControllerIncFailsThresh();
         double fuzzyRefMatch = DatabaseDescriptor.compactionControllerSLOFuzzyFactor();
         double maxInput = DatabaseDescriptor.compactionControllerMaxRateMBPS();
         double initInput = DatabaseDescriptor.compactionControllerMaxRateMBPS();
@@ -65,8 +66,8 @@ public abstract class CompactionController {
             return;
         }
 
-        CompactionControllerImpl ctrlr = new CompactionControllerImpl(stepSize, remainFrac, refOut, fuzzyRefMatch,
-                                                                      maxInput, initInput, pct, winSize,
+        CompactionControllerImpl ctrlr = new CompactionControllerImpl(stepSize, remainFrac, refOut, incFailsThresh,
+                                                                      fuzzyRefMatch, maxInput, initInput, pct, winSize,
                                                                       highFudgeFactor);
         ctrlr.startControlThread();
         ctrlr.startStatusThread();
@@ -116,10 +117,10 @@ public abstract class CompactionController {
             }
         }
 
-        CompactionControllerImpl(double stepSize, double remainFrac, double refOut, double fuzzyRefMatch,
+        CompactionControllerImpl(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch,
                                  double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
             ctlr = Controllers.newPercentile(
-                    Controllers.newAIMD(stepSize, remainFrac, refOut, fuzzyRefMatch, 0, maxInput, initInput),
+                    Controllers.newAIMD(stepSize, remainFrac, refOut, incFailsThresh, fuzzyRefMatch, 0, maxInput, initInput),
                     pct, winSize, fuzzyRefMatch, highFudgeFactor);
             this.initInput = initInput;
 
