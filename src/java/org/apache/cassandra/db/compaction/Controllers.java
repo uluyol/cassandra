@@ -34,6 +34,14 @@ public final class Controllers
         return new AIMD(stepSize, remainFrac, refOut, incFailsThresh, fuzzyRefMatch, minInput, maxInput, initInput);
     }
 
+    public static BangBang newBangBang(double refOut, double disableOff, double enableOff, double minInput) {
+        return new BangBang(refOut, disableOff, enableOff, minInput);
+    }
+
+    public static Proportional newProportional(double refOut, double k, double minInput, double maxInput, double minAction, double maxAction, double initInput) {
+        return new Proportional(refOut, k, minInput, maxInput, minAction, maxAction, initInput);
+    }
+
     /*
     Percentile computes the percentile based on a sliding window
     of observations before passing a Record() call to the
@@ -267,6 +275,107 @@ public final class Controllers
             sb.append(",AIMDCurFails=");
             sb.append(curFails);
             return sb.toString();
+        }
+    }
+
+    /*
+    BangBang is a simple on-off controller with hysteresis.
+
+    The idea is to switch between no to full input and back to stay around the reference.
+    A deadband exists around the reference point to prevent rapid switching.
+
+    E.g. with a deadband of [5, 2] and reference point of 10,
+    the min input will be used until 12 is reached,
+    then input will switch to Double.MAX_VALUE until current output is ≤ 5.
+    */
+    public static final class BangBang implements Controller {
+        private double refOut;
+        private final double enableOff;
+        private final double disableOff;
+
+        private double curInput;
+        private final double minInput;
+
+        BangBang(double refOut, double disableOffset, double enableOffset, double minInput) {
+            this.refOut = refOut;
+            this.enableOff = enableOffset;
+            this.disableOff = disableOffset;
+            this.curInput = minInput;
+            this.minInput = minInput;
+        }
+
+        @Override
+        public double getReference() { return refOut; }
+        @Override
+        public double getInput() { return curInput; }
+        @Override
+        public void resetInput(double in) { curInput = in; }
+        @Override
+        public void setReference(double ref) { refOut = ref; }
+        @Override
+        public String getAux() { return ""; }
+
+        @Override
+        public void record(double in, double out) {
+            if (out > refOut+enableOff) {
+                curInput = Double.MAX_VALUE;
+            } else if (out < refOut-disableOff) {
+                curInput = minInput;
+            }
+        }
+    }
+
+    // Proportional implements a simple proportional controller
+    public static final class Proportional implements Controller {
+        private double refOut;
+
+        private double curInput;
+        private final double minInput, maxInput;
+        private final double k;
+        private final double minAction;
+        private final double maxAction;
+
+        Proportional(double refOut, double k, double minInput, double maxInput, double minAction, double maxAction, double initInput) {
+            this.refOut = refOut;
+            this.curInput = initInput;
+            this.minInput = minInput;
+            this.maxInput = maxInput;
+            this.k = k;
+            this.minAction = minAction;
+            this.maxAction = maxAction;
+        }
+
+        @Override
+        public double getReference() { return refOut; }
+        @Override
+        public double getInput() { return curInput; }
+        @Override
+        public void resetInput(double in) { curInput = in; }
+        @Override
+        public void setReference(double ref) { refOut = ref; }
+        @Override
+        public String getAux() { return ""; }
+
+        @Override
+        public void record(double in, double out) {
+            double error = refOut-out;
+            double sign = error >= 0 ? 1 : -1;
+            double action = k*Math.abs(error);
+            action = Math.min(maxAction, action);
+            action = Math.max(minAction, action);
+            action *= sign;
+            // if ref < out:
+            //   * action < 0
+            //   * want to increase input
+            // else:
+            //   * action > 0
+            //   * want to decrease input
+            curInput -= action;
+            if (curInput > maxInput) {
+                curInput = maxInput;
+            } else if (curInput < minInput) {
+                curInput = minInput;
+            }
         }
     }
 

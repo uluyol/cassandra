@@ -91,6 +91,48 @@ public class ControllersTest {
             Inst.record(101), Inst.check(3)));
     }
 
+    @Test
+    public void testBangBang() {
+        Controller ctlr = Controllers.newBangBang(885, 35, 77, 0);
+
+        compareToInsts(ctlr, ImmutableList.of(
+            Inst.record(100), Inst.check(0),
+            Inst.record(885), Inst.check(0),
+            Inst.record(885+77), Inst.check(0),
+            Inst.record(885+78), Inst.check(Double.MAX_VALUE),
+            Inst.record(885+77), Inst.check(Double.MAX_VALUE),
+            Inst.record(885), Inst.check(Double.MAX_VALUE),
+            Inst.record(885-35), Inst.check(Double.MAX_VALUE),
+            Inst.record(885-36), Inst.check(0)));
+    }
+
+    @Test
+    public void testProportional() {
+        Controller ctlr = Controllers.newProportional(10, 0.5, 2, 20, 0, 4, 20);
+
+        compareToInsts(ctlr, ImmutableList.of(
+            Inst.record(10), Inst.check(20),
+            Inst.record(12), Inst.check(20),
+            Inst.record(8), Inst.check(19),
+            Inst.record(8), Inst.check(18),
+            Inst.record(6), Inst.check(16),
+            Inst.record(16), Inst.check(19),
+            Inst.record(2), Inst.check(15),
+            Inst.record(0), Inst.check(11),
+            Inst.record(11), Inst.check(11.5)));
+
+        ctlr = Controllers.newProportional(10, 0.5, 2, 20, 2, 100, 20);
+
+        compareToInsts(ctlr, ImmutableList.of(
+            Inst.record(10), Inst.check(18),
+            Inst.record(12), Inst.check(20),
+            Inst.record(8), Inst.check(18),
+            Inst.record(8), Inst.check(16),
+            Inst.record(6), Inst.check(14),
+            Inst.record(16), Inst.check(17),
+            Inst.record(0), Inst.check(12)));
+    }
+
     private void compareToInsts(Controller ctlr, ImmutableList<Inst> insts) {
         for (int i = 0; i < insts.size(); i++) {
             Inst inst = insts.get(i);
