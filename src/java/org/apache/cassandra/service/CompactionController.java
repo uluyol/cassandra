@@ -260,12 +260,9 @@ public abstract class CompactionController {
                 return;
             }
             Double v = Duration.between(meta.getStart(), end).toNanos() / 1e6;
-            while (true) {
-                try {
-                    recQ.put(v);
-                    break;
-                } catch (InterruptedException e) {}
-            }
+            try {
+                recQ.offer(v, 1, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {}
         }
 
         private final void compactionDone(OpLoggers.RecVal v) {

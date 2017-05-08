@@ -1199,7 +1199,7 @@ public class DatabaseDescriptor
     }
 
     public static String compactionControllerKind() { return conf.compaction_controller_kind; }
-    public static double compactionControllerStepSizeMBPS() { return (double)conf.compaction_controller_step_size_mbps; }
+    public static double compactionControllerStepSizeMBPS() { return conf.compaction_controller_step_size_mbps; }
     public static double compactionControllerRemainFrac() { return conf.compaction_controller_remain_frac; }
     public static double compactionControllerSLOMillis() { return conf.compaction_controller_slo_ms; }
     public static int compactionControllerIncFailsThresh() { return conf.compaction_controller_inc_fails_thresh; }
