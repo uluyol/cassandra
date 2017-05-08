@@ -26,11 +26,13 @@ import org.apache.log4j.Logger;
 
 public final class Controllers
 {
-    public static Percentile newPercentile(Controller c, double pct, int winSize, double fuzzyRefMatch, double highFudgeFactor) {
+    public static Percentile newPercentile(Controller c, double pct, int winSize, double fuzzyRefMatch,
+                                           double highFudgeFactor) {
         return new Percentile(c, pct, winSize, fuzzyRefMatch, highFudgeFactor);
     }
 
-    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
+    public static AIMD newAIMD(double stepSize, double remainFrac, double refOut, int incFailsThresh,
+                               double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
         return new AIMD(stepSize, remainFrac, refOut, incFailsThresh, fuzzyRefMatch, minInput, maxInput, initInput);
     }
 
@@ -38,7 +40,8 @@ public final class Controllers
         return new BangBang(refOut, disableOff, enableOff, minInput);
     }
 
-    public static Proportional newProportional(double refOut, double k, double minInput, double maxInput, double minAction, double maxAction, double initInput) {
+    public static Proportional newProportional(double refOut, double k, double minInput, double maxInput,
+                                               double minAction, double maxAction, double initInput) {
         return new Proportional(refOut, k, minInput, maxInput, minAction, maxAction, initInput);
     }
 
@@ -224,19 +227,19 @@ public final class Controllers
         public void record(double input, double output) {
             curOut = output;
 
-            double nextInput = input;
-            if (Math.abs(refOut-curOut) <= fuzzyRefMatch*refOut) {
+            double nextInput;
+            if (refOut-fuzzyRefMatch*refOut <= curOut && curOut <= refOut) {
                 curFails = Integer.max(curFails-1, 0);
                 nextInput = input;
             } else if (curOut < refOut) {
                 curFails = 0;
-                nextInput = curInput + stepSize;
+                nextInput = input + stepSize;
             } else if (curOut > refOut) {
                 curFails++;
                 if (curFails >= incFailsThresh) {
-                    nextInput = curInput * remainFrac;
+                    nextInput = input * remainFrac;
                 } else {
-                    nextInput = curInput - stepSize;
+                    nextInput = input - stepSize;
                 }
             } else {
                 throw new IllegalStateException();

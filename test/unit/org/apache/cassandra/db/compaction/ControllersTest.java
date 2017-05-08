@@ -66,9 +66,9 @@ public class ControllersTest {
                                               2, 20, 10);
         compareToInsts(ctlr, ImmutableList.of(
             Inst.record(100), Inst.check(10),
-            Inst.record(110), Inst.check(10),
+            Inst.record(90), Inst.check(10),
             Inst.record(100), Inst.check(10),
-            Inst.record(110), Inst.check(10),
+            Inst.record(95), Inst.check(10),
             Inst.record(100), Inst.check(10),
             Inst.record(100), Inst.check(10),
             Inst.record(90), Inst.check(10),

@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.log4j.Logger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -34,6 +33,7 @@ import org.apache.cassandra.config.Schema;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.compaction.CompactionManager;
+import org.apache.cassandra.db.compaction.Controller;
 import org.apache.cassandra.db.compaction.Controllers;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.hists.NanoClock;
@@ -50,28 +50,39 @@ public abstract class CompactionController {
     public abstract void setReference(double pct);
 
     public static void init() {
+        String ctlrKind = DatabaseDescriptor.compactionControllerKind();
         double stepSize = DatabaseDescriptor.compactionControllerStepSizeMBPS();
         double remainFrac = DatabaseDescriptor.compactionControllerRemainFrac();
         double refOut = DatabaseDescriptor.compactionControllerSLOMillis();
         int incFailsThresh = DatabaseDescriptor.compactionControllerIncFailsThresh();
         double fuzzyRefMatch = DatabaseDescriptor.compactionControllerSLOFuzzyFactor();
+        double minInput = DatabaseDescriptor.compactionControllerMinRateMBPS();
         double maxInput = DatabaseDescriptor.compactionControllerMaxRateMBPS();
         double initInput = DatabaseDescriptor.compactionControllerMaxRateMBPS();
         double pct = DatabaseDescriptor.compactionControllerSLOPercentile() / 100.0;
         int winSize = DatabaseDescriptor.compactionControllerPercentileWindow();
         double highFudgeFactor = DatabaseDescriptor.compactionControllerPercentileHighFudgeFactor();
+        double pendingRefOut = DatabaseDescriptor.compactionControllerPendingGoal();
+        double bbDisableOff = DatabaseDescriptor.compactionControllerBangBangDisableOffset();
+        double bbEnableOff = DatabaseDescriptor.compactionControllerBangBangEnableOffset();
+        double propK = DatabaseDescriptor.compactionControllerPropGain();
+        double minAction = DatabaseDescriptor.compactionControllerMinAction();
+        double maxAction = DatabaseDescriptor.compactionControllerMaxAction();
 
-        if (refOut == 0) {
+        if (ctlrKind.startsWith("latency-")) {
+            LatencyCompactionController ctrlr = new LatencyCompactionController(stepSize, remainFrac, refOut,
+                                                                                incFailsThresh, fuzzyRefMatch, maxInput,
+                                                                                initInput, pct, winSize,
+                                                                                highFudgeFactor);
+            ctrlr.startControlThread();
+            ctrlr.startStatusThread();
+            instance = ctrlr;
+        } else if (ctlrKind.startsWith("pending-")) {
+            instance = new PendingTasksCompactionController(ctlrKind, pendingRefOut, minInput, maxInput, initInput,
+                                                            bbDisableOff, bbEnableOff, propK, minAction, maxAction);
+        } else {
             instance = new DummyCompactionController();
-            return;
         }
-
-        CompactionControllerImpl ctrlr = new CompactionControllerImpl(stepSize, remainFrac, refOut, incFailsThresh,
-                                                                      fuzzyRefMatch, maxInput, initInput, pct, winSize,
-                                                                      highFudgeFactor);
-        ctrlr.startControlThread();
-        ctrlr.startStatusThread();
-        instance = ctrlr;
     }
 
     private static final class DummyCompactionController extends CompactionController {
@@ -89,7 +100,7 @@ public abstract class CompactionController {
         public void setReference(double ref) {}
     }
 
-    private static final class CompactionControllerImpl extends CompactionController {
+    private static final class LatencyCompactionController extends CompactionController {
         private static final double BAD_MODE_RATE_THRESH_MBPS = 0.25;
 
         private final double initInput;
@@ -117,8 +128,8 @@ public abstract class CompactionController {
             }
         }
 
-        CompactionControllerImpl(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch,
-                                 double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
+        LatencyCompactionController(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch,
+                                    double maxInput, double initInput, double pct, int winSize, double highFudgeFactor) {
             ctlr = Controllers.newPercentile(
                     Controllers.newAIMD(stepSize, remainFrac, refOut, incFailsThresh, fuzzyRefMatch, 0, maxInput, initInput),
                     pct, winSize, fuzzyRefMatch, highFudgeFactor);
@@ -223,24 +234,6 @@ public abstract class CompactionController {
             }
         }
 
-        private static String getAux(boolean canMeetSLO, String ctlrAux) {
-            int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
-            String tplMap = tablesPerLevelSupplier.get();
-            StringBuilder aux = new StringBuilder();
-            aux.append("levelCount=");
-            aux.append(tplMap);
-            aux.append(",pending=");
-            aux.append(wipAndPendingCompactions);
-            if (ctlrAux != null && !ctlrAux.isEmpty()) {
-                aux.append(',');
-                aux.append(ctlrAux);
-            }
-            if (!canMeetSLO) {
-                aux.append(",recoveryMode");
-            }
-            return aux.toString();
-        }
-
         private final void resetCanMeetSLOAndController() {
             // No data race here, but there is a semantic one.
             // The semantic race may fail to cause this to trigger,
@@ -310,6 +303,84 @@ public abstract class CompactionController {
                 return canMeetSLO.get();
             }
         }
+    }
+
+    private static final class PendingTasksCompactionController extends CompactionController {
+        private final static int PERIOD_SEC = 5;
+        private final Controller ctlr;
+
+        PendingTasksCompactionController(String ctlr, double refOut, double minInput, double maxInput, double initInput,
+                                         double bbDisableOff, double bbEnableOff,
+                                         double propK, double propMinAction, double propMaxAction) {
+            if (ctlr.equals("pending-bangbang")) {
+                this.ctlr = Controllers.newBangBang(refOut, bbDisableOff, bbEnableOff, minInput);
+            } else if (ctlr.equals("pending-proportional")) {
+                this.ctlr = Controllers.newProportional(refOut, propK, minInput, maxInput, propMinAction, propMaxAction,
+                                                        initInput);
+            } else {
+                throw new RuntimeException("invalid controller type");
+            }
+
+            new Thread(() -> {
+                int prevPending = 0;
+                boolean prevPendingValid = false;
+                while (true) {
+                    try {
+                        Thread.sleep(PERIOD_SEC*1000);
+                        int pending = CompactionManager.instance.getPendingTasks();
+                        if (prevPendingValid && pending == prevPending) {
+                            continue;
+                        }
+                        prevPending = pending;
+                        prevPendingValid = true;
+                        double newInput;
+                        String aux;
+                        synchronized (this.ctlr) {
+                            this.ctlr.record(this.ctlr.getInput(), pending);
+                            newInput = this.ctlr.getInput();
+                            aux = this.ctlr.getAux();
+                        }
+                        OpLoggers.compactionRates().recordValue(Instant.now(NanoClock.instance),
+                                                                (long)(newInput*1024*1024),
+                                                                getAux(true, aux));
+                    } catch (Throwable e) {}
+                }
+            }).start();
+        }
+
+        @Override
+        public double getCurRate() {
+            synchronized (ctlr) {
+                return ctlr.getInput();
+            }
+        }
+
+        @Override
+        public void setPercentile(double pct) {}
+        @Override
+        public void setReference(double ref) {
+            synchronized (ctlr) {
+                ctlr.setReference(ref);
+            }
+        }
+    }
+
+    static String getAux(boolean canMeetSLO, String ctlrAux) {
+        int wipAndPendingCompactions = CompactionManager.instance.getPendingTasks();
+        String tplMap = tablesPerLevelSupplier.get();
+        StringBuilder aux = new StringBuilder();
+        aux.append("levelCount=");
+        aux.append(tplMap);
+        aux.append(",pending=");
+        aux.append(wipAndPendingCompactions);
+        if (ctlrAux != null && !ctlrAux.isEmpty()) {
+            aux.append(',');
+            aux.append(ctlrAux);
+        }
+        if (!canMeetSLO) {
+            aux.append(",recoveryMode");
+        }
+        return aux.toString();
     }
 
     public static final Supplier<String> tablesPerLevelSupplier = Suppliers.memoizeWithExpiration(

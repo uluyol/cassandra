@@ -1198,15 +1198,23 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static String compactionControllerKind() { return conf.compaction_controller_kind; }
     public static double compactionControllerStepSizeMBPS() { return (double)conf.compaction_controller_step_size_mbps; }
     public static double compactionControllerRemainFrac() { return conf.compaction_controller_remain_frac; }
     public static double compactionControllerSLOMillis() { return conf.compaction_controller_slo_ms; }
     public static int compactionControllerIncFailsThresh() { return conf.compaction_controller_inc_fails_thresh; }
     public static double compactionControllerSLOFuzzyFactor() { return conf.compaction_controller_slo_fuzzy_factor; }
+    public static double compactionControllerMinRateMBPS() { return conf.compaction_controller_min_rate_mbps; }
     public static double compactionControllerMaxRateMBPS() { return conf.compaction_controller_max_rate_mbps; }
     public static double compactionControllerSLOPercentile() { return conf.compaction_controller_slo_percentile; }
     public static int compactionControllerPercentileWindow() { return conf.compaction_controller_percentile_win; }
     public static double compactionControllerPercentileHighFudgeFactor() { return conf.compaction_controller_percentile_high_fudge_factor; }
+    public static double compactionControllerPendingGoal() { return conf.compaction_controller_pending_goal; }
+    public static double compactionControllerBangBangDisableOffset() { return conf.compaction_controller_bangbang_disable_off; }
+    public static double compactionControllerBangBangEnableOffset() { return conf.compaction_controller_bangbang_enable_off; }
+    public static double compactionControllerPropGain() { return conf.compaction_controller_prop_gain; }
+    public static double compactionControllerMinAction() { return conf.compaction_controller_min_action; }
+    public static double compactionControllerMaxAction() { return conf.compaction_controller_max_action; }
 
     public static boolean shouldCompact() { return conf.compactions_enable; }
     public static boolean shouldKeyCacheSendFakeResponse() { return conf.key_cache_fake_response; }

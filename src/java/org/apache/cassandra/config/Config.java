@@ -37,15 +37,23 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
+    public String compaction_controller_kind = "dummy";
     public int compaction_controller_step_size_mbps = 1;
     public double compaction_controller_remain_frac = 0.7;
     public double compaction_controller_slo_ms = 0;
     public int compaction_controller_inc_fails_thresh = 0;
     public double compaction_controller_slo_fuzzy_factor = 0;
     public double compaction_controller_slo_percentile = 99;
+    public double compaction_controller_min_rate_mbps = 0;
     public double compaction_controller_max_rate_mbps = 16;
     public int compaction_controller_percentile_win = 5000;
     public double compaction_controller_percentile_high_fudge_factor = 1.5;
+    public double compaction_controller_pending_goal = 5;
+    public double compaction_controller_bangbang_disable_off = 2;
+    public double compaction_controller_bangbang_enable_off = 2;
+    public double compaction_controller_prop_gain = 0.5;
+    public double compaction_controller_min_action = 0;
+    public double compaction_controller_max_action = 4;
 
     public Boolean compactions_enable;
     public Boolean key_cache_fake_response;
