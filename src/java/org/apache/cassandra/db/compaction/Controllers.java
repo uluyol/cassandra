@@ -194,10 +194,17 @@ public final class Controllers
     Otherwise it is left constant.
     */
     public static final class AIMD implements Controller {
-        private static final Logger logger = Logger.getLogger(AIMD.class);
+        private static final double PREV_ERROR_GAIN = 0.5;
 
         private final double stepSize; // Additive increase factor 0 < StepSize
         private final double remainFrac; // Multiplicative factor 0 < RemainFrac < 1
+
+        // Memory from previous cycle(s).
+        // This is the last known max good input.
+        // It is updated in one of two cases:
+        // 1. A platue is reached
+        // 2. Input needs to be increased, and current input > lastKnownHighestGood
+        private double lastKnownHighestGood;
 
         private double fuzzyRefMatch;
         private double refOut, curOut;
@@ -217,6 +224,7 @@ public final class Controllers
             this.minInput = minInput;
             this.maxInput = maxInput;
             this.curInput = initInput;
+            this.lastKnownHighestGood = -1;
         }
 
         @Override
@@ -230,10 +238,16 @@ public final class Controllers
             double nextInput;
             if (refOut-fuzzyRefMatch*refOut <= curOut && curOut <= refOut) {
                 curFails = Integer.max(curFails-1, 0);
+                lastKnownHighestGood = input;
                 nextInput = input;
             } else if (curOut < refOut) {
                 curFails = 0;
-                nextInput = input + stepSize;
+                double step = stepSize;
+                if (lastKnownHighestGood > 0 && input < lastKnownHighestGood) {
+                    step = Math.max((lastKnownHighestGood - input) * PREV_ERROR_GAIN, step);
+                }
+                lastKnownHighestGood = Math.max(lastKnownHighestGood, input);
+                nextInput = input + step;
             } else if (curOut > refOut) {
                 curFails++;
                 if (curFails >= incFailsThresh) {
