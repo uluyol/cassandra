@@ -201,8 +201,8 @@ public final class Controllers
         private double refOut, curOut;
         private final double minInput, maxInput;
         private double curInput;
-        private int incFailsThresh;
-        private int curFails;
+        private float incFailsThresh;
+        private float curFails;
 
         AIMD(double stepSize, double remainFrac, double refOut, int incFailsThresh, double fuzzyRefMatch, double minInput, double maxInput, double initInput) {
             this.stepSize = stepSize;
@@ -227,13 +227,13 @@ public final class Controllers
 
             double nextInput;
             if (refOut-fuzzyRefMatch*refOut <= curOut && curOut <= refOut) {
-                curFails = Integer.max(curFails-1, 0);
+                curFails = Math.max(curFails-0.25f, 0f);
                 nextInput = input;
             } else if (curOut < refOut) {
-                curFails = 0;
+                curFails = Math.max(curFails-0.5f, 0f);
                 nextInput = input + stepSize;
             } else if (curOut > refOut) {
-                curFails++;
+                curFails = Math.max(curFails+1f, incFailsThresh);
                 if (curFails >= incFailsThresh) {
                     nextInput = input * remainFrac;
                 } else {
@@ -262,7 +262,7 @@ public final class Controllers
         @Override
         public double getInput() { return curInput; }
 
-        int getFails() { return curFails; }
+        int getFails() { return (int)curFails; }
 
         @Override
         public String getAux() {
