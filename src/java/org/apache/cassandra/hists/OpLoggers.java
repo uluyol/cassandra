@@ -48,6 +48,7 @@ public final class OpLoggers {
     private final OpLogger _compactions;
     private final OpLogger _compactionRates;
     private final OpLogger _periodicStats;
+    private final OpLogger _writes;
 
     private static final int WRITE_PERIOD_SECONDS = 15;
 
@@ -58,8 +59,16 @@ public final class OpLoggers {
         _compactions = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_time_log.csv"));
         _compactionRates = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "compaction_rate_log.csv"));
         _periodicStats = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "periodic_stats.csv"));
+        ImmutableList.Builder<OpLogger> loggersB = ImmutableList.builder();
+        loggersB.add(_flushes, _compactions, _compactionRates, _periodicStats);
+        if (DatabaseDescriptor.logWriteOps()) {
+            _writes = new OpLogger(Paths.get(DatabaseDescriptor.getOpLogDir(), "write_ops.csv"));
+            loggersB.add(_writes);
+        } else {
+            _writes = null;
+        }
 
-        loggers = ImmutableList.of(_flushes, _compactions, _compactionRates, _periodicStats);
+        loggers = loggersB.build();
         flusher = new Thread(() -> {
             while (true) {
                 try {
@@ -80,6 +89,7 @@ public final class OpLoggers {
     public static OpLogger flushes() { return instance._flushes; }
     public static OpLogger compactions() { return instance._compactions; }
     public static OpLogger compactionRates() { return instance._compactionRates; }
+    public static OpLogger writes() { return instance._writes; }
     static OpLogger periodicStats() { return instance._periodicStats; }
 
     public static final class RecVal {

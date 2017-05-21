@@ -760,12 +760,12 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
                     buildSummary(false, false, Downsampling.BASE_SAMPLING_LEVEL);
                     ifile = ibuilderRebuild.buildIndex(descriptor, indexSummary);
                     dfile = dbuilderRebuild.buildData(descriptor, sstableMetadata);
-                    saveSummary(ibuilderRebuild, dbuilderRebuild);
+                    saveSummary(ibuilderRebuild, dbuilderRebuild, CallerMeta.of("SSTR/load", null, null));
                 }
             }
             else if (saveSummaryIfCreated && builtSummary)
             {
-                saveSummary(ibuilder, dbuilder);
+                saveSummary(ibuilder, dbuilder, CallerMeta.of("SSTR/load", null, null));
             }
         }
         catch (Throwable t)
@@ -951,26 +951,27 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
      * @param dbuilder
      */
 
-    public void saveSummary(SegmentedFile.Builder ibuilder, SegmentedFile.Builder dbuilder)
+    public void saveSummary(SegmentedFile.Builder ibuilder, SegmentedFile.Builder dbuilder, CallerMeta meta)
     {
-        saveSummary(this.descriptor, this.first, this.last, ibuilder, dbuilder, indexSummary);
+        saveSummary(this.descriptor, this.first, this.last, ibuilder, dbuilder, indexSummary, meta);
     }
 
-    private void saveSummary(SegmentedFile.Builder ibuilder, SegmentedFile.Builder dbuilder, IndexSummary newSummary)
+    private void saveSummary(SegmentedFile.Builder ibuilder, SegmentedFile.Builder dbuilder, IndexSummary newSummary, CallerMeta meta)
     {
-        saveSummary(this.descriptor, this.first, this.last, ibuilder, dbuilder, newSummary);
+        saveSummary(this.descriptor, this.first, this.last, ibuilder, dbuilder, newSummary, meta);
     }
     /**
      * Save index summary to Summary.db file.
      */
     public static void saveSummary(Descriptor descriptor, DecoratedKey first, DecoratedKey last,
-                                   SegmentedFile.Builder ibuilder, SegmentedFile.Builder dbuilder, IndexSummary summary)
+                                   SegmentedFile.Builder ibuilder, SegmentedFile.Builder dbuilder,
+                                   IndexSummary summary, CallerMeta meta)
     {
         File summariesFile = new File(descriptor.filenameFor(Component.SUMMARY));
         if (summariesFile.exists())
             FileUtils.deleteWithConfirm(summariesFile);
 
-        try (DataOutputStreamPlus oStream = new BufferedDataOutputStreamPlus(new FileOutputStream(summariesFile));)
+        try (DataOutputStreamPlus oStream = new BufferedDataOutputStreamPlus(new FileOutputStream(summariesFile), meta);)
         {
             IndexSummary.serializer.serialize(summary, oStream, descriptor.version.hasSamplingLevel());
             ByteBufferUtil.writeWithLength(first.getKey(), oStream);
@@ -1145,7 +1146,7 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
      * @throws IOException
      */
     @SuppressWarnings("resource")
-    public SSTableReader cloneWithNewSummarySamplingLevel(ColumnFamilyStore parent, int samplingLevel) throws IOException
+    public SSTableReader cloneWithNewSummarySamplingLevel(ColumnFamilyStore parent, int samplingLevel, CallerMeta meta) throws IOException
     {
         assert descriptor.version.hasSamplingLevel();
 
@@ -1177,7 +1178,7 @@ public abstract class SSTableReader extends SSTable implements SelfRefCounted<SS
                 try(SegmentedFile.Builder ibuilder = SegmentedFile.getBuilder(DatabaseDescriptor.getIndexAccessMode(), false);
                     SegmentedFile.Builder dbuilder = SegmentedFile.getBuilder(DatabaseDescriptor.getDiskAccessMode(), compression))
                 {
-                    saveSummary(ibuilder, dbuilder, newSummary);
+                    saveSummary(ibuilder, dbuilder, newSummary, meta);
                 }
             }
             else

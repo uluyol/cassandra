@@ -43,7 +43,7 @@ import org.apache.cassandra.net.MessageIn;
 public abstract class CompactionController {
     public static final Logger logger = Logger.getLogger(CompactionController.class);
 
-    public static CompactionController instance;
+    public static CompactionController instance = new DummyCompactionController();
 
     public abstract double getCurRate();
     public abstract void setPercentile(double pct);
@@ -80,8 +80,6 @@ public abstract class CompactionController {
         } else if (ctlrKind.startsWith("pending-")) {
             instance = new PendingTasksCompactionController(ctlrKind, pendingRefOut, minInput, maxInput, initInput,
                                                             bbDisableOff, bbEnableOff, propK, minAction, maxAction);
-        } else {
-            instance = new DummyCompactionController();
         }
     }
 

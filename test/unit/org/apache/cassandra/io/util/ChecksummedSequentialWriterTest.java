@@ -59,7 +59,7 @@ public class ChecksummedSequentialWriterTest extends SequentialWriterTest
 
         private TestableCSW(File file, File crcFile) throws IOException
         {
-            this(file, crcFile, new ChecksummedSequentialWriter(file, BUFFER_SIZE, crcFile));
+            this(file, crcFile, new ChecksummedSequentialWriter(file, null, BUFFER_SIZE, crcFile));
         }
 
         private TestableCSW(File file, File crcFile, SequentialWriter sw) throws IOException

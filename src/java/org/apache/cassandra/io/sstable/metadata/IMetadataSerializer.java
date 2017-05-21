@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.sstable.format.Version;
+import org.apache.cassandra.io.util.CallerMeta;
 import org.apache.cassandra.io.util.DataOutputPlus;
 
 /**
@@ -67,10 +68,10 @@ public interface IMetadataSerializer
      * @param newLevel new SSTable level
      * @throws IOException
      */
-    void mutateLevel(Descriptor descriptor, int newLevel) throws IOException;
+    void mutateLevel(Descriptor descriptor, int newLevel, CallerMeta meta) throws IOException;
 
     /**
      * Mutate repairedAt time
      */
-    void mutateRepairedAt(Descriptor descriptor, long newRepairedAt) throws IOException;
+    void mutateRepairedAt(Descriptor descriptor, long newRepairedAt, CallerMeta meta) throws IOException;
 }

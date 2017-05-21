@@ -136,7 +136,7 @@ public class OutputStreamBench
                 return remaining;
             }
 
-        }, 8192);
+        }, null, 8192);
     }
 
     @Benchmark

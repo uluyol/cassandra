@@ -43,7 +43,7 @@ public class ChecksummedRandomAccessReaderTest
         final byte[] expected = new byte[70 * 1024];   // bit more than crc chunk size, so we can test rebuffering.
         ThreadLocalRandom.current().nextBytes(expected);
 
-        SequentialWriter writer = ChecksummedSequentialWriter.open(data, crc);
+        SequentialWriter writer = ChecksummedSequentialWriter.open(data, crc, null);
         writer.write(expected);
         writer.finish();
 
@@ -69,7 +69,7 @@ public class ChecksummedRandomAccessReaderTest
         final byte[] dataBytes = new byte[70 * 1024];   // bit more than crc chunk size
         ThreadLocalRandom.current().nextBytes(dataBytes);
 
-        SequentialWriter writer = ChecksummedSequentialWriter.open(data, crc);
+        SequentialWriter writer = ChecksummedSequentialWriter.open(data, crc, null);
         writer.write(dataBytes);
         writer.finish();
 
@@ -101,7 +101,7 @@ public class ChecksummedRandomAccessReaderTest
         final byte[] expected = new byte[5 * 1024];
         Arrays.fill(expected, (byte) 0);
 
-        SequentialWriter writer = ChecksummedSequentialWriter.open(data, crc);
+        SequentialWriter writer = ChecksummedSequentialWriter.open(data, crc, null);
         writer.write(expected);
         writer.finish();
 

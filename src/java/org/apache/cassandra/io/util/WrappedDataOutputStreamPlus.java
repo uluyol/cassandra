@@ -36,11 +36,13 @@ public class WrappedDataOutputStreamPlus extends UnbufferedDataOutputStreamPlus
         this.out = out;
     }
 
+    /*
     public WrappedDataOutputStreamPlus(OutputStream out, WritableByteChannel channel)
     {
         super(channel);
         this.out = out;
     }
+    */
 
     @Override
     public void write(byte[] buffer, int offset, int count) throws IOException

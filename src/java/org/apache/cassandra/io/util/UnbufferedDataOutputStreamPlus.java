@@ -44,9 +44,9 @@ public abstract class UnbufferedDataOutputStreamPlus extends DataOutputStreamPlu
         super();
     }
 
-    protected UnbufferedDataOutputStreamPlus(WritableByteChannel channel)
+    protected UnbufferedDataOutputStreamPlus(WritableByteChannel channel, CallerMeta meta)
     {
-        super(channel);
+        super(WChan.wrap(channel, meta));
     }
 
     /*

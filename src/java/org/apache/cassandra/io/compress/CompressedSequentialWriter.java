@@ -31,6 +31,7 @@ import org.apache.cassandra.io.FSReadError;
 import org.apache.cassandra.io.FSWriteError;
 import org.apache.cassandra.io.sstable.CorruptSSTableException;
 import org.apache.cassandra.io.sstable.metadata.MetadataCollector;
+import org.apache.cassandra.io.util.CallerMeta;
 import org.apache.cassandra.io.util.DataIntegrityMetadata;
 import org.apache.cassandra.io.util.FileMark;
 import org.apache.cassandra.io.util.FileUtils;
@@ -62,11 +63,12 @@ public class CompressedSequentialWriter extends SequentialWriter
     private final ByteBuffer crcCheckBuffer = ByteBuffer.allocate(4);
 
     public CompressedSequentialWriter(File file,
+                                      CallerMeta meta,
                                       String offsetsPath,
                                       CompressionParams parameters,
                                       MetadataCollector sstableMetadataCollector)
     {
-        super(file, parameters.chunkLength(), parameters.getSstableCompressor().preferredBufferType());
+        super(file, meta, parameters.chunkLength(), parameters.getSstableCompressor().preferredBufferType());
         this.compressor = parameters.getSstableCompressor();
 
         // buffer for compression should be the same size as buffer itself

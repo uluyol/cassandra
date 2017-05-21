@@ -71,7 +71,7 @@ public class SequentialWriterTest extends AbstractTransactionalTest
 
         protected TestableSW(File file) throws IOException
         {
-            this(file, new SequentialWriter(file, 8 << 10, BufferType.OFF_HEAP));
+            this(file, new SequentialWriter(file, null, 8 << 10, BufferType.OFF_HEAP));
         }
 
         protected TestableSW(File file, SequentialWriter sw) throws IOException
@@ -127,7 +127,7 @@ public class SequentialWriterTest extends AbstractTransactionalTest
         File tempFile = new File(Files.createTempDir(), "test.txt");
         Assert.assertFalse("temp file shouldn't exist yet", tempFile.exists());
 
-        try (DataOutputStream os = new DataOutputStream(SequentialWriter.open(tempFile).finishOnClose()))
+        try (DataOutputStream os = new DataOutputStream(SequentialWriter.open(tempFile, null).finishOnClose()))
         {
             os.writeUTF("123");
         }

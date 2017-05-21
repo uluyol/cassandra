@@ -1198,6 +1198,8 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static boolean logWriteOps() { return conf.enable_log_write_ops; }
+
     public static String compactionControllerKind() { return conf.compaction_controller_kind; }
     public static double compactionControllerStepSizeMBPS() { return conf.compaction_controller_step_size_mbps; }
     public static double compactionControllerRemainFrac() { return conf.compaction_controller_remain_frac; }

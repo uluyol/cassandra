@@ -88,7 +88,7 @@ public class SSTableLevelResetter
                     if (metadata.sstableLevel > 0)
                     {
                         out.println("Changing level from " + metadata.sstableLevel + " to 0 on " + descriptor.filenameFor(Component.DATA));
-                        descriptor.getMetadataSerializer().mutateLevel(descriptor, 0);
+                        descriptor.getMetadataSerializer().mutateLevel(descriptor, 0, null);
                     }
                     else
                     {

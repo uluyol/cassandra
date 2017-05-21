@@ -165,7 +165,7 @@ public class ConnectionHandler
             // socket channel is null when encrypted(SSL)
             if (out == null)
                 return new WrappedDataOutputStreamPlus(new BufferedOutputStream(socket.getOutputStream()));
-            return new BufferedDataOutputStreamPlus(out);
+            return new BufferedDataOutputStreamPlus(out, null);
         }
 
         protected static ReadableByteChannel getReadChannel(Socket socket) throws IOException

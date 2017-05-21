@@ -37,6 +37,8 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
+    public boolean enable_log_write_ops = false;
+
     public String compaction_controller_kind = "dummy";
     public double compaction_controller_step_size_mbps = 1;
     public double compaction_controller_remain_frac = 0.7;
@@ -55,9 +57,9 @@ public class Config
     public double compaction_controller_min_action = 0;
     public double compaction_controller_max_action = 4;
 
-    public Boolean compactions_enable;
-    public Boolean key_cache_fake_response;
-    public Boolean use_hedged_requests;
+    public boolean compactions_enable = true;
+    public boolean key_cache_fake_response = false;
+    public boolean use_hedged_requests = false;
 
     /* Logging params */
     public long hist_write_period_s;

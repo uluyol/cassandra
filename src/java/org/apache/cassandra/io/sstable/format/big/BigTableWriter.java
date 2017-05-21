@@ -71,17 +71,21 @@ public class BigTableWriter extends SSTableWriter
         super(descriptor, keyCount, repairedAt, metadata, metadataCollector, header, observers);
         txn.trackNew(this); // must track before any files are created
 
+        CallerMeta compactMeta = CallerMeta.of("BTW/datafile", txn.opType(), txn.opId());
         if (compression)
         {
             dataFile = SequentialWriter.open(getFilename(),
                                              descriptor.filenameFor(Component.COMPRESSION_INFO),
+                                             compactMeta,
                                              metadata.params.compression,
                                              metadataCollector);
             dbuilder = SegmentedFile.getCompressedBuilder((CompressedSequentialWriter) dataFile);
         }
         else
         {
-            dataFile = SequentialWriter.open(new File(getFilename()), new File(descriptor.filenameFor(Component.CRC)));
+            dataFile = SequentialWriter.open(new File(getFilename()),
+                                             new File(descriptor.filenameFor(Component.CRC)),
+                                             compactMeta);
             dbuilder = SegmentedFile.getBuilder(DatabaseDescriptor.getDiskAccessMode(), false);
         }
         iwriter = new IndexWriter(keyCount, dataFile);
@@ -308,7 +312,7 @@ public class BigTableWriter extends SSTableWriter
 
             // write sstable statistics
             dataFile.setDescriptor(descriptor).prepareToCommit();
-            writeMetadata(descriptor, finalizeMetadata());
+            writeMetadata(descriptor, finalizeMetadata(), CallerMeta.from(dataFile.getMeta(), "BTW/metadata"));
 
             // save the table of components
             SSTable.appendTOC(descriptor, components);
@@ -339,10 +343,10 @@ public class BigTableWriter extends SSTableWriter
         }
     }
 
-    private static void writeMetadata(Descriptor desc, Map<MetadataType, MetadataComponent> components)
+    private static void writeMetadata(Descriptor desc, Map<MetadataType, MetadataComponent> components, CallerMeta meta)
     {
         File file = new File(desc.filenameFor(Component.STATS));
-        try (SequentialWriter out = SequentialWriter.open(file))
+        try (SequentialWriter out = SequentialWriter.open(file, meta))
         {
             desc.getMetadataSerializer().serialize(components, out, desc.version);
             out.setDescriptor(desc).finish();
@@ -376,7 +380,8 @@ public class BigTableWriter extends SSTableWriter
 
         IndexWriter(long keyCount, final SequentialWriter dataFile)
         {
-            indexFile = SequentialWriter.open(new File(descriptor.filenameFor(Component.PRIMARY_INDEX)));
+            indexFile = SequentialWriter.open(new File(descriptor.filenameFor(Component.PRIMARY_INDEX)),
+                                              CallerMeta.from(dataFile.getMeta(), "BTW/indexfile"));
             builder = SegmentedFile.getBuilder(DatabaseDescriptor.getIndexAccessMode(), false);
             summary = new IndexSummaryBuilder(keyCount, metadata.params.minIndexInterval, Downsampling.BASE_SAMPLING_LEVEL);
             bf = FilterFactory.getFilter(keyCount, metadata.params.bloomFilterFpChance, true, descriptor.version.hasOldBfHashOrder());
@@ -433,7 +438,9 @@ public class BigTableWriter extends SSTableWriter
             {
                 String path = descriptor.filenameFor(Component.FILTER);
                 try (FileOutputStream fos = new FileOutputStream(path);
-                     DataOutputStreamPlus stream = new BufferedDataOutputStreamPlus(fos))
+                     DataOutputStreamPlus stream = new BufferedDataOutputStreamPlus(
+                                                                                   fos,
+                                                                                   CallerMeta.from(dataFile.getMeta(), "BTW/filter")))
                 {
                     // bloom filter
                     FilterFactory.serialize(bf, stream);
@@ -473,7 +480,8 @@ public class BigTableWriter extends SSTableWriter
             summary.prepareToCommit();
             try (IndexSummary summary = iwriter.summary.build(getPartitioner()))
             {
-                SSTableReader.saveSummary(descriptor, first, last, iwriter.builder, dbuilder, summary);
+                SSTableReader.saveSummary(descriptor, first, last, iwriter.builder, dbuilder, summary,
+                                          CallerMeta.from(dataFile.getMeta(), "BTW/IW/do-prepare"));
             }
         }
 

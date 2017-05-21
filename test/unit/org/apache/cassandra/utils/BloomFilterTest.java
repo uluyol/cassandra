@@ -253,7 +253,7 @@ public class BloomFilterTest
         File file = FileUtils.createTempFile("bloomFilterTest-", ".dat");
         BloomFilter filter = (BloomFilter) FilterFactory.getFilter(((long) Integer.MAX_VALUE / 8) + 1, 0.01d, true, oldBfHashOrder);
         filter.add(FilterTestHelper.wrap(test));
-        DataOutputStreamPlus out = new BufferedDataOutputStreamPlus(new FileOutputStream(file));
+        DataOutputStreamPlus out = new BufferedDataOutputStreamPlus(new FileOutputStream(file), null);
         FilterFactory.serialize(filter, out);
         filter.bitset.serialize(out);
         out.close();

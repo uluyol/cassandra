@@ -19,7 +19,6 @@ package org.apache.cassandra.io.util;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.WritableByteChannel;
@@ -54,41 +53,26 @@ public class BufferedDataOutputStreamPlus extends DataOutputStreamPlus
     //expect block (same as buffer size) alignment for everything except the last block
     protected boolean strictFlushing = false;
 
-    public BufferedDataOutputStreamPlus(RandomAccessFile ras)
+    public BufferedDataOutputStreamPlus(FileOutputStream fos, CallerMeta meta)
     {
-        this(ras.getChannel());
+        this(fos.getChannel(), meta);
     }
 
-    public BufferedDataOutputStreamPlus(RandomAccessFile ras, int bufferSize)
+    public BufferedDataOutputStreamPlus(WritableByteChannel wbc, CallerMeta meta)
     {
-        this(ras.getChannel(), bufferSize);
+        this(wbc, meta, DEFAULT_BUFFER_SIZE);
     }
 
-    public BufferedDataOutputStreamPlus(FileOutputStream fos)
+    public BufferedDataOutputStreamPlus(WritableByteChannel wbc, CallerMeta meta, int bufferSize)
     {
-        this(fos.getChannel());
-    }
-
-    public BufferedDataOutputStreamPlus(FileOutputStream fos, int bufferSize)
-    {
-        this(fos.getChannel(), bufferSize);
-    }
-
-    public BufferedDataOutputStreamPlus(WritableByteChannel wbc)
-    {
-        this(wbc, DEFAULT_BUFFER_SIZE);
-    }
-
-    public BufferedDataOutputStreamPlus(WritableByteChannel wbc, int bufferSize)
-    {
-        this(wbc, ByteBuffer.allocateDirect(bufferSize));
+        this(wbc, meta, ByteBuffer.allocateDirect(bufferSize));
         Preconditions.checkNotNull(wbc);
         Preconditions.checkArgument(bufferSize >= 8, "Buffer size must be large enough to accommodate a long/double");
     }
 
-    protected BufferedDataOutputStreamPlus(WritableByteChannel channel, ByteBuffer buffer)
+    protected BufferedDataOutputStreamPlus(WritableByteChannel channel, CallerMeta meta, ByteBuffer buffer)
     {
-        super(channel);
+        super(DataOutputStreamPlus.WChan.wrap(channel, meta));
         this.buffer = buffer;
     }
 

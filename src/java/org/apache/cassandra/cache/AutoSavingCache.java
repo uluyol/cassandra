@@ -56,7 +56,7 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
     public interface IStreamFactory
     {
         InputStream getInputStream(File dataPath, File crcPath) throws IOException;
-        OutputStream getOutputStream(File dataPath, File crcPath) throws FileNotFoundException;
+        OutputStream getOutputStream(File dataPath, File crcPath, CallerMeta meta) throws FileNotFoundException;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(AutoSavingCache.class);
@@ -87,9 +87,9 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
             return new ChecksummedRandomAccessReader.Builder(dataPath, crcPath).build();
         }
 
-        public OutputStream getOutputStream(File dataPath, File crcPath)
+        public OutputStream getOutputStream(File dataPath, File crcPath, CallerMeta meta)
         {
-            return SequentialWriter.open(dataPath, crcPath).finishOnClose();
+            return SequentialWriter.open(dataPath, crcPath, meta).finishOnClose();
         }
     };
 
@@ -334,7 +334,10 @@ public class AutoSavingCache<K extends CacheKey, V> extends InstrumentingCache<K
             long start = System.nanoTime();
 
             Pair<File, File> cacheFilePaths = tempCacheFiles();
-            try (WrappedDataOutputStreamPlus writer = new WrappedDataOutputStreamPlus(streamFactory.getOutputStream(cacheFilePaths.left, cacheFilePaths.right)))
+            try (WrappedDataOutputStreamPlus writer = new WrappedDataOutputStreamPlus(
+                    streamFactory.getOutputStream(cacheFilePaths.left,
+                                                  cacheFilePaths.right,
+                                                  CallerMeta.of("ASC/savecache", info.getTaskType(), info.compactionId()))))
             {
 
                 //Need to be able to check schema version because CF names are ambiguous

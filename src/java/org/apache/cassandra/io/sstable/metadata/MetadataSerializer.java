@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.io.sstable.Component;
 import org.apache.cassandra.io.sstable.Descriptor;
 import org.apache.cassandra.io.sstable.format.Version;
+import org.apache.cassandra.io.util.CallerMeta;
 import org.apache.cassandra.io.util.DataOutputPlus;
 import org.apache.cassandra.io.util.DataOutputStreamPlus;
 import org.apache.cassandra.io.util.FileDataInput;
@@ -127,30 +128,30 @@ public class MetadataSerializer implements IMetadataSerializer
         return components;
     }
 
-    public void mutateLevel(Descriptor descriptor, int newLevel) throws IOException
+    public void mutateLevel(Descriptor descriptor, int newLevel, CallerMeta meta) throws IOException
     {
         logger.trace("Mutating {} to level {}", descriptor.filenameFor(Component.STATS), newLevel);
         Map<MetadataType, MetadataComponent> currentComponents = deserialize(descriptor, EnumSet.allOf(MetadataType.class));
         StatsMetadata stats = (StatsMetadata) currentComponents.remove(MetadataType.STATS);
         // mutate level
         currentComponents.put(MetadataType.STATS, stats.mutateLevel(newLevel));
-        rewriteSSTableMetadata(descriptor, currentComponents);
+        rewriteSSTableMetadata(descriptor, currentComponents, meta);
     }
 
-    public void mutateRepairedAt(Descriptor descriptor, long newRepairedAt) throws IOException
+    public void mutateRepairedAt(Descriptor descriptor, long newRepairedAt, CallerMeta meta) throws IOException
     {
         logger.trace("Mutating {} to repairedAt time {}", descriptor.filenameFor(Component.STATS), newRepairedAt);
         Map<MetadataType, MetadataComponent> currentComponents = deserialize(descriptor, EnumSet.allOf(MetadataType.class));
         StatsMetadata stats = (StatsMetadata) currentComponents.remove(MetadataType.STATS);
         // mutate level
         currentComponents.put(MetadataType.STATS, stats.mutateRepairedAt(newRepairedAt));
-        rewriteSSTableMetadata(descriptor, currentComponents);
+        rewriteSSTableMetadata(descriptor, currentComponents, meta);
     }
 
-    private void rewriteSSTableMetadata(Descriptor descriptor, Map<MetadataType, MetadataComponent> currentComponents) throws IOException
+    private void rewriteSSTableMetadata(Descriptor descriptor, Map<MetadataType, MetadataComponent> currentComponents, CallerMeta meta) throws IOException
     {
         String filePath = descriptor.tmpFilenameFor(Component.STATS);
-        try (DataOutputStreamPlus out = new BufferedDataOutputStreamPlus(new FileOutputStream(filePath)))
+        try (DataOutputStreamPlus out = new BufferedDataOutputStreamPlus(new FileOutputStream(filePath), meta))
         {
             serialize(currentComponents, out, descriptor.version);
             out.flush();

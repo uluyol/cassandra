@@ -130,11 +130,11 @@ public class SequentialWriter extends BufferedDataOutputStreamPlus implements Tr
         }
     }
 
-    public SequentialWriter(File file, int bufferSize, BufferType bufferType)
+    public SequentialWriter(File file, CallerMeta meta, int bufferSize, BufferType bufferType)
     {
-        super(openChannel(file), bufferType.allocate(bufferSize));
+        super(openChannel(file), meta, bufferType.allocate(bufferSize));
         strictFlushing = true;
-        fchannel = (FileChannel)channel;
+        fchannel = (FileChannel)channel.wc;
 
         filePath = file.getAbsolutePath();
 
@@ -145,22 +145,23 @@ public class SequentialWriter extends BufferedDataOutputStreamPlus implements Tr
     /**
      * Open a heap-based, non-compressed SequentialWriter
      */
-    public static SequentialWriter open(File file)
+    public static SequentialWriter open(File file, CallerMeta meta)
     {
-        return new SequentialWriter(file, DEFAULT_BUFFER_SIZE, BufferType.ON_HEAP);
+        return new SequentialWriter(file, meta, DEFAULT_BUFFER_SIZE, BufferType.ON_HEAP);
     }
 
-    public static ChecksummedSequentialWriter open(File file, File crcPath)
+    public static ChecksummedSequentialWriter open(File file, File crcPath, CallerMeta meta)
     {
-        return new ChecksummedSequentialWriter(file, DEFAULT_BUFFER_SIZE, crcPath);
+        return new ChecksummedSequentialWriter(file, meta, DEFAULT_BUFFER_SIZE, crcPath);
     }
 
     public static CompressedSequentialWriter open(String dataFilePath,
                                                   String offsetsPath,
+                                                  CallerMeta meta,
                                                   CompressionParams parameters,
                                                   MetadataCollector sstableMetadataCollector)
     {
-        return new CompressedSequentialWriter(new File(dataFilePath), offsetsPath, parameters, sstableMetadataCollector);
+        return new CompressedSequentialWriter(new File(dataFilePath), meta, offsetsPath, parameters, sstableMetadataCollector);
     }
 
     public SequentialWriter finishOnClose()

@@ -92,7 +92,7 @@ public class CompressedSequentialWriterTest extends SequentialWriterTest
 
             byte[] dataPre = new byte[bytesToTest];
             byte[] rawPost = new byte[bytesToTest];
-            try (CompressedSequentialWriter writer = new CompressedSequentialWriter(f, filename + ".metadata", compressionParameters, sstableMetadataCollector);)
+            try (CompressedSequentialWriter writer = new CompressedSequentialWriter(f, null, filename + ".metadata", compressionParameters, sstableMetadataCollector);)
             {
                 Random r = new Random(42);
 
@@ -179,6 +179,7 @@ public class CompressedSequentialWriterTest extends SequentialWriterTest
         private TestableCSW(File file, File offsetsFile) throws IOException
         {
             this(file, offsetsFile, new CompressedSequentialWriter(file,
+                                                                   null,
                                                                    offsetsFile.getPath(),
                                                                    CompressionParams.lz4(BUFFER_SIZE),
                                                                    new MetadataCollector(new ClusteringComparator(UTF8Type.instance))));

@@ -38,6 +38,7 @@ import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.dht.Bounds;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
+import org.apache.cassandra.io.util.CallerMeta;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.Pair;
 
@@ -129,7 +130,8 @@ public class LeveledManifest
             // The add(..):ed sstable will be sent to level 0
             try
             {
-                reader.descriptor.getMetadataSerializer().mutateLevel(reader.descriptor, 0);
+                reader.descriptor.getMetadataSerializer().mutateLevel(reader.descriptor, 0,
+                                                                      CallerMeta.of("LM/add", null, null));
                 reader.reloadSSTableMetadata();
             }
             catch (IOException e)
@@ -228,7 +230,8 @@ public class LeveledManifest
         remove(sstable);
         try
         {
-            sstable.descriptor.getMetadataSerializer().mutateLevel(sstable.descriptor, 0);
+            sstable.descriptor.getMetadataSerializer().mutateLevel(sstable.descriptor, 0,
+                                                                   CallerMeta.of("LM/send-back-to-L0", null, null));
             sstable.reloadSSTableMetadata();
             add(sstable);
         }

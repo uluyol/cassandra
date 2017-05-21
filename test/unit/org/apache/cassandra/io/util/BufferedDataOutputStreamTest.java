@@ -84,20 +84,20 @@ public class BufferedDataOutputStreamTest
 
     };
 
-    BufferedDataOutputStreamPlus fakeStream = new BufferedDataOutputStreamPlus(adapter, 8);
+    BufferedDataOutputStreamPlus fakeStream = new BufferedDataOutputStreamPlus(adapter, null, 8);
 
     @SuppressWarnings("resource")
     @Test(expected = NullPointerException.class)
     public void testNullChannel()
     {
-        new BufferedDataOutputStreamPlus((WritableByteChannel)null, 8);
+        new BufferedDataOutputStreamPlus((WritableByteChannel)null, null, 8);
     }
 
     @SuppressWarnings("resource")
     @Test(expected = IllegalArgumentException.class)
     public void testTooSmallBuffer()
     {
-        new BufferedDataOutputStreamPlus(adapter, 7);
+        new BufferedDataOutputStreamPlus(adapter, null, 7);
     }
 
     @Test(expected = NullPointerException.class)
@@ -175,7 +175,7 @@ public class BufferedDataOutputStreamTest
         dosp = new WrappedDataOutputStreamPlus(canonical);
         if (ndosp != null)
             ndosp.close();
-        ndosp = new BufferedDataOutputStreamPlus(adapter, 4096);
+        ndosp = new BufferedDataOutputStreamPlus(adapter, null, 4096);
     }
 
     @Test

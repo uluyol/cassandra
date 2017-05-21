@@ -21,8 +21,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.cassandra.config.Config;
+import org.apache.cassandra.hists.NanoClock;
+import org.apache.cassandra.hists.OpLoggers;
 import org.apache.cassandra.utils.ByteBufferUtil;
 
 /**
@@ -34,20 +38,22 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 public abstract class DataOutputStreamPlus extends OutputStream implements DataOutputPlus
 {
     //Dummy wrapper channel for derived implementations that don't have a channel
-    protected final WritableByteChannel channel;
+    protected final WChan channel;
 
     protected DataOutputStreamPlus()
     {
-        this.channel = newDefaultChannel();
+        this.channel = WChan.wrap(newDefaultChannel(), null);
     }
 
-    protected DataOutputStreamPlus(WritableByteChannel channel)
+    protected DataOutputStreamPlus(WChan channel)
     {
         this.channel = channel;
     }
 
     private static int MAX_BUFFER_SIZE =
             Integer.getInteger(Config.PROPERTY_PREFIX + "data_output_stream_plus_temp_buffer_size", 8192);
+
+    public Optional<CallerMeta> getMeta() { return channel.callerMeta; }
 
     /*
      * Factored out into separate method to create more flexibility around inlining
@@ -132,4 +138,32 @@ public abstract class DataOutputStreamPlus extends OutputStream implements DataO
         };
     }
 
+    public static final class WChan implements WritableByteChannel {
+        public final Optional<CallerMeta> callerMeta;
+        public final WritableByteChannel wc;
+
+        private WChan(WritableByteChannel c, Optional<CallerMeta> meta) {
+            wc = c;
+            callerMeta = meta;
+        }
+
+        @Override
+        public void close() throws IOException { wc.close(); }
+        @Override
+        public boolean isOpen() { return wc.isOpen(); }
+        @Override
+        public int write(ByteBuffer b) throws IOException {
+            if (callerMeta.isPresent()) {
+                OpLoggers.writes().recordValue(Instant.now(NanoClock.instance), b.remaining(), CallerMeta.logAux(callerMeta));
+            }
+            return wc.write(b);
+        }
+
+        public static WChan wrap(WritableByteChannel c, CallerMeta meta) {
+            if (meta == null) {
+                return new WChan(c, Optional.empty());
+            }
+            return new WChan(c, Optional.of(meta));
+        }
+    }
 }

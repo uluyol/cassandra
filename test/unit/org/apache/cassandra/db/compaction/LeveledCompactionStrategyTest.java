@@ -269,7 +269,7 @@ public class LeveledCompactionStrategyTest
         {
             assertTrue(s.getSSTableLevel() != 6 && s.getSSTableLevel() > 0);
             strategy.manifest.remove(s);
-            s.descriptor.getMetadataSerializer().mutateLevel(s.descriptor, 6);
+            s.descriptor.getMetadataSerializer().mutateLevel(s.descriptor, 6, null);
             s.reloadSSTableMetadata();
             strategy.manifest.add(s);
         }
@@ -329,7 +329,7 @@ public class LeveledCompactionStrategyTest
         SSTableReader sstable1 = unrepaired.manifest.generations[2].get(0);
         SSTableReader sstable2 = unrepaired.manifest.generations[1].get(0);
 
-        sstable1.descriptor.getMetadataSerializer().mutateRepairedAt(sstable1.descriptor, System.currentTimeMillis());
+        sstable1.descriptor.getMetadataSerializer().mutateRepairedAt(sstable1.descriptor, System.currentTimeMillis(), null);
         sstable1.reloadSSTableMetadata();
         assertTrue(sstable1.isRepaired());
 

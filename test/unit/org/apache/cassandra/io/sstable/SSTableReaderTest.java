@@ -390,7 +390,7 @@ public class SSTableReaderTest
                  SegmentedFile.Builder dbuilder = SegmentedFile.getBuilder(DatabaseDescriptor.getDiskAccessMode(),
                                                                            sstable.compression))
             {
-                sstable.saveSummary(ibuilder, dbuilder);
+                sstable.saveSummary(ibuilder, dbuilder, null);
             }
             SSTableReader reopened = SSTableReader.open(sstable.descriptor);
             assert reopened.first.getToken() instanceof LocalToken;
@@ -522,7 +522,7 @@ public class SSTableReaderTest
         SSTableReader replacement;
         try (LifecycleTransaction txn = store.getTracker().tryModify(Arrays.asList(sstable), OperationType.UNKNOWN))
         {
-            replacement = sstable.cloneWithNewSummarySamplingLevel(store, 1);
+            replacement = sstable.cloneWithNewSummarySamplingLevel(store, 1, null);
             txn.update(replacement, true);
             txn.finish();
         }

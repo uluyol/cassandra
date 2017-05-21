@@ -86,6 +86,6 @@ public class AbstractSerializationsTester
     {
         File f = new File("test/data/serialization/" + version + '/' + name);
         f.getParentFile().mkdirs();
-        return new BufferedDataOutputStreamPlus(new FileOutputStream(f).getChannel());
+        return new BufferedDataOutputStreamPlus(new FileOutputStream(f).getChannel(), null);
     }
 }

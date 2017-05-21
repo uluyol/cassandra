@@ -531,7 +531,7 @@ public class IndexSummaryManagerTest
         {
             for (int samplingLevel = 1; samplingLevel < BASE_SAMPLING_LEVEL; samplingLevel++)
             {
-                sstable = sstable.cloneWithNewSummarySamplingLevel(cfs, samplingLevel);
+                sstable = sstable.cloneWithNewSummarySamplingLevel(cfs, samplingLevel, null);
                 assertEquals(samplingLevel, sstable.getIndexSummarySamplingLevel());
                 int expectedSize = (numRows * samplingLevel) / (sstable.metadata.params.minIndexInterval * BASE_SAMPLING_LEVEL);
                 assertEquals(expectedSize, sstable.getIndexSummarySize(), 1);

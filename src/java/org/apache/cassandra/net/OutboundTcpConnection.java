@@ -418,7 +418,7 @@ public class OutboundTcpConnection extends Thread
 
                 // SocketChannel may be null when using SSL
                 WritableByteChannel ch = socket.getChannel();
-                out = new BufferedDataOutputStreamPlus(ch != null ? ch : Channels.newChannel(socket.getOutputStream()), BUFFER_SIZE);
+                out = new BufferedDataOutputStreamPlus(ch != null ? ch : Channels.newChannel(socket.getOutputStream()), null, BUFFER_SIZE);
 
                 out.writeInt(MessagingService.PROTOCOL_MAGIC);
                 writeHeader(out, targetVersion, shouldCompressConnection());

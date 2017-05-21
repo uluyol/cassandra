@@ -26,6 +26,7 @@ import org.apache.cassandra.io.sstable.Component;
 import org.apache.cassandra.io.sstable.CorruptSSTableException;
 import org.apache.cassandra.io.sstable.SSTableIdentityIterator;
 import org.apache.cassandra.io.sstable.format.SSTableReader;
+import org.apache.cassandra.io.util.CallerMeta;
 import org.apache.cassandra.io.util.DataIntegrityMetadata;
 import org.apache.cassandra.io.util.DataIntegrityMetadata.FileDigestValidator;
 import org.apache.cassandra.io.util.FileUtils;
@@ -234,7 +235,12 @@ public class Verifier implements Closeable
 
     private void markAndThrow() throws IOException
     {
-        sstable.descriptor.getMetadataSerializer().mutateRepairedAt(sstable.descriptor, ActiveRepairService.UNREPAIRED_SSTABLE);
+        sstable.descriptor.getMetadataSerializer().mutateRepairedAt(
+                sstable.descriptor,
+                ActiveRepairService.UNREPAIRED_SSTABLE,
+                CallerMeta.of("Verifier/mark-throw",
+                              verifyInfo.getCompactionInfo().getTaskType(),
+                              verifyInfo.getCompactionInfo().compactionId()));
         throw new CorruptSSTableException(new Exception(String.format("Invalid SSTable %s, please force repair", sstable.getFilename())), sstable.getFilename());
     }
 
