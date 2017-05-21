@@ -23,8 +23,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.cassandra.config.Config;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.hists.NanoClock;
 import org.apache.cassandra.hists.OpLoggers;
 import org.apache.cassandra.utils.ByteBufferUtil;
@@ -53,7 +55,7 @@ public abstract class DataOutputStreamPlus extends OutputStream implements DataO
     private static int MAX_BUFFER_SIZE =
             Integer.getInteger(Config.PROPERTY_PREFIX + "data_output_stream_plus_temp_buffer_size", 8192);
 
-    public Optional<CallerMeta> getMeta() { return channel.callerMeta; }
+    public Optional<CallerMeta> getMeta() { return Optional.ofNullable(channel.callerMeta); }
 
     /*
      * Factored out into separate method to create more flexibility around inlining
@@ -139,10 +141,12 @@ public abstract class DataOutputStreamPlus extends OutputStream implements DataO
     }
 
     public static final class WChan implements WritableByteChannel {
-        public final Optional<CallerMeta> callerMeta;
+        public final CallerMeta callerMeta;
         public final WritableByteChannel wc;
 
-        private WChan(WritableByteChannel c, Optional<CallerMeta> meta) {
+        private final AtomicLong nops = new AtomicLong(0);
+
+        private WChan(WritableByteChannel c, CallerMeta meta) {
             wc = c;
             callerMeta = meta;
         }
@@ -153,17 +157,22 @@ public abstract class DataOutputStreamPlus extends OutputStream implements DataO
         public boolean isOpen() { return wc.isOpen(); }
         @Override
         public int write(ByteBuffer b) throws IOException {
-            if (callerMeta.isPresent()) {
+            if (callerMeta != null && shouldLog(b.remaining())) {
                 OpLoggers.writes().recordValue(Instant.now(NanoClock.instance), b.remaining(), CallerMeta.logAux(callerMeta));
             }
             return wc.write(b);
         }
 
         public static WChan wrap(WritableByteChannel c, CallerMeta meta) {
-            if (meta == null) {
-                return new WChan(c, Optional.empty());
+            return new WChan(c, meta);
+        }
+
+        private boolean shouldLog(int bufSize) {
+            long nops = this.nops.getAndIncrement();
+            if (bufSize >= DatabaseDescriptor.logWriteSampleThresh()) {
+                return true;
             }
-            return new WChan(c, Optional.of(meta));
+            return nops % DatabaseDescriptor.logWriteSamplePeriod() == 0;
         }
     }
 }

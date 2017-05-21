@@ -66,9 +66,9 @@ public final class CallerMeta {
         return of(source, opType, compactionId);
     }
 
-    public static String logAux(Optional<CallerMeta> meta) {
-        if (meta.isPresent()) {
-            return meta.get().logAux;
+    public static String logAux(CallerMeta meta) {
+        if (meta != null) {
+            return meta.logAux;
         }
         return "";
     }

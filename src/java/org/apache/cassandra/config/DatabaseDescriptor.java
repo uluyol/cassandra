@@ -1199,6 +1199,8 @@ public class DatabaseDescriptor
     }
 
     public static boolean logWriteOps() { return conf.enable_log_write_ops; }
+    public static long logWriteSamplePeriod() { return conf.log_write_sample_period; }
+    public static int logWriteSampleThresh() { return conf.log_write_sample_thresh_bytes; }
 
     public static String compactionControllerKind() { return conf.compaction_controller_kind; }
     public static double compactionControllerStepSizeMBPS() { return conf.compaction_controller_step_size_mbps; }
