@@ -79,7 +79,7 @@ public final class CompactionCoordinatorService {
             return;
         }
         instance = new CompactionCoordinatorService(DatabaseDescriptor.compactionCoordinator());
-        String ip = DatabaseDescriptor.getBroadcastAddress().toString();
+        String ip = DatabaseDescriptor.getBroadcastAddress().getHostAddress();
         instance.blockingStub.register(
                 Coordination.RegisterReq.newBuilder()
                                         .setServerIp(ip)
@@ -90,7 +90,7 @@ public final class CompactionCoordinatorService {
 
     private void startWatchThread() {
         new Thread(() -> {
-            String ip = DatabaseDescriptor.getBroadcastAddress().toString();
+            String ip = DatabaseDescriptor.getBroadcastAddress().getHostAddress();
             Coordination.WatchReq req = Coordination.WatchReq.newBuilder().setServerIp(ip).build();
 
             while (true) {
@@ -127,7 +127,7 @@ public final class CompactionCoordinatorService {
     }
 
     private void loopReregister() {
-        String ip = DatabaseDescriptor.getBroadcastAddress().toString();
+        String ip = DatabaseDescriptor.getBroadcastAddress().getHostAddress();
         boolean success = false;
         while (!success)
         {
@@ -185,7 +185,7 @@ public final class CompactionCoordinatorService {
     private void startUpdateThread() {
         if (SystemUtils.IS_OS_LINUX) {
             new Thread(() -> {
-                String ip = DatabaseDescriptor.getBroadcastAddress().toString();
+                String ip = DatabaseDescriptor.getBroadcastAddress().getHostAddress();
                 Set<String> devNames = new HashSet<String>();
                 for (String p : DatabaseDescriptor.getAllDataFileLocations()) {
                     String out;
