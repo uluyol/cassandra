@@ -187,7 +187,6 @@ public class CassandraDaemon
 
         maybeInitJmx();
 
-        CompactionCoordinatorService.init();
         CompactionController.init();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
@@ -382,6 +381,7 @@ public class CassandraDaemon
         nativeTransportService = new NativeTransportService();
 
         completeSetup();
+        CompactionCoordinatorService.init();
     }
 
     /*
