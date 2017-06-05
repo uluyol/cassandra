@@ -1198,6 +1198,8 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static String compactionCoordinator() { return conf.compaction_coordinator; }
+
     public static boolean logWriteOps() { return conf.enable_log_write_ops; }
     public static long logWriteSamplePeriod() { return conf.log_write_sample_period; }
     public static int logWriteSampleThresh() { return conf.log_write_sample_thresh_bytes; }

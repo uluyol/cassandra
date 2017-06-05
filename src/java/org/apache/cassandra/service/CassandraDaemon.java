@@ -187,6 +187,7 @@ public class CassandraDaemon
 
         maybeInitJmx();
 
+        CompactionCoordinatorService.init();
         CompactionController.init();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()

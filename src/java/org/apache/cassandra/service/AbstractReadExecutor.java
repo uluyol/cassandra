@@ -21,8 +21,10 @@ import java.net.InetAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,6 +176,10 @@ public abstract class AbstractReadExecutor
         ColumnFamilyStore cfs = keyspace.getColumnFamilyStore(command.metadata().cfId);
         SpeculativeRetryParam retry = cfs.metadata.params.speculativeRetry;
 
+        if (!DatabaseDescriptor.compactionCoordinator().equals("")) {
+            return new ProportionalReadExecutor(meta, keyspace, command, consistencyLevel, allReplicas);
+        }
+
         if (DatabaseDescriptor.useHedgedRequests()) {
             return new HedgedReadExecutor(meta, keyspace, command, consistencyLevel, allReplicas);
         }
@@ -313,7 +319,11 @@ public abstract class AbstractReadExecutor
     }
 
     private static class HedgedReadExecutor extends AbstractReadExecutor {
-        HedgedReadExecutor(Optional<MessageIn.MessageMeta> meta, Keyspace ks, ReadCommand cmd, ConsistencyLevel level, List<InetAddress> replicas) {
+        HedgedReadExecutor(Optional<MessageIn.MessageMeta> meta,
+                           Keyspace ks,
+                           ReadCommand cmd,
+                           ConsistencyLevel level,
+                           List<InetAddress> replicas) {
             super(meta, ks, cmd, level, replicas);
         }
 
@@ -327,6 +337,50 @@ public abstract class AbstractReadExecutor
             makeDataRequests(targetReplicas);
         }
 
+    }
+
+    private static class ProportionalReadExecutor extends AbstractReadExecutor {
+        final ImmutableList<InetAddress> selected;
+
+        ProportionalReadExecutor(Optional<MessageIn.MessageMeta> meta,
+                                 Keyspace ks,
+                                 ReadCommand cmd,
+                                 ConsistencyLevel level,
+                                 List<InetAddress> replicas) {
+            super(meta, ks, cmd, level, replicas);
+            // currently don't handle any other consistency levels
+            assert level == ConsistencyLevel.ONE || level == ConsistencyLevel.ANY || level == ConsistencyLevel.LOCAL_ONE;
+            float[] weights = ReplicaSetWeightMap.current.weightsFor(replicas);
+            InetAddress choice = null;
+            float target = 0;
+            if (weights == null) {
+                choice = replicas.get(0);
+            } else {
+                target = ThreadLocalRandom.current().nextFloat();
+                float accum = 0;
+                for (int i = 0; i < weights.length; i++) {
+                    accum += weights[i];
+                    if (target <= accum) {
+                        choice = replicas.get(i);
+                        break;
+                    }
+                }
+            }
+            if (choice == null) {
+                logger.warn("Was not able to choose based on proportions depite weights present: weights: %s, target: %f", weights.toString(), target);
+                choice = replicas.get(0);
+            }
+            selected = ImmutableList.of(choice);
+        }
+
+        @Override
+        public void maybeTryAdditionalReplicas() {}
+
+        @Override
+        public Collection<InetAddress> getContactedReplicas() { return selected; }
+
+        @Override
+        public void executeAsync() { makeDataRequests(selected); }
     }
 
     private static class AlwaysSpeculatingReadExecutor extends AbstractReadExecutor

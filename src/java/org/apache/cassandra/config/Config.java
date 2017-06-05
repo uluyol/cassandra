@@ -37,6 +37,8 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
+    public String compaction_coordinator = "";
+
     public boolean enable_log_write_ops = false;
     public long log_write_sample_period = 100;
     public int log_write_sample_thresh_bytes = 1024*1024;
