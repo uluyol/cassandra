@@ -55,6 +55,7 @@ public final class ReplicaSetWeightMap {
                 try {
                     sw.clear();
                     for (Coordination.ReplicaSetWeights pws : rsWeights) {
+                        addrs.clear();
                         for (int i = 0; i < pws.getHostIpsCount(); i++) {
                             addrs.add(InetAddress.getByName(pws.getHostIps(i)));
                         }
@@ -114,6 +115,8 @@ public final class ReplicaSetWeightMap {
             }
         }
 
+        // put adds the kv-pair. The addrs ands weights lists are copied so the
+        // originals are safe for reuse.
         void put(List<InetAddress> addrs, List<Float> weights) {
             assert addrs.size() == weights.size();
             grow();
@@ -124,6 +127,8 @@ public final class ReplicaSetWeightMap {
             }
         }
 
+        // put adds the kv-pair. The addrs ands weights lists are copied so the
+        // originals are safe for reuse.
         void put(List<InetAddress> addrs, float[] weights) {
             assert addrs.size() == weights.length;
             grow();
