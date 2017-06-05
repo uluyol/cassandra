@@ -20,6 +20,7 @@ package org.apache.cassandra.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -33,17 +34,17 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.apache.cassandra.compactlb.Coordination;
 import org.apache.cassandra.compactlb.CoordinatorGrpc;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
@@ -211,7 +212,7 @@ public final class CompactionCoordinatorService {
                             continue;
                         }
                     }
-                    String name = FilenameUtils.getBaseName(devPath);
+                    String name = Paths.get(devPath).getFileName().toString();
                     if (!Files.exists(Paths.get("/sys/block", name))) {
                         name = name.replaceAll("[0-9]*$", ""); // remove trailing numbers for sdXN -> sdX
                     }
@@ -272,8 +273,8 @@ public final class CompactionCoordinatorService {
         Process proc = rt.exec(cmd);
         InputStream outSt = proc.getInputStream();
         InputStream errSt = proc.getErrorStream();
-        String out = IOUtils.toString(outSt, "utf-8");
-        String err = IOUtils.toString(errSt, "utf-8");
+        String out = CharStreams.toString(new InputStreamReader(outSt, Charsets.UTF_8));
+        String err = CharStreams.toString(new InputStreamReader(errSt, Charsets.UTF_8));
         proc.waitFor();
         if (proc.exitValue() != 0) {
             throw new Exception("Command failed: " + cmd[0] + ": " + err);
