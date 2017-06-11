@@ -217,7 +217,7 @@ public final class CompactionCoordinatorService {
                         name = name.replaceAll("[0-9]*$", ""); // remove trailing numbers for sdXN -> sdX
                     }
                     if (!Files.exists(Paths.get("/sys/block", name))) {
-                        logger.warn("Unable to get stats for %s", p);
+                        logger.warn("Unable to get stats for " + p);
                         continue;
                     }
                     devNames.add(name);

@@ -28,6 +28,7 @@ import org.apache.cassandra.exceptions.WriteTimeoutException;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.io.util.FastByteArrayInputStream;
 import org.apache.cassandra.net.*;
+import org.apache.cassandra.service.StorageProxy;
 import org.apache.cassandra.tracing.Tracing;
 
 public class MutationVerbHandler implements IVerbHandler<Mutation>
@@ -45,7 +46,9 @@ public class MutationVerbHandler implements IVerbHandler<Mutation>
 
     public void doVerb(MessageIn<Mutation> message, int id)  throws IOException
     {
-        message.meta.setHist(Hists.writes);
+        if (StorageProxy.shouldRecordLatency(message.payload.getKeyspaceName())) {
+            message.meta.setHist(Hists.writes);
+        }
         // Check if there were any forwarding headers in this message
         byte[] from = message.parameters.get(Mutation.FORWARD_FROM);
         InetAddress replyTo;

@@ -45,6 +45,17 @@ public final class ReplicaSetWeightMap {
         shadowWeights = new WeightMap(100);
     }
 
+    public boolean isEmpty() {
+        WeightMap map = weights;
+        Lock rlock = map.lock.readLock();
+        rlock.lock();
+        try {
+            return map.isEmpty();
+        } finally {
+            rlock.unlock();
+        }
+    }
+
     public void update(List<Coordination.ReplicaSetWeights> rsWeights) throws UnknownHostException {
         List<InetAddress> addrs = Lists.newArrayListWithExpectedSize(5);
         try {
@@ -95,6 +106,10 @@ public final class ReplicaSetWeightMap {
             buckets = new PWListList[initialBuckets];
             initBuckets(buckets);
             load = 0;
+        }
+
+        public boolean isEmpty() {
+            return load == 0;
         }
 
         private void grow() {

@@ -176,7 +176,7 @@ public abstract class AbstractReadExecutor
         ColumnFamilyStore cfs = keyspace.getColumnFamilyStore(command.metadata().cfId);
         SpeculativeRetryParam retry = cfs.metadata.params.speculativeRetry;
 
-        if (!DatabaseDescriptor.compactionCoordinator().equals("")) {
+        if (!DatabaseDescriptor.compactionCoordinator().equals("") && !ReplicaSetWeightMap.current.isEmpty()) {
             return new ProportionalReadExecutor(meta, keyspace, command, consistencyLevel, allReplicas);
         }
 

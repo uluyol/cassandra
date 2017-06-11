@@ -26,6 +26,7 @@ import org.apache.cassandra.net.IVerbHandler;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.service.StorageProxy;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.tracing.Tracing;
 
@@ -47,7 +48,9 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         command.setMonitoringTime(message.constructionTime, message.getTimeout());
 
         ReadResponse response;
-        message.meta.setHist(Hists.reads);
+        if (StorageProxy.shouldRecordLatency(command.metadata().ksName)) {
+            message.meta.setHist(Hists.reads);
+        }
         try (ReadExecutionController executionController = command.executionController();
              UnfilteredPartitionIterator iterator = command.executeLocally(executionController))
         {

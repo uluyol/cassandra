@@ -1805,7 +1805,7 @@ public class StorageProxy implements StorageProxyMBean
                 }
 
                 MessagingService.instance().addLatency(FBUtilities.getBroadcastAddress(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
-                if (meta.isPresent()) {
+                if (meta.isPresent() && shouldRecordLatency(command.metadata().ksName)) {
                     meta.get().setHist(Hists.reads);
                 }
             }
@@ -1818,6 +1818,14 @@ public class StorageProxy implements StorageProxyMBean
                     throw t;
             }
         }
+    }
+
+    public static boolean shouldRecordLatency(String ks) {
+        String mks = DatabaseDescriptor.monitorKeyspace();
+        if (mks == null || mks.equals("")) {
+            return true;
+        }
+        return mks.equals(ks);
     }
 
     public static List<InetAddress> getLiveSortedEndpoints(Keyspace keyspace, ByteBuffer key)

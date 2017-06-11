@@ -37,6 +37,7 @@ public class Config
      */
     public static final String PROPERTY_PREFIX = "cassandra.";
 
+    public String monitor_keyspace = "";
     public String compaction_coordinator = "";
 
     public boolean enable_log_write_ops = false;

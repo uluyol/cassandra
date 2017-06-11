@@ -1198,6 +1198,7 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static String monitorKeyspace() { return conf.monitor_keyspace; }
     public static String compactionCoordinator() { return conf.compaction_coordinator; }
 
     public static boolean logWriteOps() { return conf.enable_log_write_ops; }
