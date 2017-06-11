@@ -207,11 +207,11 @@ public final class Hists
             Instant now = Instant.now(NanoClock.instance);
             Duration diff = Duration.between(lastLog, now);
             lastLog = now;
-            //logger.info(String.format(
-            //    "%s: last %d seconds: %d recorded p50: %d p95: %d p99: %d us", name, diff.getSeconds(), hist.getTotalCount(),
-            //    hist.getValueAtPercentile(50),
-            //    hist.getValueAtPercentile(95),
-            //    hist.getValueAtPercentile(99)));
+            logger.info(String.format(
+                "%s: last %d seconds: %d recorded p50: %d p95: %d p99: %d us", name, diff.getSeconds(), hist.getTotalCount(),
+                hist.getValueAtPercentile(50),
+                hist.getValueAtPercentile(95),
+                hist.getValueAtPercentile(99)));
             writer.outputIntervalHistogram(hist);
             try {
                 ps.flush();

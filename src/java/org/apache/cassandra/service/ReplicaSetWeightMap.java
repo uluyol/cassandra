@@ -37,23 +37,18 @@ public final class ReplicaSetWeightMap {
     public final static ReplicaSetWeightMap current = new ReplicaSetWeightMap();
 
     private final Object weightsWriteLock = new Object();
+    private volatile boolean hasWeights;
     private volatile WeightMap weights;
     private volatile WeightMap shadowWeights;
 
     private ReplicaSetWeightMap() {
+        hasWeights = false;
         weights = new WeightMap(100);
         shadowWeights = new WeightMap(100);
     }
 
     public boolean isEmpty() {
-        WeightMap map = weights;
-        Lock rlock = map.lock.readLock();
-        rlock.lock();
-        try {
-            return map.isEmpty();
-        } finally {
-            rlock.unlock();
-        }
+        return !hasWeights;
     }
 
     public void update(List<Coordination.ReplicaSetWeights> rsWeights) throws UnknownHostException {
@@ -76,6 +71,7 @@ public final class ReplicaSetWeightMap {
                     wlock.unlock();
                 }
                 WeightMap w = weights;
+                hasWeights = !sw.isEmpty();
                 weights = sw;
                 shadowWeights = w;
             }

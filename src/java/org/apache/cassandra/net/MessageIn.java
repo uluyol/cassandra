@@ -174,8 +174,7 @@ public class MessageIn<T>
     public static class MessageMeta {
         private final Instant reqStart;
 
-        private final Object histLock = new Object();
-        private Hists hist;
+        private volatile Hists hist = null;
 
         private MessageMeta(Instant start) { reqStart = start; }
         public static MessageMeta create(Instant start) { return new MessageMeta(start); }
@@ -183,11 +182,11 @@ public class MessageIn<T>
         public Instant getStart() { return reqStart; }
 
         public Hists getHist() {
-            synchronized (histLock) { return hist; }
+            return hist;
         }
 
         public void setHist(Hists hist) {
-            synchronized (histLock) { this.hist = hist; }
+            this.hist = hist;
         }
     }
 }
