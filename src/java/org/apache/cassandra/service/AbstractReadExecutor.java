@@ -42,6 +42,7 @@ import org.apache.cassandra.db.partitions.PartitionIterator;
 import org.apache.cassandra.exceptions.ReadFailureException;
 import org.apache.cassandra.exceptions.ReadTimeoutException;
 import org.apache.cassandra.exceptions.UnavailableException;
+import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.metrics.ReadRepairMetrics;
 import org.apache.cassandra.net.MessageIn;
 import org.apache.cassandra.net.MessageOut;
@@ -124,6 +125,10 @@ public abstract class AbstractReadExecutor
         {
             logger.trace("reading {} locally", readCommand.isDigestQuery() ? "digest" : "data");
             StageManager.getStage(Stage.READ).maybeExecuteImmediately(new LocalReadRunnable(meta, command, handler));
+        } else {
+            if (!DatabaseDescriptor.recordWorkerTimes() && meta.isPresent() && StorageProxy.shouldRecordLatency(command.metadata().ksName)) {
+                meta.get().setHist(Hists.reads);
+            }
         }
     }
 

@@ -19,6 +19,7 @@ package org.apache.cassandra.db;
 
 import java.util.Optional;
 
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.partitions.UnfilteredPartitionIterator;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.io.IVersionedSerializer;
@@ -48,7 +49,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         command.setMonitoringTime(message.constructionTime, message.getTimeout());
 
         ReadResponse response;
-        if (StorageProxy.shouldRecordLatency(command.metadata().ksName)) {
+        if (DatabaseDescriptor.recordWorkerTimes() && StorageProxy.shouldRecordLatency(command.metadata().ksName)) {
             message.meta.setHist(Hists.reads);
         }
         try (ReadExecutionController executionController = command.executionController();

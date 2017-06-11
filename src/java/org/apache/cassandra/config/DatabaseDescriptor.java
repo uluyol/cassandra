@@ -1198,6 +1198,7 @@ public class DatabaseDescriptor
         conf.inter_dc_stream_throughput_outbound_megabits_per_sec = value;
     }
 
+    public static boolean recordWorkerTimes() { return conf.record_worker_times; }
     public static String monitorKeyspace() { return conf.monitor_keyspace; }
     public static String compactionCoordinator() { return conf.compaction_coordinator; }
 

@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.apache.cassandra.batchlog.LegacyBatchlogMigrator;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.exceptions.WriteTimeoutException;
 import org.apache.cassandra.hists.Hists;
 import org.apache.cassandra.io.util.FastByteArrayInputStream;
@@ -46,7 +47,7 @@ public class MutationVerbHandler implements IVerbHandler<Mutation>
 
     public void doVerb(MessageIn<Mutation> message, int id)  throws IOException
     {
-        if (StorageProxy.shouldRecordLatency(message.payload.getKeyspaceName())) {
+        if (DatabaseDescriptor.recordWorkerTimes() && StorageProxy.shouldRecordLatency(message.payload.getKeyspaceName())) {
             message.meta.setHist(Hists.writes);
         }
         // Check if there were any forwarding headers in this message
