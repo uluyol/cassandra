@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.log4j.Logger;
 
 import org.apache.cassandra.config.DatabaseDescriptor;
@@ -45,6 +46,7 @@ public abstract class CompactionController {
 
     public static CompactionController instance = new DummyCompactionController();
 
+    public abstract void setCurRate(double rateMbps);
     public abstract double getCurRate();
     public abstract void setPercentile(double pct);
     public abstract void setReference(double pct);
@@ -84,8 +86,19 @@ public abstract class CompactionController {
     }
 
     private static final class DummyCompactionController extends CompactionController {
+        private final AtomicDouble curRateMbps = new AtomicDouble(-1);
+
+        @Override
+        public void setCurRate(double rateMbps) {
+            curRateMbps.set(rateMbps);
+        }
+
         @Override
         public double getCurRate() {
+            double crate = curRateMbps.get();
+            if (crate >= 0) {
+                return crate;
+            }
             int tput = DatabaseDescriptor.getCompactionThroughputMbPerSec();
             if (tput == 0) {
                 return Double.MAX_VALUE;
@@ -114,6 +127,11 @@ public abstract class CompactionController {
                 return Double.MAX_VALUE;
             }
             return tput;
+        }
+
+        @Override
+        public void setCurRate(double rateMbps) {
+            logger.warn("Call to setCurRate in node controller");
         }
 
         @Override
@@ -341,6 +359,11 @@ public abstract class CompactionController {
                     } catch (Throwable e) {}
                 }
             }).start();
+        }
+
+        @Override
+        public void setCurRate(double rateMbps) {
+            logger.warn("call to setCurRate in pending-based node controller");
         }
 
         @Override

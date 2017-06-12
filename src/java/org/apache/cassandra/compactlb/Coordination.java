@@ -1052,6 +1052,16 @@ public final class Coordination {
      */
     org.apache.cassandra.compactlb.Coordination.ReplicaSetWeightsOrBuilder getReplicaSetWeightsOrBuilder(
         int index);
+
+    /**
+     * <code>optional bool has_compaction_rate_hint = 3;</code>
+     */
+    boolean getHasCompactionRateHint();
+
+    /**
+     * <code>optional double compaction_rate_hint = 4;</code>
+     */
+    double getCompactionRateHint();
   }
   /**
    * Protobuf type {@code compaction.WatchResp}
@@ -1067,6 +1077,8 @@ public final class Coordination {
     private WatchResp() {
       sendReplicaSets_ = false;
       replicaSetWeights_ = java.util.Collections.emptyList();
+      hasCompactionRateHint_ = false;
+      compactionRateHint_ = 0D;
     }
 
     @java.lang.Override
@@ -1106,6 +1118,16 @@ public final class Coordination {
               }
               replicaSetWeights_.add(
                   input.readMessage(org.apache.cassandra.compactlb.Coordination.ReplicaSetWeights.parser(), extensionRegistry));
+              break;
+            }
+            case 24: {
+
+              hasCompactionRateHint_ = input.readBool();
+              break;
+            }
+            case 33: {
+
+              compactionRateHint_ = input.readDouble();
               break;
             }
           }
@@ -1179,6 +1201,24 @@ public final class Coordination {
       return replicaSetWeights_.get(index);
     }
 
+    public static final int HAS_COMPACTION_RATE_HINT_FIELD_NUMBER = 3;
+    private boolean hasCompactionRateHint_;
+    /**
+     * <code>optional bool has_compaction_rate_hint = 3;</code>
+     */
+    public boolean getHasCompactionRateHint() {
+      return hasCompactionRateHint_;
+    }
+
+    public static final int COMPACTION_RATE_HINT_FIELD_NUMBER = 4;
+    private double compactionRateHint_;
+    /**
+     * <code>optional double compaction_rate_hint = 4;</code>
+     */
+    public double getCompactionRateHint() {
+      return compactionRateHint_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1197,6 +1237,12 @@ public final class Coordination {
       for (int i = 0; i < replicaSetWeights_.size(); i++) {
         output.writeMessage(2, replicaSetWeights_.get(i));
       }
+      if (hasCompactionRateHint_ != false) {
+        output.writeBool(3, hasCompactionRateHint_);
+      }
+      if (compactionRateHint_ != 0D) {
+        output.writeDouble(4, compactionRateHint_);
+      }
     }
 
     public int getSerializedSize() {
@@ -1211,6 +1257,14 @@ public final class Coordination {
       for (int i = 0; i < replicaSetWeights_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, replicaSetWeights_.get(i));
+      }
+      if (hasCompactionRateHint_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, hasCompactionRateHint_);
+      }
+      if (compactionRateHint_ != 0D) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(4, compactionRateHint_);
       }
       memoizedSize = size;
       return size;
@@ -1232,6 +1286,12 @@ public final class Coordination {
           == other.getSendReplicaSets());
       result = result && getReplicaSetWeightsList()
           .equals(other.getReplicaSetWeightsList());
+      result = result && (getHasCompactionRateHint()
+          == other.getHasCompactionRateHint());
+      result = result && (
+          java.lang.Double.doubleToLongBits(getCompactionRateHint())
+          == java.lang.Double.doubleToLongBits(
+              other.getCompactionRateHint()));
       return result;
     }
 
@@ -1249,6 +1309,12 @@ public final class Coordination {
         hash = (37 * hash) + REPLICA_SET_WEIGHTS_FIELD_NUMBER;
         hash = (53 * hash) + getReplicaSetWeightsList().hashCode();
       }
+      hash = (37 * hash) + HAS_COMPACTION_RATE_HINT_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getHasCompactionRateHint());
+      hash = (37 * hash) + COMPACTION_RATE_HINT_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          java.lang.Double.doubleToLongBits(getCompactionRateHint()));
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1376,6 +1442,10 @@ public final class Coordination {
         } else {
           replicaSetWeightsBuilder_.clear();
         }
+        hasCompactionRateHint_ = false;
+
+        compactionRateHint_ = 0D;
+
         return this;
       }
 
@@ -1410,6 +1480,8 @@ public final class Coordination {
         } else {
           result.replicaSetWeights_ = replicaSetWeightsBuilder_.build();
         }
+        result.hasCompactionRateHint_ = hasCompactionRateHint_;
+        result.compactionRateHint_ = compactionRateHint_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1480,6 +1552,12 @@ public final class Coordination {
               replicaSetWeightsBuilder_.addAllMessages(other.replicaSetWeights_);
             }
           }
+        }
+        if (other.getHasCompactionRateHint() != false) {
+          setHasCompactionRateHint(other.getHasCompactionRateHint());
+        }
+        if (other.getCompactionRateHint() != 0D) {
+          setCompactionRateHint(other.getCompactionRateHint());
         }
         onChanged();
         return this;
@@ -1772,6 +1850,58 @@ public final class Coordination {
           replicaSetWeights_ = null;
         }
         return replicaSetWeightsBuilder_;
+      }
+
+      private boolean hasCompactionRateHint_ ;
+      /**
+       * <code>optional bool has_compaction_rate_hint = 3;</code>
+       */
+      public boolean getHasCompactionRateHint() {
+        return hasCompactionRateHint_;
+      }
+      /**
+       * <code>optional bool has_compaction_rate_hint = 3;</code>
+       */
+      public Builder setHasCompactionRateHint(boolean value) {
+        
+        hasCompactionRateHint_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool has_compaction_rate_hint = 3;</code>
+       */
+      public Builder clearHasCompactionRateHint() {
+        
+        hasCompactionRateHint_ = false;
+        onChanged();
+        return this;
+      }
+
+      private double compactionRateHint_ ;
+      /**
+       * <code>optional double compaction_rate_hint = 4;</code>
+       */
+      public double getCompactionRateHint() {
+        return compactionRateHint_;
+      }
+      /**
+       * <code>optional double compaction_rate_hint = 4;</code>
+       */
+      public Builder setCompactionRateHint(double value) {
+        
+        compactionRateHint_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double compaction_rate_hint = 4;</code>
+       */
+      public Builder clearCompactionRateHint() {
+        
+        compactionRateHint_ = 0D;
+        onChanged();
+        return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -6141,26 +6271,28 @@ public final class Coordination {
     java.lang.String[] descriptorData = {
       "\n\020compaction.proto\022\ncompaction\" \n\013Regist" +
       "erReq\022\021\n\tserver_ip\030\001 \001(\t\"\035\n\010WatchReq\022\021\n\t" +
-      "server_ip\030\001 \001(\t\"b\n\tWatchResp\022\031\n\021send_rep" +
-      "lica_sets\030\001 \001(\010\022:\n\023replica_set_weights\030\002" +
-      " \003(\0132\035.compaction.ReplicaSetWeights\"\272\001\n\t" +
-      "UpdateReq\022\021\n\tserver_ip\030\001 \001(\t\022,\n\014replica_" +
-      "sets\030\002 \003(\0132\026.compaction.ReplicaSet\022%\n\010io" +
-      "_stats\030\003 \001(\0132\023.compaction.IOStats\022\023\n\013num" +
-      "_pending\030\004 \001(\005\0220\n\013compactions\030\005 \003(\0132\033.co" +
-      "mpaction.CompactionStats\"W\n\007IOStats\022\020\n\010r",
-      "ead_ios\030\001 \001(\003\022\022\n\nread_bytes\030\002 \001(\003\022\021\n\twri" +
-      "te_ios\030\003 \001(\003\022\023\n\013write_bytes\030\004 \001(\003\"\036\n\nRep" +
-      "licaSet\022\020\n\010host_ips\030\001 \003(\t\"6\n\021ReplicaSetW" +
-      "eights\022\020\n\010host_ips\030\001 \003(\t\022\017\n\007weights\030\002 \003(" +
-      "\002\"=\n\017CompactionStats\022\024\n\014input_zbytes\030\001 \001" +
-      "(\003\022\024\n\014input_ubytes\030\002 \001(\003\"\007\n\005Empty2\261\001\n\013Co" +
-      "ordinator\0226\n\010Register\022\027.compaction.Regis" +
-      "terReq\032\021.compaction.Empty\0226\n\005Watch\022\024.com" +
-      "paction.WatchReq\032\025.compaction.WatchResp0" +
-      "\001\0222\n\006Update\022\025.compaction.UpdateReq\032\021.com",
-      "paction.EmptyB.\n\036org.apache.cassandra.co" +
-      "mpactlbB\014Coordinationb\006proto3"
+      "server_ip\030\001 \001(\t\"\242\001\n\tWatchResp\022\031\n\021send_re" +
+      "plica_sets\030\001 \001(\010\022:\n\023replica_set_weights\030" +
+      "\002 \003(\0132\035.compaction.ReplicaSetWeights\022 \n\030" +
+      "has_compaction_rate_hint\030\003 \001(\010\022\034\n\024compac" +
+      "tion_rate_hint\030\004 \001(\001\"\272\001\n\tUpdateReq\022\021\n\tse" +
+      "rver_ip\030\001 \001(\t\022,\n\014replica_sets\030\002 \003(\0132\026.co" +
+      "mpaction.ReplicaSet\022%\n\010io_stats\030\003 \001(\0132\023." +
+      "compaction.IOStats\022\023\n\013num_pending\030\004 \001(\005\022",
+      "0\n\013compactions\030\005 \003(\0132\033.compaction.Compac" +
+      "tionStats\"W\n\007IOStats\022\020\n\010read_ios\030\001 \001(\003\022\022" +
+      "\n\nread_bytes\030\002 \001(\003\022\021\n\twrite_ios\030\003 \001(\003\022\023\n" +
+      "\013write_bytes\030\004 \001(\003\"\036\n\nReplicaSet\022\020\n\010host" +
+      "_ips\030\001 \003(\t\"6\n\021ReplicaSetWeights\022\020\n\010host_" +
+      "ips\030\001 \003(\t\022\017\n\007weights\030\002 \003(\002\"=\n\017Compaction" +
+      "Stats\022\024\n\014input_zbytes\030\001 \001(\003\022\024\n\014input_uby" +
+      "tes\030\002 \001(\003\"\007\n\005Empty2\261\001\n\013Coordinator\0226\n\010Re" +
+      "gister\022\027.compaction.RegisterReq\032\021.compac" +
+      "tion.Empty\0226\n\005Watch\022\024.compaction.WatchRe",
+      "q\032\025.compaction.WatchResp0\001\0222\n\006Update\022\025.c" +
+      "ompaction.UpdateReq\032\021.compaction.EmptyB." +
+      "\n\036org.apache.cassandra.compactlbB\014Coordi" +
+      "nationb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6191,7 +6323,7 @@ public final class Coordination {
     internal_static_compaction_WatchResp_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_WatchResp_descriptor,
-        new java.lang.String[] { "SendReplicaSets", "ReplicaSetWeights", });
+        new java.lang.String[] { "SendReplicaSets", "ReplicaSetWeights", "HasCompactionRateHint", "CompactionRateHint", });
     internal_static_compaction_UpdateReq_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_compaction_UpdateReq_fieldAccessorTable = new

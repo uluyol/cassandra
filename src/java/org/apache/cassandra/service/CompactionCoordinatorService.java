@@ -118,6 +118,9 @@ public final class CompactionCoordinatorService {
                                 logger.warn("Unable to convert host to InetAddress", e);
                             }
                         }
+                        if (watchResp.getHasCompactionRateHint()) {
+                            CompactionController.instance.setCurRate(watchResp.getCompactionRateHint());
+                        }
                         try {
                             sendPHFuture.get();
                         } catch (Exception e) {
