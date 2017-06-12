@@ -33,9 +33,12 @@ import java.util.List;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -54,16 +57,19 @@ import org.slf4j.LoggerFactory;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.compaction.CompactionManager;
 import org.apache.cassandra.dht.Range;
 import org.apache.cassandra.dht.Token;
+import org.apache.cassandra.io.sstable.SSTable;
+import org.apache.cassandra.io.sstable.format.SSTableReader;
 
 public final class CompactionCoordinatorService {
     private static final long UPDATE_PERIOD_MS = 1000L;
 
     private static final Logger logger = LoggerFactory.getLogger(CompactionCoordinatorService.class);
-    private static CompactionCoordinatorService instance;
+    private static CompactionCoordinatorService instance = null;
 
     private final Channel channel;
     private final CoordinatorGrpc.CoordinatorFutureStub stub;
@@ -144,6 +150,29 @@ public final class CompactionCoordinatorService {
                     Thread.sleep(1000);
                 } catch (InterruptedException e2) {}
             }
+        }
+    }
+
+    private final ConcurrentHashMap<UUID, Coordination.CompactionStats> compactions = new ConcurrentHashMap<>();
+
+    public static void startCompactionHook(UUID taskId, ColumnFamilyStore cfs, ImmutableList<SSTableReader> readers, int level) {
+        if (instance != null) {
+            long ubytes = 0;
+            long zbytes = 0;
+            for (int i = 0; i < readers.size(); i++) {
+                ubytes += readers.get(i).uncompressedLength();
+                zbytes += readers.get(i).onDiskLength();
+            }
+            instance.compactions.put(taskId, Coordination.CompactionStats.newBuilder()
+                                                                         .setInputUbytes(ubytes)
+                                                                         .setInputZbytes(zbytes)
+                                                                         .build());
+        }
+    }
+
+    public static void endCompactionHook(UUID taskId) {
+        if (instance != null) {
+            instance.compactions.remove(taskId);
         }
     }
 
@@ -246,17 +275,19 @@ public final class CompactionCoordinatorService {
                             continue;
                         }
                     }
+                    Coordination.UpdateReq.Builder update =
+                    Coordination.UpdateReq.newBuilder()
+                                          .setServerIp(ip)
+                                          .setNumPending(CompactionManager.instance.getPendingTasks())
+                                          .addAllCompactions(compactions.values())
+                                          .setIoStats(
+                                          Coordination.IOStats.newBuilder()
+                                                              .setReadIos(readIOs)
+                                                              .setWriteIos(writeIOs)
+                                                              .setReadBytes(readBytes)
+                                                              .setWriteBytes(writeBytes));
                     logger.debug("Sending updated disk stats to coordinator");
-                    blockingStub.update(Coordination.UpdateReq.newBuilder()
-                                                              .setServerIp(ip)
-                                                              .setNumPending(CompactionManager.instance.getPendingTasks())
-                                                              .setIoStats(
-                                                              Coordination.IOStats.newBuilder()
-                                                                                  .setReadIos(readIOs)
-                                                                                  .setWriteIos(writeIOs)
-                                                                                  .setReadBytes(readBytes)
-                                                                                  .setWriteBytes(writeBytes))
-                                                              .build());
+                    blockingStub.update(update.build());
                     while (System.currentTimeMillis() < startTime + UPDATE_PERIOD_MS) {
                         try {
                             Thread.sleep(System.currentTimeMillis()-startTime);

@@ -48,6 +48,7 @@ import org.apache.cassandra.db.SystemKeyspace;
 import org.apache.cassandra.db.compaction.CompactionManager.CompactionExecutorStatsCollector;
 import org.apache.cassandra.db.lifecycle.LifecycleTransaction;
 import org.apache.cassandra.service.ActiveRepairService;
+import org.apache.cassandra.service.CompactionCoordinatorService;
 import org.apache.cassandra.utils.FBUtilities;
 import org.apache.cassandra.utils.concurrent.Refs;
 
@@ -187,6 +188,7 @@ public class CompactionTask extends AbstractCompactionTask
 
         Instant startInstant = Instant.now(NanoClock.instance);
         String logAux = loggingAux(cfs, ImmutableList.copyOf(transaction.originals()), getLevel());
+        CompactionCoordinatorService.startCompactionHook(taskId, cfs, ImmutableList.copyOf(transaction.originals()), getLevel());
         long start = System.nanoTime();
         long startForHist = Hists.nowMicros();
         Hists.compactionStart.set(startForHist);
@@ -259,6 +261,7 @@ public class CompactionTask extends AbstractCompactionTask
             long totalSourceRows = 0;
             String mergeSummary = updateCompactionHistory(cfs.keyspace.getName(), cfs.getColumnFamilyName(), mergedRowCounts, startsize, endsize);
             OpLoggers.compactions().record(startInstant, Instant.now(NanoClock.instance), logAux);
+            CompactionCoordinatorService.endCompactionHook(taskId);
             Hists.setIfEq(Hists.compactionEnd, Hists.nowMicros(), Hists.compactionStart, startForHist);
             logger.debug(String.format("Compacted (%s) %d sstables to [%s] to level=%d.  %,d bytes to %,d (~%d%% of original) in %,dms = %fMB/s.  %,d total partitions merged to %,d.  Partition merge counts were {%s}",
                                       taskId, transaction.originals().size(), newSSTableNames.toString(), getLevel(), startsize, endsize, (int) (ratio * 100), dTime, mbps, totalSourceRows, totalKeysWritten, mergeSummary));

@@ -1877,6 +1877,30 @@ public final class Coordination {
      * <code>optional int32 num_pending = 4;</code>
      */
     int getNumPending();
+
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    java.util.List<org.apache.cassandra.compactlb.Coordination.CompactionStats> 
+        getCompactionsList();
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    org.apache.cassandra.compactlb.Coordination.CompactionStats getCompactions(int index);
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    int getCompactionsCount();
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    java.util.List<? extends org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder> 
+        getCompactionsOrBuilderList();
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder getCompactionsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code compaction.UpdateReq}
@@ -1893,6 +1917,7 @@ public final class Coordination {
       serverIp_ = "";
       replicaSets_ = java.util.Collections.emptyList();
       numPending_ = 0;
+      compactions_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -1953,6 +1978,15 @@ public final class Coordination {
               numPending_ = input.readInt32();
               break;
             }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                compactions_ = new java.util.ArrayList<org.apache.cassandra.compactlb.Coordination.CompactionStats>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              compactions_.add(
+                  input.readMessage(org.apache.cassandra.compactlb.Coordination.CompactionStats.parser(), extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1963,6 +1997,9 @@ public final class Coordination {
       } finally {
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           replicaSets_ = java.util.Collections.unmodifiableList(replicaSets_);
+        }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          compactions_ = java.util.Collections.unmodifiableList(compactions_);
         }
         makeExtensionsImmutable();
       }
@@ -2079,6 +2116,41 @@ public final class Coordination {
       return numPending_;
     }
 
+    public static final int COMPACTIONS_FIELD_NUMBER = 5;
+    private java.util.List<org.apache.cassandra.compactlb.Coordination.CompactionStats> compactions_;
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    public java.util.List<org.apache.cassandra.compactlb.Coordination.CompactionStats> getCompactionsList() {
+      return compactions_;
+    }
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    public java.util.List<? extends org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder> 
+        getCompactionsOrBuilderList() {
+      return compactions_;
+    }
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    public int getCompactionsCount() {
+      return compactions_.size();
+    }
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    public org.apache.cassandra.compactlb.Coordination.CompactionStats getCompactions(int index) {
+      return compactions_.get(index);
+    }
+    /**
+     * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+     */
+    public org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder getCompactionsOrBuilder(
+        int index) {
+      return compactions_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2103,6 +2175,9 @@ public final class Coordination {
       if (numPending_ != 0) {
         output.writeInt32(4, numPending_);
       }
+      for (int i = 0; i < compactions_.size(); i++) {
+        output.writeMessage(5, compactions_.get(i));
+      }
     }
 
     public int getSerializedSize() {
@@ -2124,6 +2199,10 @@ public final class Coordination {
       if (numPending_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, numPending_);
+      }
+      for (int i = 0; i < compactions_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, compactions_.get(i));
       }
       memoizedSize = size;
       return size;
@@ -2152,6 +2231,8 @@ public final class Coordination {
       }
       result = result && (getNumPending()
           == other.getNumPending());
+      result = result && getCompactionsList()
+          .equals(other.getCompactionsList());
       return result;
     }
 
@@ -2174,6 +2255,10 @@ public final class Coordination {
       }
       hash = (37 * hash) + NUM_PENDING_FIELD_NUMBER;
       hash = (53 * hash) + getNumPending();
+      if (getCompactionsCount() > 0) {
+        hash = (37 * hash) + COMPACTIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getCompactionsList().hashCode();
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2289,6 +2374,7 @@ public final class Coordination {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getReplicaSetsFieldBuilder();
+          getCompactionsFieldBuilder();
         }
       }
       public Builder clear() {
@@ -2309,6 +2395,12 @@ public final class Coordination {
         }
         numPending_ = 0;
 
+        if (compactionsBuilder_ == null) {
+          compactions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          compactionsBuilder_.clear();
+        }
         return this;
       }
 
@@ -2349,6 +2441,15 @@ public final class Coordination {
           result.ioStats_ = ioStatsBuilder_.build();
         }
         result.numPending_ = numPending_;
+        if (compactionsBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+            compactions_ = java.util.Collections.unmodifiableList(compactions_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.compactions_ = compactions_;
+        } else {
+          result.compactions_ = compactionsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2426,6 +2527,32 @@ public final class Coordination {
         }
         if (other.getNumPending() != 0) {
           setNumPending(other.getNumPending());
+        }
+        if (compactionsBuilder_ == null) {
+          if (!other.compactions_.isEmpty()) {
+            if (compactions_.isEmpty()) {
+              compactions_ = other.compactions_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensureCompactionsIsMutable();
+              compactions_.addAll(other.compactions_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.compactions_.isEmpty()) {
+            if (compactionsBuilder_.isEmpty()) {
+              compactionsBuilder_.dispose();
+              compactionsBuilder_ = null;
+              compactions_ = other.compactions_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              compactionsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getCompactionsFieldBuilder() : null;
+            } else {
+              compactionsBuilder_.addAllMessages(other.compactions_);
+            }
+          }
         }
         onChanged();
         return this;
@@ -2904,6 +3031,246 @@ public final class Coordination {
         numPending_ = 0;
         onChanged();
         return this;
+      }
+
+      private java.util.List<org.apache.cassandra.compactlb.Coordination.CompactionStats> compactions_ =
+        java.util.Collections.emptyList();
+      private void ensureCompactionsIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          compactions_ = new java.util.ArrayList<org.apache.cassandra.compactlb.Coordination.CompactionStats>(compactions_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.apache.cassandra.compactlb.Coordination.CompactionStats, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder, org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder> compactionsBuilder_;
+
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public java.util.List<org.apache.cassandra.compactlb.Coordination.CompactionStats> getCompactionsList() {
+        if (compactionsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(compactions_);
+        } else {
+          return compactionsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public int getCompactionsCount() {
+        if (compactionsBuilder_ == null) {
+          return compactions_.size();
+        } else {
+          return compactionsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats getCompactions(int index) {
+        if (compactionsBuilder_ == null) {
+          return compactions_.get(index);
+        } else {
+          return compactionsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder setCompactions(
+          int index, org.apache.cassandra.compactlb.Coordination.CompactionStats value) {
+        if (compactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCompactionsIsMutable();
+          compactions_.set(index, value);
+          onChanged();
+        } else {
+          compactionsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder setCompactions(
+          int index, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder builderForValue) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          compactionsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder addCompactions(org.apache.cassandra.compactlb.Coordination.CompactionStats value) {
+        if (compactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCompactionsIsMutable();
+          compactions_.add(value);
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder addCompactions(
+          int index, org.apache.cassandra.compactlb.Coordination.CompactionStats value) {
+        if (compactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCompactionsIsMutable();
+          compactions_.add(index, value);
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder addCompactions(
+          org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder builderForValue) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.add(builderForValue.build());
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder addCompactions(
+          int index, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder builderForValue) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          compactionsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder addAllCompactions(
+          java.lang.Iterable<? extends org.apache.cassandra.compactlb.Coordination.CompactionStats> values) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, compactions_);
+          onChanged();
+        } else {
+          compactionsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder clearCompactions() {
+        if (compactionsBuilder_ == null) {
+          compactions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          compactionsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public Builder removeCompactions(int index) {
+        if (compactionsBuilder_ == null) {
+          ensureCompactionsIsMutable();
+          compactions_.remove(index);
+          onChanged();
+        } else {
+          compactionsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder getCompactionsBuilder(
+          int index) {
+        return getCompactionsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder getCompactionsOrBuilder(
+          int index) {
+        if (compactionsBuilder_ == null) {
+          return compactions_.get(index);  } else {
+          return compactionsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public java.util.List<? extends org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder> 
+           getCompactionsOrBuilderList() {
+        if (compactionsBuilder_ != null) {
+          return compactionsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(compactions_);
+        }
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder addCompactionsBuilder() {
+        return getCompactionsFieldBuilder().addBuilder(
+            org.apache.cassandra.compactlb.Coordination.CompactionStats.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder addCompactionsBuilder(
+          int index) {
+        return getCompactionsFieldBuilder().addBuilder(
+            index, org.apache.cassandra.compactlb.Coordination.CompactionStats.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .compaction.CompactionStats compactions = 5;</code>
+       */
+      public java.util.List<org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder> 
+           getCompactionsBuilderList() {
+        return getCompactionsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.apache.cassandra.compactlb.Coordination.CompactionStats, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder, org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder> 
+          getCompactionsFieldBuilder() {
+        if (compactionsBuilder_ == null) {
+          compactionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.apache.cassandra.compactlb.Coordination.CompactionStats, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder, org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder>(
+                  compactions_,
+                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  getParentForChildren(),
+                  isClean());
+          compactions_ = null;
+        }
+        return compactionsBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4859,6 +5226,500 @@ public final class Coordination {
 
   }
 
+  public interface CompactionStatsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:compaction.CompactionStats)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional int64 input_zbytes = 1;</code>
+     */
+    long getInputZbytes();
+
+    /**
+     * <code>optional int64 input_ubytes = 2;</code>
+     */
+    long getInputUbytes();
+  }
+  /**
+   * Protobuf type {@code compaction.CompactionStats}
+   */
+  public  static final class CompactionStats extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:compaction.CompactionStats)
+      CompactionStatsOrBuilder {
+    // Use CompactionStats.newBuilder() to construct.
+    private CompactionStats(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private CompactionStats() {
+      inputZbytes_ = 0L;
+      inputUbytes_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private CompactionStats(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+
+              inputZbytes_ = input.readInt64();
+              break;
+            }
+            case 16: {
+
+              inputUbytes_ = input.readInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.cassandra.compactlb.Coordination.internal_static_compaction_CompactionStats_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.cassandra.compactlb.Coordination.internal_static_compaction_CompactionStats_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.cassandra.compactlb.Coordination.CompactionStats.class, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder.class);
+    }
+
+    public static final int INPUT_ZBYTES_FIELD_NUMBER = 1;
+    private long inputZbytes_;
+    /**
+     * <code>optional int64 input_zbytes = 1;</code>
+     */
+    public long getInputZbytes() {
+      return inputZbytes_;
+    }
+
+    public static final int INPUT_UBYTES_FIELD_NUMBER = 2;
+    private long inputUbytes_;
+    /**
+     * <code>optional int64 input_ubytes = 2;</code>
+     */
+    public long getInputUbytes() {
+      return inputUbytes_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (inputZbytes_ != 0L) {
+        output.writeInt64(1, inputZbytes_);
+      }
+      if (inputUbytes_ != 0L) {
+        output.writeInt64(2, inputUbytes_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (inputZbytes_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, inputZbytes_);
+      }
+      if (inputUbytes_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, inputUbytes_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.apache.cassandra.compactlb.Coordination.CompactionStats)) {
+        return super.equals(obj);
+      }
+      org.apache.cassandra.compactlb.Coordination.CompactionStats other = (org.apache.cassandra.compactlb.Coordination.CompactionStats) obj;
+
+      boolean result = true;
+      result = result && (getInputZbytes()
+          == other.getInputZbytes());
+      result = result && (getInputUbytes()
+          == other.getInputUbytes());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      hash = (37 * hash) + INPUT_ZBYTES_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getInputZbytes());
+      hash = (37 * hash) + INPUT_UBYTES_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getInputUbytes());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.apache.cassandra.compactlb.Coordination.CompactionStats prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code compaction.CompactionStats}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:compaction.CompactionStats)
+        org.apache.cassandra.compactlb.Coordination.CompactionStatsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.cassandra.compactlb.Coordination.internal_static_compaction_CompactionStats_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.cassandra.compactlb.Coordination.internal_static_compaction_CompactionStats_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.cassandra.compactlb.Coordination.CompactionStats.class, org.apache.cassandra.compactlb.Coordination.CompactionStats.Builder.class);
+      }
+
+      // Construct using org.apache.cassandra.compactlb.Coordination.CompactionStats.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        inputZbytes_ = 0L;
+
+        inputUbytes_ = 0L;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.cassandra.compactlb.Coordination.internal_static_compaction_CompactionStats_descriptor;
+      }
+
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats getDefaultInstanceForType() {
+        return org.apache.cassandra.compactlb.Coordination.CompactionStats.getDefaultInstance();
+      }
+
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats build() {
+        org.apache.cassandra.compactlb.Coordination.CompactionStats result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.cassandra.compactlb.Coordination.CompactionStats buildPartial() {
+        org.apache.cassandra.compactlb.Coordination.CompactionStats result = new org.apache.cassandra.compactlb.Coordination.CompactionStats(this);
+        result.inputZbytes_ = inputZbytes_;
+        result.inputUbytes_ = inputUbytes_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.cassandra.compactlb.Coordination.CompactionStats) {
+          return mergeFrom((org.apache.cassandra.compactlb.Coordination.CompactionStats)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.cassandra.compactlb.Coordination.CompactionStats other) {
+        if (other == org.apache.cassandra.compactlb.Coordination.CompactionStats.getDefaultInstance()) return this;
+        if (other.getInputZbytes() != 0L) {
+          setInputZbytes(other.getInputZbytes());
+        }
+        if (other.getInputUbytes() != 0L) {
+          setInputUbytes(other.getInputUbytes());
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.cassandra.compactlb.Coordination.CompactionStats parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.cassandra.compactlb.Coordination.CompactionStats) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private long inputZbytes_ ;
+      /**
+       * <code>optional int64 input_zbytes = 1;</code>
+       */
+      public long getInputZbytes() {
+        return inputZbytes_;
+      }
+      /**
+       * <code>optional int64 input_zbytes = 1;</code>
+       */
+      public Builder setInputZbytes(long value) {
+        
+        inputZbytes_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 input_zbytes = 1;</code>
+       */
+      public Builder clearInputZbytes() {
+        
+        inputZbytes_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long inputUbytes_ ;
+      /**
+       * <code>optional int64 input_ubytes = 2;</code>
+       */
+      public long getInputUbytes() {
+        return inputUbytes_;
+      }
+      /**
+       * <code>optional int64 input_ubytes = 2;</code>
+       */
+      public Builder setInputUbytes(long value) {
+        
+        inputUbytes_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 input_ubytes = 2;</code>
+       */
+      public Builder clearInputUbytes() {
+        
+        inputUbytes_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:compaction.CompactionStats)
+    }
+
+    // @@protoc_insertion_point(class_scope:compaction.CompactionStats)
+    private static final org.apache.cassandra.compactlb.Coordination.CompactionStats DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.apache.cassandra.compactlb.Coordination.CompactionStats();
+    }
+
+    public static org.apache.cassandra.compactlb.Coordination.CompactionStats getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<CompactionStats>
+        PARSER = new com.google.protobuf.AbstractParser<CompactionStats>() {
+      public CompactionStats parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new CompactionStats(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CompactionStats> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CompactionStats> getParserForType() {
+      return PARSER;
+    }
+
+    public org.apache.cassandra.compactlb.Coordination.CompactionStats getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface EmptyOrBuilder extends
       // @@protoc_insertion_point(interface_extends:compaction.Empty)
       com.google.protobuf.MessageOrBuilder {
@@ -5260,6 +6121,11 @@ public final class Coordination {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_compaction_ReplicaSetWeights_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_compaction_CompactionStats_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_compaction_CompactionStats_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_compaction_Empty_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -5277,21 +6143,24 @@ public final class Coordination {
       "erReq\022\021\n\tserver_ip\030\001 \001(\t\"\035\n\010WatchReq\022\021\n\t" +
       "server_ip\030\001 \001(\t\"b\n\tWatchResp\022\031\n\021send_rep" +
       "lica_sets\030\001 \001(\010\022:\n\023replica_set_weights\030\002" +
-      " \003(\0132\035.compaction.ReplicaSetWeights\"\210\001\n\t" +
+      " \003(\0132\035.compaction.ReplicaSetWeights\"\272\001\n\t" +
       "UpdateReq\022\021\n\tserver_ip\030\001 \001(\t\022,\n\014replica_" +
       "sets\030\002 \003(\0132\026.compaction.ReplicaSet\022%\n\010io" +
       "_stats\030\003 \001(\0132\023.compaction.IOStats\022\023\n\013num" +
-      "_pending\030\004 \001(\005\"W\n\007IOStats\022\020\n\010read_ios\030\001 " +
-      "\001(\003\022\022\n\nread_bytes\030\002 \001(\003\022\021\n\twrite_ios\030\003 \001",
-      "(\003\022\023\n\013write_bytes\030\004 \001(\003\"\036\n\nReplicaSet\022\020\n" +
-      "\010host_ips\030\001 \003(\t\"6\n\021ReplicaSetWeights\022\020\n\010" +
-      "host_ips\030\001 \003(\t\022\017\n\007weights\030\002 \003(\002\"\007\n\005Empty" +
-      "2\261\001\n\013Coordinator\0226\n\010Register\022\027.compactio" +
-      "n.RegisterReq\032\021.compaction.Empty\0226\n\005Watc" +
-      "h\022\024.compaction.WatchReq\032\025.compaction.Wat" +
-      "chResp0\001\0222\n\006Update\022\025.compaction.UpdateRe" +
-      "q\032\021.compaction.EmptyB.\n\036org.apache.cassa" +
-      "ndra.compactlbB\014Coordinationb\006proto3"
+      "_pending\030\004 \001(\005\0220\n\013compactions\030\005 \003(\0132\033.co" +
+      "mpaction.CompactionStats\"W\n\007IOStats\022\020\n\010r",
+      "ead_ios\030\001 \001(\003\022\022\n\nread_bytes\030\002 \001(\003\022\021\n\twri" +
+      "te_ios\030\003 \001(\003\022\023\n\013write_bytes\030\004 \001(\003\"\036\n\nRep" +
+      "licaSet\022\020\n\010host_ips\030\001 \003(\t\"6\n\021ReplicaSetW" +
+      "eights\022\020\n\010host_ips\030\001 \003(\t\022\017\n\007weights\030\002 \003(" +
+      "\002\"=\n\017CompactionStats\022\024\n\014input_zbytes\030\001 \001" +
+      "(\003\022\024\n\014input_ubytes\030\002 \001(\003\"\007\n\005Empty2\261\001\n\013Co" +
+      "ordinator\0226\n\010Register\022\027.compaction.Regis" +
+      "terReq\032\021.compaction.Empty\0226\n\005Watch\022\024.com" +
+      "paction.WatchReq\032\025.compaction.WatchResp0" +
+      "\001\0222\n\006Update\022\025.compaction.UpdateReq\032\021.com",
+      "paction.EmptyB.\n\036org.apache.cassandra.co" +
+      "mpactlbB\014Coordinationb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -5328,7 +6197,7 @@ public final class Coordination {
     internal_static_compaction_UpdateReq_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_UpdateReq_descriptor,
-        new java.lang.String[] { "ServerIp", "ReplicaSets", "IoStats", "NumPending", });
+        new java.lang.String[] { "ServerIp", "ReplicaSets", "IoStats", "NumPending", "Compactions", });
     internal_static_compaction_IOStats_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_compaction_IOStats_fieldAccessorTable = new
@@ -5347,8 +6216,14 @@ public final class Coordination {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_ReplicaSetWeights_descriptor,
         new java.lang.String[] { "HostIps", "Weights", });
-    internal_static_compaction_Empty_descriptor =
+    internal_static_compaction_CompactionStats_descriptor =
       getDescriptor().getMessageTypes().get(7);
+    internal_static_compaction_CompactionStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_compaction_CompactionStats_descriptor,
+        new java.lang.String[] { "InputZbytes", "InputUbytes", });
+    internal_static_compaction_Empty_descriptor =
+      getDescriptor().getMessageTypes().get(8);
     internal_static_compaction_Empty_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_compaction_Empty_descriptor,
