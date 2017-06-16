@@ -49,6 +49,7 @@ import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.schema.IndexMetadata;
 import org.apache.cassandra.schema.UnknownIndexException;
 import org.apache.cassandra.service.ClientWarn;
+import org.apache.cassandra.service.CompactionController;
 import org.apache.cassandra.tracing.Tracing;
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.cassandra.utils.FBUtilities;
@@ -482,6 +483,7 @@ public abstract class ReadCommand extends MonitorableImpl implements ReadQuery
                 if (Hists.overlapCompaction(istart, iend)) {
                     Tracing.trace("Compaction was executing");
                 }
+                Tracing.trace("Compaction rate was %d", CompactionController.instance.getCurRate());
             }
         };
 

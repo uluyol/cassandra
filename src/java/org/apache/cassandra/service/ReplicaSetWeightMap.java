@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -91,6 +92,25 @@ public final class ReplicaSetWeightMap {
         }
     }
 
+    public int nextContact(List<InetAddress> replicas) {
+        WeightMap map = weights;
+        Lock rlock = map.lock.readLock();
+        rlock.lock();
+        try {
+            WeightedRoundRobin wrr = map.getWRR(replicas);
+            if (wrr == null) {
+                return -1;
+            }
+            int choice = wrr.next();
+            if (choice >= replicas.size() || choice < 0) {
+                return -2;
+            }
+            return choice;
+        } finally {
+            rlock.unlock();
+        }
+    }
+
     static final class WeightMap {
         private final static float maxLoadFactor = 0.6f;
         private PWListList[] buckets;
@@ -136,6 +156,7 @@ public final class ReplicaSetWeightMap {
             for (int i = 0; i < addrs.size(); i++) {
                 pws.add(addrs.get(i), weights.get(i));
             }
+            pws.makeWRR();
         }
 
         // put adds the kv-pair. The addrs ands weights lists are copied so the
@@ -148,6 +169,7 @@ public final class ReplicaSetWeightMap {
             for (int i = 0; i < addrs.size(); i++) {
                 pws.add(addrs.get(i), weights[i]);
             }
+            pws.makeWRR();
         }
 
         float[] get(List<InetAddress> replicas) {
@@ -169,6 +191,28 @@ public final class ReplicaSetWeightMap {
                 }
                 if (!bad) {
                     return weights;
+                }
+            }
+            return null;
+        }
+
+        WeightedRoundRobin getWRR(List<InetAddress> replicas) {
+            PWListList bucket = bucketOf(buckets, replicas);
+            for (int i = 0; i < bucket.size(); i++) {
+                PWList pws = bucket.get(i);
+                if (pws.size() != replicas.size()) {
+                    continue;
+                }
+                boolean bad = false;
+                for (int j = 0; j < replicas.size(); j++) {
+                    float w = pws.lookup(replicas.get(j));
+                    if (w < 0) {
+                        bad = true;
+                        break;
+                    }
+                }
+                if (!bad) {
+                    return pws.wrr;
                 }
             }
             return null;
@@ -284,11 +328,13 @@ public final class ReplicaSetWeightMap {
         InetAddress[] addrs;
         float[] weights;
         int len;
+        final WeightedRoundRobin wrr;
 
         PWList() {
             addrs = new InetAddress[5];
             weights = new float[5];
             len = 0;
+            wrr = new WeightedRoundRobin();
         }
 
         void clear() {
@@ -297,6 +343,7 @@ public final class ReplicaSetWeightMap {
                 addrs[i] = null;
             }
             len = 0;
+            wrr.reset();
         }
 
         private void grow() {
@@ -320,6 +367,10 @@ public final class ReplicaSetWeightMap {
             len++;
         }
 
+        void makeWRR() {
+            wrr.reset(weights, len);
+        }
+
         // lookup performs a linear search. Should be the fastest option for small arrays.
         float lookup(InetAddress addr) {
             for (int i = 0; i < len; i++) {
@@ -334,5 +385,89 @@ public final class ReplicaSetWeightMap {
         float getWeight(int i) { return weights[i]; }
 
         int size() { return len; }
+    }
+
+    // WeightedRoundRobin performs WRR load balancing.
+    // The following code is based on the psuedo code available at
+    // http://kb.linuxvirtualserver.org/wiki/Weighted_Round-Robin_Scheduling
+    public static final class WeightedRoundRobin {
+        private static final float[] emptyWeights = new float[0];
+
+        // Sort of final, only touched by reset()
+        private int[] weights;
+        private int weightsLen;
+        private int max, gcd;
+
+        int i = -1;
+        int cw = 0;
+
+        WeightedRoundRobin() {
+            reset();
+        }
+
+        WeightedRoundRobin(float[] weights) {
+            reset(weights, weights.length);
+        }
+
+        public void reset() {
+            reset(emptyWeights, emptyWeights.length);
+        }
+
+        public void reset(float[] weights, int len) {
+            if (this.weights == null || this.weights.length < len) {
+                this.weights = new int[len];
+            }
+            weightsLen = len;
+            max = Integer.MIN_VALUE;
+            for (int i = 0; i < weightsLen; i++) {
+                this.weights[i] = (int) (weights[i] * 100f);
+                max = Integer.max(max, this.weights[i]);
+            }
+            gcd = gcd(this.weights, weightsLen);
+
+            this.i = -1;
+            this.cw = 0;
+        }
+
+        private static int gcd(int[] vs, int len) {
+            if (vs == null || len <= 0) {
+                return Integer.MIN_VALUE;
+            }
+            int gcd = vs[0];
+            for (int i = 1; i < len; i++) {
+                gcd = gcd(gcd, vs[i]);
+            }
+            return gcd;
+        }
+
+        private static int gcd(int a, int b) {
+            while (b != 0) {
+                int t = b;
+                b = a % b;
+                a = t;
+            }
+            return a;
+        }
+
+        public int next() {
+            if (weightsLen <= 0) {
+                return -1;
+            }
+            while (true) {
+                i = (i + 1) % weightsLen;
+                if (i == 0) {
+                    cw = cw - gcd;
+                    if (cw <= 0) {
+                        cw = max;
+                        if (cw == 0) {
+                            throw new IllegalStateException();
+                        }
+                    }
+                }
+                if (weights[i] >= cw) {
+                    return i;
+                }
+            }
+        }
     }
 }

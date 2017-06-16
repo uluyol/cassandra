@@ -21,6 +21,7 @@ package org.apache.cassandra.service;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -71,6 +72,46 @@ public class ReplicaSetWeightMapTest {
             return 0;
         }
     };
+
+    @Test
+    public void testWeightedRoundRobin() {
+        List<ImmutableList<Float>> tests = ImmutableList.of(
+            ImmutableList.of(0.4f, 0.5f, 0.1f),
+            ImmutableList.of(0.1f, 0.9f),
+            ImmutableList.of(0.0f, 0.5f, 0.4f, 0.1f),
+            ImmutableList.of(0.5f, 0.5f));
+
+        ReplicaSetWeightMap.WeightedRoundRobin wrrReuse = new ReplicaSetWeightMap.WeightedRoundRobin();
+        for (int testi = 0; testi < tests.size(); testi++) {
+            ImmutableList<Float> t = tests.get(testi);
+            float[] weights = new float[t.size()];
+            for (int i = 0; i < weights.length; i++) {
+                weights[i] = t.get(i);
+            }
+            ReplicaSetWeightMap.WeightedRoundRobin wrr = new ReplicaSetWeightMap.WeightedRoundRobin(weights);
+            wrrReuse.reset(weights, weights.length);
+            float[] counts = new float[weights.length];
+            float[] countsReuse = new float[weights.length];
+            float total = 0;
+            for (int i = 0; i < 1000; i++) {
+                counts[wrr.next()]++;
+                countsReuse[wrrReuse.next()]++;
+                total++;
+            }
+            for (int i = 0; i < counts.length; i++) {
+                counts[i] /= total;
+                countsReuse[i] /= total;
+            }
+            for (int i = 0; i < weights.length; i++) {
+                Assert.assertEquals(String.format("case %d: different weights: want %s have %s",
+                                                  testi, Arrays.toString(weights), Arrays.toString(counts)),
+                                    weights[i], counts[i], 0.001);
+                Assert.assertEquals(String.format("case %d: different weights with reuse: want %s have %s",
+                                                  testi, Arrays.toString(weights), Arrays.toString(countsReuse)),
+                                    weights[i], countsReuse[i], 0.001);
+            }
+        }
+    }
 
     @Test
     public void testCorrectReplicaSets() throws UnknownHostException {

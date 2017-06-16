@@ -355,27 +355,12 @@ public abstract class AbstractReadExecutor
             super(meta, ks, cmd, level, replicas);
             // currently don't handle any other consistency levels
             assert level == ConsistencyLevel.ONE || level == ConsistencyLevel.ANY || level == ConsistencyLevel.LOCAL_ONE;
-            float[] weights = ReplicaSetWeightMap.current.weightsFor(replicas);
-            InetAddress choice = null;
+            int index = ReplicaSetWeightMap.current.nextContact(replicas);
             float target = 0;
-            if (weights == null) {
-                choice = replicas.get(0);
-            } else {
-                target = ThreadLocalRandom.current().nextFloat();
-                float accum = 0;
-                for (int i = 0; i < weights.length; i++) {
-                    accum += weights[i];
-                    if (target <= accum) {
-                        choice = replicas.get(i);
-                        break;
-                    }
-                }
+            if (index < 0) {
+                index = 0;
             }
-            if (choice == null) {
-                logger.warn("Was not able to choose based on proportions depite weights present: weights: %s, target: %f", weights.toString(), target);
-                choice = replicas.get(0);
-            }
-            selected = ImmutableList.of(choice);
+            selected = ImmutableList.of(replicas.get(index));
         }
 
         @Override
