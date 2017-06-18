@@ -19,6 +19,7 @@ package org.apache.cassandra.service;
 
 import java.net.InetAddress;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -51,6 +52,7 @@ import org.apache.cassandra.schema.SpeculativeRetryParam;
 import org.apache.cassandra.service.StorageProxy.LocalReadRunnable;
 import org.apache.cassandra.tracing.TraceState;
 import org.apache.cassandra.tracing.Tracing;
+import org.apache.cassandra.utils.FBUtilities;
 
 /**
  * Sends a read request to the replicas needed to satisfy a given ConsistencyLevel.
@@ -159,13 +161,28 @@ public abstract class AbstractReadExecutor
         return handler.get();
     }
 
+    private static List<InetAddress> sortMeFirst(List<InetAddress> addrs) {
+        Collections.sort(addrs, (a1, a2) -> {
+            if (a1.equals(FBUtilities.getBroadcastAddress())) {
+                if (a2.equals(FBUtilities.getBroadcastAddress())) {
+                    return 0;
+                }
+                return -1;
+            } else if (a2.equals(FBUtilities.getBroadcastAddress())) {
+                return 1;
+            }
+            return 0;
+        });
+        return addrs;
+    }
+
     /**
      * @return an executor appropriate for the configured speculative read policy
      */
     public static AbstractReadExecutor getReadExecutor(Optional<MessageIn.MessageMeta> meta, SinglePartitionReadCommand command, ConsistencyLevel consistencyLevel) throws UnavailableException
     {
         Keyspace keyspace = Keyspace.open(command.metadata().ksName);
-        List<InetAddress> allReplicas = StorageProxy.getLiveSortedEndpoints(keyspace, command.partitionKey());
+        List<InetAddress> allReplicas = sortMeFirst(StorageProxy.getLiveSortedEndpoints(keyspace, command.partitionKey()));
         ReadRepairDecision repairDecision = command.metadata().newReadRepairDecision();
         List<InetAddress> targetReplicas = consistencyLevel.filterForQuery(keyspace, allReplicas, repairDecision);
 
